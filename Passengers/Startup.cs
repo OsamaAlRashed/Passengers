@@ -102,8 +102,8 @@ namespace Passengers
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.ConfigureOpenAPI();
             }
+            app.ConfigureOpenAPI();
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
