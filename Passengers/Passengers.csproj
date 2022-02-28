@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="10.3.6" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="5.0.12" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="5.0.12">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="5.6.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Passengers.Location\Passengers.Location.csproj" />
+    <ProjectReference Include="..\Passengers.Main\Passengers.Main.csproj" />
+    <ProjectReference Include="..\Passengers.Security\Passengers.Security.csproj" />
+    <ProjectReference Include="..\Passengers.SharedKernel\Passengers.SharedKernel.csproj" />
+    <ProjectReference Include="..\Passengers.SqlServer\Passengers.SqlServer.csproj" />
+  </ItemGroup>
+
+</Project>
