@@ -21,7 +21,7 @@ namespace Passengers.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get() => await repository.Get().ToJsonResultAsync();
+        public async Task<IActionResult> Get(bool isHidden) => await repository.Get(isHidden).ToJsonResultAsync();
 
         [HttpGet]
         public async Task<IActionResult> GetById([Required]Guid id) => await repository.GetById(id).ToJsonResultAsync();
@@ -41,5 +41,10 @@ namespace Passengers.Controllers
         [HttpDelete]
         public async Task<IActionResult> Delete([Required] Guid id) => await repository.Remove(id).ToJsonResultAsync();
 
+        [HttpPut]
+        public async Task<IActionResult> Archive([Required]Guid id) => await repository.ChangeStatus(id, true).ToJsonResultAsync();
+
+        [HttpPut]
+        public async Task<IActionResult> Restore([Required] Guid id) => await repository.ChangeStatus(id, false).ToJsonResultAsync();
     }
 }

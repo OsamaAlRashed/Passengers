@@ -14,6 +14,21 @@ namespace Passengers.Models.Security
 {
     public class AppUser : IdentityUser<Guid> , IBaseEntity
     {
+        public AppUser()
+        {
+            CustomerOrders = new HashSet<OrderSet>();
+            DriverOrders = new HashSet<OrderSet>();
+            MainCategories = new HashSet<ShopCategory>();
+            Documents = new HashSet<Document>();
+            ShopSchedules = new HashSet<ShopSchedule>();
+            Tags = new HashSet<Tag>();
+            Offers = new HashSet<Offer>();
+            Rates = new HashSet<Rate>();
+            CustomerFavorites = new HashSet<Favorite>();
+            ShopFavorites = new HashSet<Favorite>();
+            Addresses = new HashSet<Address>();
+        }
+
         #region Base
         public DateTime DateCreated { get; set; }
         public DateTime? DateDeleted { get; set; }
@@ -26,7 +41,6 @@ namespace Passengers.Models.Security
 
         #region Shared
         public UserTypes UserType { get; set; }
-
         [DefaultValue(AccountStatus.Accepted)]
         public AccountStatus AccountStatus { get; set; }
         public string FullName { get; set; }
@@ -50,7 +64,6 @@ namespace Passengers.Models.Security
         public string Description { get; set; }
         public string OwnerName { get; set; }
 
-        public Guid? AddressId { get; set; }
         public Address Address { get; set; }
 
         public ICollection<ShopCategory> MainCategories { get; set; }
@@ -58,6 +71,7 @@ namespace Passengers.Models.Security
         public ICollection<ShopSchedule> ShopSchedules { get; set; }
         public ICollection<ShopContact> ShopContacts { get; set; }
         public ICollection<Tag> Tags { get; set; }
+        public ICollection<Offer> Offers { get; set; }
 
         #endregion
         public ICollection<Rate> Rates { get; set; }
@@ -67,5 +81,8 @@ namespace Passengers.Models.Security
 
         [InverseProperty("Shop")]
         public ICollection<Favorite> ShopFavorites { get; set; }
+
+        [InverseProperty("Customer")]
+        public ICollection<Address> Addresses { get; set; }
     }
 }

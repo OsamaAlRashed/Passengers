@@ -1,5 +1,6 @@
 ﻿using Passengers.Base;
 using Passengers.DataTransferObject.LocationDtos;
+using Passengers.SharedKernel.OperationResult;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,5 +11,6 @@ namespace Passengers.Location.AreaService
 {
     public interface IAreaRepository : IBaseRepository<AreaDto>
     {
+
     }
 }

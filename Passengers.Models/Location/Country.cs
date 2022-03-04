@@ -7,6 +7,11 @@ namespace Passengers.Models.Location
 {
     public class Country : BaseEntity
     {
+        public Country()
+        {
+            Cities = new HashSet<City>();
+        }
+
         public string Name { get; set; }
 
         public ICollection<City> Cities { get; set; }

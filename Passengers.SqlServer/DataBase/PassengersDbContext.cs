@@ -96,6 +96,7 @@ namespace Passengers.SqlServer.DataBase
         public DbSet<Discount> Discounts { get; set; }
         public DbSet<PriceLog> PriceLogs { get; set; }
         public DbSet<Product> Products { get; set; }
+        public DbSet<Offer> Offers { get; set; }
         public DbSet<ShopCategory> ShopCategories { get; set; }
         public DbSet<ShopContact> ShopContacts { get; set; }
         public DbSet<ShopSchedule> ShopSchedules { get; set; }

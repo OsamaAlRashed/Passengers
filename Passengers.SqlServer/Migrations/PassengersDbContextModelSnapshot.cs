@@ -160,6 +160,9 @@ namespace Passengers.SqlServer.Migrations
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("CustomerId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");
 
@@ -178,6 +181,9 @@ namespace Passengers.SqlServer.Migrations
                     b.Property<string>("Long")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid?>("ShopId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Text")
                         .HasColumnType("nvarchar(max)");
 
@@ -188,7 +194,13 @@ namespace Passengers.SqlServer.Migrations
 
                     b.HasIndex("AreaId");
 
+                    b.HasIndex("CustomerId");
+
                     b.HasIndex("DateCreated");
+
+                    b.HasIndex("ShopId")
+                        .IsUnique()
+                        .HasFilter("[ShopId] IS NOT NULL");
 
                     b.ToTable("Addresses");
                 });
@@ -350,6 +362,60 @@ namespace Passengers.SqlServer.Migrations
                     b.ToTable("Discounts");
                 });
 
+            modelBuilder.Entity("Passengers.Models.Main.Offer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DateDeleted")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DateUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PrepareTime")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("ShopId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DateCreated");
+
+                    b.HasIndex("ShopId");
+
+                    b.ToTable("Offers");
+                });
+
             modelBuilder.Entity("Passengers.Models.Main.PriceLog", b =>
                 {
                     b.Property<Guid>("Id")
@@ -419,8 +485,8 @@ namespace Passengers.SqlServer.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("EndDate")
-                        .HasColumnType("datetime2");
+                    b.Property<bool>("IsHidden")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
@@ -430,12 +496,6 @@ namespace Passengers.SqlServer.Migrations
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("ProductType")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("StartDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<Guid>("TagId")
                         .HasColumnType("uniqueidentifier");
@@ -711,10 +771,13 @@ namespace Passengers.SqlServer.Migrations
                     b.Property<string>("Note")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid?>("OfferId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("ProductId")
+                    b.Property<Guid?>("ProductId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Quantity")
@@ -726,6 +789,8 @@ namespace Passengers.SqlServer.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DateCreated");
+
+                    b.HasIndex("OfferId");
 
                     b.HasIndex("OrderId");
 
@@ -745,9 +810,6 @@ namespace Passengers.SqlServer.Migrations
 
                     b.Property<int>("AccountStatus")
                         .HasColumnType("int");
-
-                    b.Property<Guid?>("AddressId")
-                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int?>("BloodType")
                         .HasColumnType("int");
@@ -848,8 +910,6 @@ namespace Passengers.SqlServer.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AddressId");
 
                     b.HasIndex("DateCreated");
 
@@ -964,6 +1024,9 @@ namespace Passengers.SqlServer.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid?>("OfferId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Path")
                         .HasColumnType("nvarchar(max)");
 
@@ -982,6 +1045,8 @@ namespace Passengers.SqlServer.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DateCreated");
+
+                    b.HasIndex("OfferId");
 
                     b.HasIndex("ProductId");
 
@@ -1178,7 +1243,19 @@ namespace Passengers.SqlServer.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Passengers.Models.Security.AppUser", "Customer")
+                        .WithMany("Addresses")
+                        .HasForeignKey("CustomerId");
+
+                    b.HasOne("Passengers.Models.Security.AppUser", "Shop")
+                        .WithOne("Address")
+                        .HasForeignKey("Passengers.Models.Location.Address", "ShopId");
+
                     b.Navigation("Area");
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Shop");
                 });
 
             modelBuilder.Entity("Passengers.Models.Location.Area", b =>
@@ -1212,6 +1289,17 @@ namespace Passengers.SqlServer.Migrations
                         .IsRequired();
 
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("Passengers.Models.Main.Offer", b =>
+                {
+                    b.HasOne("Passengers.Models.Security.AppUser", "Shop")
+                        .WithMany("Offers")
+                        .HasForeignKey("ShopId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Shop");
                 });
 
             modelBuilder.Entity("Passengers.Models.Main.PriceLog", b =>
@@ -1305,6 +1393,10 @@ namespace Passengers.SqlServer.Migrations
 
             modelBuilder.Entity("Passengers.Models.Order.OrderDetails", b =>
                 {
+                    b.HasOne("Passengers.Models.Main.Offer", "Offer")
+                        .WithMany("OrderDetails")
+                        .HasForeignKey("OfferId");
+
                     b.HasOne("Passengers.Models.Order.Order", "Order")
                         .WithMany("OrderDetails")
                         .HasForeignKey("OrderId")
@@ -1312,23 +1404,14 @@ namespace Passengers.SqlServer.Migrations
                         .IsRequired();
 
                     b.HasOne("Passengers.Models.Main.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .WithMany("OrderDetails")
+                        .HasForeignKey("ProductId");
+
+                    b.Navigation("Offer");
 
                     b.Navigation("Order");
 
                     b.Navigation("Product");
-                });
-
-            modelBuilder.Entity("Passengers.Models.Security.AppUser", b =>
-                {
-                    b.HasOne("Passengers.Models.Location.Address", "Address")
-                        .WithMany()
-                        .HasForeignKey("AddressId");
-
-                    b.Navigation("Address");
                 });
 
             modelBuilder.Entity("Passengers.Models.Shared.Category", b =>
@@ -1342,6 +1425,10 @@ namespace Passengers.SqlServer.Migrations
 
             modelBuilder.Entity("Passengers.Models.Shared.Document", b =>
                 {
+                    b.HasOne("Passengers.Models.Main.Offer", "Offer")
+                        .WithMany("Documents")
+                        .HasForeignKey("OfferId");
+
                     b.HasOne("Passengers.Models.Main.Product", "Product")
                         .WithMany("Documents")
                         .HasForeignKey("ProductId");
@@ -1349,6 +1436,8 @@ namespace Passengers.SqlServer.Migrations
                     b.HasOne("Passengers.Models.Security.AppUser", "Shop")
                         .WithMany("Documents")
                         .HasForeignKey("ShopId");
+
+                    b.Navigation("Offer");
 
                     b.Navigation("Product");
 
@@ -1416,6 +1505,13 @@ namespace Passengers.SqlServer.Migrations
                     b.Navigation("Cities");
                 });
 
+            modelBuilder.Entity("Passengers.Models.Main.Offer", b =>
+                {
+                    b.Navigation("Documents");
+
+                    b.Navigation("OrderDetails");
+                });
+
             modelBuilder.Entity("Passengers.Models.Main.Product", b =>
                 {
                     b.Navigation("Discounts");
@@ -1423,6 +1519,8 @@ namespace Passengers.SqlServer.Migrations
                     b.Navigation("Documents");
 
                     b.Navigation("Favorites");
+
+                    b.Navigation("OrderDetails");
 
                     b.Navigation("PriceLogs");
 
@@ -1443,6 +1541,10 @@ namespace Passengers.SqlServer.Migrations
 
             modelBuilder.Entity("Passengers.Models.Security.AppUser", b =>
                 {
+                    b.Navigation("Address");
+
+                    b.Navigation("Addresses");
+
                     b.Navigation("CustomerFavorites");
 
                     b.Navigation("CustomerOrders");
@@ -1452,6 +1554,8 @@ namespace Passengers.SqlServer.Migrations
                     b.Navigation("DriverOrders");
 
                     b.Navigation("MainCategories");
+
+                    b.Navigation("Offers");
 
                     b.Navigation("Rates");
 

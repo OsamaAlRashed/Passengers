@@ -9,6 +9,7 @@ namespace Passengers.SharedKernel.Enums
     public enum DocumentEntityTypes
     {
         Product,
-        Shop
+        Shop,
+        Offer
     }
 }

@@ -16,7 +16,7 @@ namespace Passengers.Main.ProductService
         Task<OperationResult<bool>> ChangeAvilable(Guid id);
         Task<OperationResult<List<GetProductDto>>> Get();
         Task<OperationResult<object>> GetById(Guid id);
-        Task<OperationResult<object>> GetFoodMenu(int pageSize = 10, int pageNumber = 1);
+        Task<OperationResult<object>> GetFoodMenu(Guid tagId, int pageSize = 10, int pageNumber = 1);
         Task<OperationResult<bool>> ChangePrice(Guid id, decimal newPrice);
     }
 }

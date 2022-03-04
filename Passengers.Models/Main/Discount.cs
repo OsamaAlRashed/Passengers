@@ -9,6 +9,10 @@ namespace Passengers.Models.Main
 {
     public class Discount : BaseEntity
     {
+        public Discount()
+        {
+        }
+
         public decimal Price { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime? EndDate { get; set; }

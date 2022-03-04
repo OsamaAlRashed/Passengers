@@ -10,6 +10,12 @@ namespace Passengers.Models.Shared
 {
     public class Category : BaseEntity
     {
+        public Category()
+        {
+            Categories = new HashSet<Category>();
+            ShopCategories = new HashSet<ShopCategory>();
+        }
+
         public string Name { get; set; }
         public string LogoPath { get; set; }
 

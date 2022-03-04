@@ -52,7 +52,7 @@ namespace Passengers.Shared.DocumentService
 
         public async Task<List<GetDocumentDto>> Add(List<IFormFile> files, Guid entityId, DocumentEntityTypes type)
         {
-            List<GetDocumentDto> documents = new List<GetDocumentDto>();
+            List<GetDocumentDto> documents = new ();
             foreach (var file in files)
             {
                 await Add(file, entityId, type);
@@ -115,29 +115,35 @@ namespace Passengers.Shared.DocumentService
         {
             throw new NotImplementedException();
         }
-        private void SetEntityId(Document model, Guid entityId, DocumentEntityTypes type)
+        private static void SetEntityId(Document model, Guid entityId, DocumentEntityTypes type)
         {
             if (type == DocumentEntityTypes.Product)
                 model.ProductId = entityId;
             else if (type == DocumentEntityTypes.Shop)
                 model.ShopId = entityId;
+            else if (type == DocumentEntityTypes.Offer)
+                model.ShopId = entityId;
         }
 
-        private DocumentEntityTypes? Map(string name)
+        private static DocumentEntityTypes? Map(string name)
         {
             if (name == FolderNames.Product)
                 return DocumentEntityTypes.Product;
             else if (name == FolderNames.Shop)
                 return DocumentEntityTypes.Shop;
+            else if (name == FolderNames.Offer)
+                return DocumentEntityTypes.Offer;
             return null;
         }
 
-        private string Map(DocumentEntityTypes type)
+        private static string Map(DocumentEntityTypes type)
         {
             if (type == DocumentEntityTypes.Product)
                 return FolderNames.Product;
             else if (type == DocumentEntityTypes.Shop)
                 return FolderNames.Shop;
+            else if (type == DocumentEntityTypes.Offer)
+                return FolderNames.Offer;
             return null;
         }
 
@@ -146,13 +152,6 @@ namespace Passengers.Shared.DocumentService
             var folderName = Map(type);
             if (folderName is null) return null;
             return file.TryUploadImage(folderName, host.WebRootPath);
-        }
-
-        private List<string> Upload(List<IFormFile> files, DocumentEntityTypes type)
-        {
-            var folderName = Map(type);
-            if (folderName is null) return null;
-            return files.TryUploadImages(folderName, host.WebRootPath);
         }
     }
 }

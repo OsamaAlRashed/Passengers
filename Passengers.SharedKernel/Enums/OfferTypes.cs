@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 
 namespace Passengers.SharedKernel.Enums
 {
-    public enum ProductTypes
+    public enum OfferTypes
     {
-        Product,
-        Offer
+        Active,
+        Pending,
+        Archive
     }
 }

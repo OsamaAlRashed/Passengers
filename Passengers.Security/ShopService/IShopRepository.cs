@@ -1,4 +1,5 @@
-﻿using Passengers.DataTransferObject.SecurityDtos;
+﻿using Microsoft.AspNetCore.Http;
+using Passengers.DataTransferObject.SecurityDtos;
 using Passengers.DataTransferObject.SecurityDtos.Login;
 using Passengers.DataTransferObject.ShopDtos;
 using Passengers.SharedKernel.Enums;
@@ -16,6 +17,10 @@ namespace Passengers.Security.ShopService
         Task<OperationResult<CreateShopAccountDto>> SignUp(CreateShopAccountDto dto);
         Task<OperationResult<object>> Login(LoginMobileDto dto);
         Task<OperationResult<bool>> CompleteInfo(CompleteInfoShopDto dto);
+        Task<OperationResult<ShopProfileDto>> GetProfile();
+        Task<OperationResult<string>> UpdateImage(IFormFile file);
+        Task<OperationResult<ShopDetailsDto>> Details();
+        Task<OperationResult<ShopDetailsDto>> Update(ShopDetailsDto dto);
         Task<OperationResult<List<ShopDto>>> Get(AccountStatus accountStatus);
     }
 }

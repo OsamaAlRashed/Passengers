@@ -9,10 +9,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using Passengers.Location.AddressSerive;
 using Passengers.Location.AreaService;
 using Passengers.Location.CityService;
 using Passengers.Location.CountryService;
 using Passengers.Location.LocationService;
+using Passengers.Main.OfferService;
 using Passengers.Main.ProductService;
 using Passengers.Main.TagService;
 using Passengers.Models.Security;
@@ -93,6 +95,8 @@ namespace Passengers
             services.AddScoped<IAccountRepository, AccountRepository>();
             services.AddScoped<ITagRepository, TagRepository>();
             services.AddScoped<IProductRepository, ProductRepository>();
+            services.AddScoped<IOfferRepository, OfferRepository>();
+            services.AddScoped<IAddressRepository, AddressRepository>();
             services.AddScoped<EmailService>();
         }
 

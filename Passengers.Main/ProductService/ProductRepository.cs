@@ -12,6 +12,7 @@ using Passengers.SharedKernel.Services.CurrentUserService;
 using Passengers.SqlServer.DataBase;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,12 +21,10 @@ namespace Passengers.Main.ProductService
 {
     public class ProductRepository : BaseRepository , IProductRepository
     {
-        private readonly ICurrentUserService currentUserService;
         private readonly IDocumentRepository documentRepository;
 
-        public ProductRepository(PassengersDbContext context,ICurrentUserService currentUserService, IDocumentRepository documentRepository): base(context)
+        public ProductRepository(PassengersDbContext context, IDocumentRepository documentRepository): base(context)
         {
-            this.currentUserService = currentUserService;
             this.documentRepository = documentRepository;
         }
 
@@ -36,7 +35,6 @@ namespace Passengers.Main.ProductService
                 Avilable = true,
                 Name = dto.Name,
                 PrepareTime = dto.PrepareTime,
-                ProductType = ProductTypes.Product,
                 Price = dto.Price,
                 TagId = dto.TagId,
             };
@@ -59,7 +57,7 @@ namespace Passengers.Main.ProductService
 
         public async Task<OperationResult<bool>> ChangeAvilable(Guid id)
         {
-            var product = await Context.Products().Where(x => x.Id == id)
+            var product = await Context.Products.Where(x => x.Id == id)
                 .SingleOrDefaultAsync();
             if (product == null)
                 return (OperationResultTypes.NotExist, "");
@@ -70,7 +68,7 @@ namespace Passengers.Main.ProductService
 
         public async Task<OperationResult<bool>> ChangePrice(Guid id, decimal newPrice)
         {
-            var product = await Context.Products().Where(x => x.Id == id)
+            var product = await Context.Products.Where(x => x.Id == id)
                 .SingleOrDefaultAsync();
             if (product == null)
                 return (OperationResultTypes.NotExist, "ProductNotFound");
@@ -86,7 +84,7 @@ namespace Passengers.Main.ProductService
 
         public async Task<OperationResult<object>> GetById(Guid id)
         {
-            var product = await Context.Products()
+            var product = await Context.Products
                 .Include(x => x.Tag)
                 .Include(x => x.Discounts)
                 .Include(x => x.Rates)
@@ -99,60 +97,50 @@ namespace Passengers.Main.ProductService
 
             var result = new
             {
-                TagId = product.TagId,
+                product.TagId,
                 TagName = product.Tag.Name,
-                Name = product.Name,
-                Price = product.Price,
+                product.Name,
+                product.Price,
                 DiscountPrice = discount?.Price,
-                Avilable = product.Avilable,
-                PrepareTime = product.PrepareTime,
+                product.Avilable,
+                product.PrepareTime,
                 RateDegree = product.Rates.Average(x => x.Degree),
-                RateNumber = product.Rates.Count(),
+                RateNumber = product.Rates.Count,
                 DiscountStartDate = discount?.StartDate,
                 DiscountEndDate = discount?.EndDate ?? DateTime.MaxValue,
-                Description = product.Description,
+                product.Description,
                 Rates = product.Rates.Select(r => new
                 {
-                    Id = r.Id,
-                    Degree = r.Degree,
-                    Descreption = r.Descreption,
+                    r.Id,
+                    r.Degree,
+                    r.Descreption,
                     CustomerName = r.Customer.Name,
-                    CustomerId = r.CustomerId,
+                    r.CustomerId,
                     Date = r.DateCreated
                 }).OrderByDescending(x => x.Date).Take(3).ToList(),
             };
             return _Operation.SetSuccess(result);
         }
 
-        public async Task<OperationResult<object>> GetFoodMenu(int pageSize = 10, int pageNumber = 1)
+        public async Task<OperationResult<object>> GetFoodMenu(Guid tagId, int pageSize = 10, int pageNumber = 1)
         {
-            var tags = await Context.Tags.Include(x => x.Products)
-                .Where(x => x.ShopId == currentUserService.UserId)
-                .ToListAsync();
-            if (tags.Count == 0)
-                return _Operation.SetFailed<object>("", OperationResultTypes.NotExist);
-
-            var result = tags.Select(x => new
-            {
-                Id = x.Id,
-                Name = x.Name,
-                LogoPath = x.LogoPath,
-
-                Products = x.Products.Select(xx => new
+            var products = await Context.Products
+                .Where(x => x.TagId == tagId)
+                .Pagnation(pageSize, pageNumber)
+                .Select(x => new
                 {
-                    Id = xx.Id,
-                    Name = xx.Name,
-                    Avilable = xx.Avilable,
-                    Description = xx.Description,
-                    ImagePath = xx.Documents?.Select(x => x.Path).FirstOrDefault(),
-                    PrepareTime = xx.PrepareTime,
-                    Price = xx.Price,
-                    TagId = xx.TagId,
-                    DiscountPrice = GetCurrentDiscount(xx.Discounts)
-                }).ToList()
-            });
+                    x.Id,
+                    x.Name,
+                    x.Avilable,
+                    x.Description,
+                    ImagePath = x.Documents.Select(x => x.Path).FirstOrDefault(),
+                    x.PrepareTime,
+                    x.Price,
+                    x.TagId,
+                    DiscountPrice = GetCurrentDiscount(x.Discounts)
+                }).ToListAsync();
 
-            return _Operation.SetSuccess(result);
+            return _Operation.SetSuccess(products);
         }
 
         public async Task<OperationResult<bool>> Remove(Guid id)
@@ -175,13 +163,13 @@ namespace Passengers.Main.ProductService
             product.Avilable = dto.Avilable;
             product.Name = dto.Name;
             product.PrepareTime = dto.PrepareTime;
-            product.ProductType = ProductTypes.Product;
             product.Price = dto.Price;
             product.TagId = dto.TagId;
 
             await Context.SaveChangesAsync();
 
-            await documentRepository.Update(dto.ImageFile, product.Id, DocumentEntityTypes.Product);
+            if(dto.ImageFile != null)
+                await documentRepository.Update(dto.ImageFile, product.Id, DocumentEntityTypes.Product);
 
             return _Operation.SetSuccess(new GetProductDto
             {
@@ -196,7 +184,7 @@ namespace Passengers.Main.ProductService
             });
         }
 
-        private Discount GetCurrentDiscount(ICollection<Discount> discounts)
+        private static Discount GetCurrentDiscount(ICollection<Discount> discounts)
         {
             return discounts.Where(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate).FirstOrDefault();
         }

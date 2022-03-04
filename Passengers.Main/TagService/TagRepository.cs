@@ -34,15 +34,32 @@ namespace Passengers.Main.TagService
         public async Task<OperationResult<GetTagDto>> Add(SetTagDto dto)
         {
             var tag = TagStore.Query.InverseSetSelectCategory.Compile()(dto);
-            tag.LogoPath = dto.LogoFile.TryUploadImage(FolderNames.Tags, webHostEnvironment.WebRootPath);
+            tag.LogoPath = dto.LogoFile.TryUploadImage(FolderNames.Tag, webHostEnvironment.WebRootPath);
             Context.Tags.Add(tag);
             await Context.SaveChangesAsync();
             return _Operation.SetSuccess(TagStore.Query.GetSelectTag.Compile()(tag));
         }
 
-        public async Task<OperationResult<List<GetTagDto>>> Get()
+        public async Task<OperationResult<bool>> ChangeStatus(Guid id, bool status)
+        {
+            var tag = await Context.Tags.Include(x => x.Products)
+                .Where(x => x.Id == id).SingleOrDefaultAsync();
+            if (tag == null)
+                return _Operation.SetFailed<bool>("", OperationResultTypes.NotExist);
+
+            tag.IsHidden = status;
+            foreach (var product in tag.Products)
+            {
+                product.IsHidden = status;
+            }
+            await Context.SaveChangesAsync();
+            return _Operation.SetSuccess(true);
+        }
+
+        public async Task<OperationResult<List<GetTagDto>>> Get(bool isHidden)
         {
             var tags = await Context.Tags
+                .Where(x => x.IsHidden == isHidden)
                 .Select(TagStore.Query.GetSelectTag)
                 .ToListAsync();
             return _Operation.SetSuccess(tags);
@@ -51,9 +68,11 @@ namespace Passengers.Main.TagService
         public async Task<OperationResult<GetTagDto>> GetById(Guid id)
         {
             var tag = await Context.Tags
-                .Where(x => x.Id == id)
-                .Select(TagStore.Query.GetSelectTag)
+                .Where(x => x.Id == id).Select(TagStore.Query.GetSelectTag)
                 .SingleOrDefaultAsync();
+            if (tag == null)
+                return _Operation.SetFailed<GetTagDto>("", OperationResultTypes.NotExist);
+
             return _Operation.SetSuccess(tag);
         }
 

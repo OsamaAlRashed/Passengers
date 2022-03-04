@@ -159,7 +159,7 @@ namespace Passengers.Shared.CategoryService
             return tree;
         }
 
-        List<string> levels = new List<string>();
+        List<string> levels = new();
         private async Task GetPath(Guid id)
         {
             var category = await Context.Categories

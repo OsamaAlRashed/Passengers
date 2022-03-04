@@ -45,6 +45,5 @@ namespace Passengers.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> RefreshToken(TokenRequestDto dto) => await repository.RefreshToken(dto).ToJsonResultAsync();
 
-
     }
 }

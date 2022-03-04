@@ -12,6 +12,7 @@ namespace Passengers.SharedKernel.Constants
         public const string Shop = "Shops";
         public const string Product = "Products";
         public const string ProductShop = "ProductShops";
-        public const string Tags = "Tags";
+        public const string Tag = "Tags";
+        public const string Offer = "Offers";
     }
 }

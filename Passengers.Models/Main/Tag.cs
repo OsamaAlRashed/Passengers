@@ -10,6 +10,11 @@ namespace Passengers.Models.Main
 {
     public class Tag : BaseEntity
     {
+        public Tag()
+        {
+            Products = new HashSet<Product>();
+        }
+
         public string Name { get; set; }
         public string LogoPath { get; set; }
         public bool IsHidden { get; set; }

@@ -7,6 +7,11 @@ namespace Passengers.Models.Location
 {
     public class City : BaseEntity
     {
+        public City()
+        {
+            Areas = new HashSet<Area>();
+        }
+
         public string Name { get; set; }
         
         public Guid CountryId { get; set; }

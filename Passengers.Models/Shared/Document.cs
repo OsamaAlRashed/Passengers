@@ -20,5 +20,8 @@ namespace Passengers.Models.Shared
         public Guid? ProductId { get; set; }
         public Product Product { get; set; }
 
+        public Guid? OfferId { get; set; }
+        public Offer Offer { get; set; }
+
     }
 }

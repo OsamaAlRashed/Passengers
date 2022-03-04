@@ -39,10 +39,10 @@ namespace Passengers.Controllers
         public async Task<IActionResult> GetById([Required] Guid id) => await repository.GetById(id).ToJsonResultAsync();
 
         [HttpGet]
-        public async Task<IActionResult> GetFoodMenu(int pageSize, int pageNumber) => await repository.GetFoodMenu(pageSize, pageNumber).ToJsonResultAsync();
+        public async Task<IActionResult> GetFoodMenu(Guid tagId, int pageSize, int pageNumber) => await repository.GetFoodMenu(tagId, pageSize, pageNumber).ToJsonResultAsync();
 
         [HttpDelete]
-        public async Task<IActionResult> Remove([Required] Guid id) => await repository.Remove(id).ToJsonResultAsync();
+        public async Task<IActionResult> Delete([Required] Guid id) => await repository.Remove(id).ToJsonResultAsync();
 
     }
 }

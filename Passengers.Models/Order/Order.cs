@@ -11,6 +11,12 @@ namespace Passengers.Models.Order
 {
     public class Order : BaseEntity
     {
+        public Order()
+        {
+            Rates = new HashSet<Rate>();
+            OrderDetails = new HashSet<OrderDetails>();
+        }
+        
         public OrderStatus OrderStatus { get; set; }
         public long TotalPrice { get; set; }
         public string Note { get; set; }
@@ -30,7 +36,6 @@ namespace Passengers.Models.Order
 
 
         public ICollection<OrderDetails> OrderDetails { get; set; }
-
         public ICollection<Rate> Rates { get; set; }
     }
 }
