@@ -14,6 +14,7 @@ namespace Passengers.DataTransferObject.ShopDtos
         public int ProductCount { get; set; }
         public int FollowerCount { get; set; }
         public double Rate { get; set; }
+        public string ImagePath { get; set; }
         public List<ContactInformationDto> Contacts { get; set; }
     }
 }

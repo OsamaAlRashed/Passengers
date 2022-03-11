@@ -46,7 +46,5 @@ namespace Passengers.Base
         public static IQueryable<T> Order<T>(this PassengersDbContext context) where T : BaseEntity
             => context.Set<T>().OrderByDescending(x => x.DateCreated);
 
-        public static IQueryable<T> Pagnation<T>(this IQueryable<T> source, int pageSize, int pageNumber) where T : BaseEntity
-            => source.Skip(pageSize * (pageNumber - 1)).Take(pageSize);
     }
 }

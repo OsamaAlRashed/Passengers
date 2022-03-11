@@ -3,8 +3,11 @@ using Passengers.Models.Order;
 using Passengers.Models.Security;
 using Passengers.Models.Shared;
 using Passengers.SharedKernel.Enums;
+using Passengers.SharedKernel.ExtensionMethods;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 using System.Text;
 
 namespace Passengers.Models.Main
@@ -37,5 +40,15 @@ namespace Passengers.Models.Main
         public ICollection<Rate> Rates { get; set; }
         public ICollection<Favorite> Favorites { get; set; }
         public ICollection<OrderDetails> OrderDetails { get; set; }
+
+        [NotMapped]
+        public string ImagePath => Documents.Select(x => x.Path).FirstOrDefault();
+
+        [NotMapped]
+        public double Rate => Rates.Any() ? Rates.Average(x => x.Degree) : 0;
+
+        [NotMapped]
+        public int Buyers => OrderDetails.Sum(x => x.Quantity);
+
     }
 }

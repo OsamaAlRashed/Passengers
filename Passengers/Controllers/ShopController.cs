@@ -5,6 +5,8 @@ using Passengers.DataTransferObject.SecurityDtos;
 using Passengers.DataTransferObject.SecurityDtos.Login;
 using Passengers.DataTransferObject.ShopDtos;
 using Passengers.Security.ShopService;
+using Passengers.SharedKernel.Attribute;
+using Passengers.SharedKernel.Constants.Security;
 using Passengers.SharedKernel.Enums;
 using Passengers.SharedKernel.OperationResult.ExtensionMethods;
 using System.ComponentModel.DataAnnotations;
@@ -29,26 +31,31 @@ namespace Passengers.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(LoginMobileDto dto) => await repository.Login(dto).ToJsonResultAsync();
 
-        [Authorize]
+        [AppAuthorize(AppRoles.Shop)]
         [HttpPost]
-        public async Task<IActionResult> CompleteInfo(CompleteInfoShopDto dto) => await repository.CompleteInfo(dto).ToJsonResultAsync();
+        public async Task<IActionResult> CompleteInfo([FromForm] CompleteInfoShopDto dto) => await repository.CompleteInfo(dto).ToJsonResultAsync();
 
+        [AppAuthorize(AppRoles.Admin)]
         [HttpGet]
         public async Task<IActionResult> Get([Required]AccountStatus accountStatus) => await repository.Get(accountStatus).ToJsonResultAsync();
 
-        [Authorize]
+        [AppAuthorize(AppRoles.Shop)]
         [HttpGet]
         public async Task<IActionResult> Details() => await repository.Details().ToJsonResultAsync();
 
-        [Authorize]
+        [AppAuthorize(AppRoles.Shop)]
         [HttpPut]
-        public async Task<IActionResult> UpdateImage([FromForm] IFormFile file) => await repository.UpdateImage(file).ToJsonResultAsync();
+        public async Task<IActionResult> UpdateImage(IFormFile file) => await repository.UpdateImage(file).ToJsonResultAsync();
 
-        [Authorize]
+        [AppAuthorize(AppRoles.Shop)]
         [HttpGet]
         public async Task<IActionResult> GetProfile() => await repository.GetProfile().ToJsonResultAsync();
 
-        [Authorize]
+        [AppAuthorize(AppRoles.Shop)]
+        [HttpGet]
+        public async Task<IActionResult> Home() => await repository.Home().ToJsonResultAsync();
+
+        [AppAuthorize(AppRoles.Shop)]
         [HttpPut]
         public async Task<IActionResult> Update(ShopDetailsDto dto) => await repository.Update(dto).ToJsonResultAsync();
     }

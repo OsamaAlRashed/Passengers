@@ -16,11 +16,12 @@ namespace Passengers.Security.ShopService
     {
         Task<OperationResult<CreateShopAccountDto>> SignUp(CreateShopAccountDto dto);
         Task<OperationResult<object>> Login(LoginMobileDto dto);
-        Task<OperationResult<bool>> CompleteInfo(CompleteInfoShopDto dto);
+        Task<OperationResult<object>> CompleteInfo(CompleteInfoShopDto dto);
         Task<OperationResult<ShopProfileDto>> GetProfile();
         Task<OperationResult<string>> UpdateImage(IFormFile file);
         Task<OperationResult<ShopDetailsDto>> Details();
         Task<OperationResult<ShopDetailsDto>> Update(ShopDetailsDto dto);
         Task<OperationResult<List<ShopDto>>> Get(AccountStatus accountStatus);
+        Task<OperationResult<ShopHomeDto>> Home();
     }
 }

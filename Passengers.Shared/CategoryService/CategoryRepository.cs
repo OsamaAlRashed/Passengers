@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
+using Passengers.Base;
 using Passengers.DataTransferObject.SharedDtos.CategoryDtos;
 using Passengers.Models.Shared;
 using Passengers.Repository.Base;
@@ -185,6 +186,15 @@ namespace Passengers.Shared.CategoryService
             category.LogoPath.TryDeleteImage(webHostEnvironment.WebRootPath);
             await Context.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<string> GetByShopId(Guid id)
+        {
+            var shop = await Context.Shops().Where(x => x.Id == id).Include(x => x.MainCategories).ThenInclude(x => x.Category).SingleOrDefaultAsync();
+            if (shop is null)
+                return null;
+            var name = shop.MainCategories.Select(x => x.Category?.Name).FirstOrDefault() ?? "";
+            return name;
         }
         #endregion
     }

@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Passengers.Base;
 using Passengers.DataTransferObject.LocationDtos;
+using Passengers.DataTransferObject.ProductDtos;
 using Passengers.DataTransferObject.SecurityDtos;
 using Passengers.DataTransferObject.SecurityDtos.Login;
 using Passengers.DataTransferObject.ShopDtos;
@@ -15,6 +17,7 @@ using Passengers.Models.Shared;
 using Passengers.Repository.Base;
 using Passengers.Security.AccountService;
 using Passengers.Security.Shared.Store;
+using Passengers.Shared.CategoryService;
 using Passengers.Shared.DocumentService;
 using Passengers.SharedKernel.Enums;
 using Passengers.SharedKernel.ExtensionMethods;
@@ -39,8 +42,9 @@ namespace Passengers.Security.ShopService
         private readonly IDocumentRepository documentRepository;
         private readonly ICurrentUserService currentUserService;
         private readonly IAddressRepository addressRepository;
+        private readonly ICategoryRepository categoryRepository;
 
-        public ShopRepository(PassengersDbContext context, UserManager<AppUser> userManager, RoleManager<IdentityRole<Guid>> roleManager, IAccountRepository accountRepository, IDocumentRepository documentRepository, ICurrentUserService currentUserService, IAddressRepository addressRepository) : base(context)
+        public ShopRepository(PassengersDbContext context, UserManager<AppUser> userManager, RoleManager<IdentityRole<Guid>> roleManager, IAccountRepository accountRepository, IDocumentRepository documentRepository, ICurrentUserService currentUserService, IAddressRepository addressRepository, ICategoryRepository categoryRepository) : base(context)
         {
             this.userManager = userManager;
             this.roleManager = roleManager;
@@ -48,10 +52,14 @@ namespace Passengers.Security.ShopService
             this.documentRepository = documentRepository;
             this.currentUserService = currentUserService;
             this.addressRepository = addressRepository;
+            this.categoryRepository = categoryRepository;
         }
 
         public async Task<OperationResult<CreateShopAccountDto>> SignUp(CreateShopAccountDto dto)
         {
+            if (await accountRepository.IsPhoneNumberUsed(dto.PhoneNumber))
+                return _Operation.SetFailed<CreateShopAccountDto>("PhoneNumberUsed");
+
             AppUser shop = new()
             {
                 PhoneNumber = dto.PhoneNumber,
@@ -67,6 +75,7 @@ namespace Passengers.Security.ShopService
                     Lat = dto.Lat,
                     Long = dto.Long,
                     Text = dto.Address,
+                    ///Todo Area Google Map
                     AreaId = Context.Areas.FirstOrDefault().Id
                 }
             };
@@ -90,39 +99,51 @@ namespace Passengers.Security.ShopService
             var result = await accountRepository.Login(SecurityStore.Query.ShopToBaseLoginDto(dto));
             if (result.IsSuccess)
             {
+                var user = result.Result.User;
                 var response = new
                 {
-                    Id = result.Result.Id,
-                    result.Result.UserName,
-                    result.Result.PhoneNumber,
+                    user.Id,
+                    user.UserName,
+                    user.PhoneNumber,
                     result.Result.AccessToken,
                     result.Result.RefreshToken,
+                    user.AccountStatus,
+                    user.Name,
+                    CategoryName = user.MainCategories.Select(x => x.Category?.Name).FirstOrDefault(),
+                    ImagePath = user.Documents.Select(x => x.Path).FirstOrDefault()
                 };
                 return _Operation.SetSuccess<object>(response);
             }
             return _Operation.SetFailed<object>(result.Message,result.OperationResultType);
         }
 
-        public async Task<OperationResult<bool>> CompleteInfo(CompleteInfoShopDto dto)
+        public async Task<OperationResult<object>> CompleteInfo(CompleteInfoShopDto dto)
         {
             var shop = await Context.Shops(AccountStatus.WaitingCompleteInformation).Where(x => x.Id == currentUserService.UserId)
                 .SingleOrDefaultAsync();
             if (shop == null)
-                return (OperationResultTypes.NotExist, "ShopNotFound");
+                return _Operation.SetContent<object>(OperationResultTypes.NotExist, "ShopNotFound");
 
-            await documentRepository.Add(dto.Image, dto.Id, DocumentEntityTypes.Shop);
+            var isValidFromTime = TimeSpan.TryParse(dto.FromTime, out var fromTime);
+            var isValidToTime = TimeSpan.TryParse(dto.ToTime, out var toTime);
+
+            if (!isValidFromTime || !isValidToTime)
+                return _Operation.SetFailed<object>("TimeFormatIsNotValid");
 
             if(dto.Days != null && dto.Days.Count > 0)
             {
+                
                 var shopSchacule = new ShopSchedule
                 {
                     Days = dto.Days.Select(i => i.ToString()).Aggregate((i, j) => i + "," + j),
-                    FromTime = dto.FromTime,
-                    ToTime = dto.ToTime,
-                    ShopId = dto.Id,
+                    FromTime = fromTime,
+                    ToTime = toTime,
+                    ShopId = shop.Id
                 };
             }
 
+            var document = await documentRepository.Add(dto.Image, shop.Id, DocumentEntityTypes.Shop);
+            
             if(dto.Contacts != null)
             {
                 foreach (var contact in dto.Contacts)
@@ -141,6 +162,7 @@ namespace Passengers.Security.ShopService
                 ShopId = shop.Id,
                 CategoryId = dto.CategoryId
             };
+            Context.ShopCategories.Add(categoryShop);
 
             if(dto.TagIds != null)
             {
@@ -158,7 +180,12 @@ namespace Passengers.Security.ShopService
             shop.AccountStatus = AccountStatus.Accepted;
             await Context.SaveChangesAsync();
 
-            return _Operation.SetSuccess(true);
+            return _Operation.SetSuccess<object>(new
+            {
+                shop.Name,
+                CategoryName = await categoryRepository.GetByShopId(shop.Id),
+                ImagePath = document?.Path ?? string.Empty
+            });
         }
 
         public async Task<OperationResult<List<ShopDto>>> Get(AccountStatus accountStatus)
@@ -175,25 +202,28 @@ namespace Passengers.Security.ShopService
         public async Task<OperationResult<ShopProfileDto>> GetProfile()
         {
             var shop = await Context.Shops()
-                .Include(x => x.MainCategories).Include(x => x.ShopFavorites).Include(x => x.Tags).Include(x => x.Rates).Include(x => x.ShopContacts)
+                .Include(x => x.MainCategories).ThenInclude(x => x.Category)
+                .Include(x => x.ShopFavorites).Include(x => x.Tags).Include(x => x.Rates).Include(x => x.ShopContacts)
+                .Include(x => x.Documents)
                 .Where(x => x.Id == currentUserService.UserId.Value)
                 .SingleOrDefaultAsync();
             if (shop == null)
-                return (OperationResultTypes.NotExist, "");
+                return _Operation.SetContent<ShopProfileDto>(OperationResultTypes.NotExist, "ShopNotFound");
 
-            return new ShopProfileDto()
+            return _Operation.SetSuccess(new ShopProfileDto()
             {
                 Name = shop.Name,
-                CategoryName = shop.MainCategories.Select(x => x.Category.Name).FirstOrDefault(),
+                CategoryName = shop.MainCategories.Select(x => x.Category?.Name).FirstOrDefault(),
                 FollowerCount = shop.ShopFavorites.Count,
                 ProductCount = shop.Tags.Sum(x => x.Products.Count),
-                Rate = shop.Rates.Average(x => x.Degree),
+                Rate = shop.Rates.ToList().CustomAverage(x => x.Degree),
+                ImagePath = shop.Documents.Select(x => x.Path).FirstOrDefault(),
                 Contacts = shop.ShopContacts.Select(x => new ContactInformationDto
                 {
                     Text = x.Text,
                     Type = x.Type
                 }).ToList(),
-            };
+            });
         }
 
         public async Task<OperationResult<string>> UpdateImage(IFormFile image)
@@ -201,11 +231,11 @@ namespace Passengers.Security.ShopService
             var shop = await Context.Shops().Where(x => x.Id == currentUserService.UserId.Value)
                 .SingleOrDefaultAsync();
             if (shop == null)
-                return (OperationResultTypes.NotExist, "");
+                return _Operation.SetContent<string>(OperationResultTypes.NotExist, "");
             
             var document = await documentRepository.Update(image, shop.Id, DocumentEntityTypes.Shop);
-            if(document == null)
-                return (OperationResultTypes.Failed, "");
+            if (document == null)
+                return _Operation.SetFailed<string>("UploadImageFailed");
 
             return document.Path;
         }
@@ -213,18 +243,18 @@ namespace Passengers.Security.ShopService
         public async Task<OperationResult<ShopDetailsDto>> Details()
         {
             var shop = await Context.Shops()
-                .Include(x => x.MainCategories).Include(x => x.Address).Include(x => x.ShopContacts)
+                .Include(x => x.MainCategories).ThenInclude(x => x.Category).Include(x => x.Address).Include(x => x.ShopContacts)
                 .Where(x => x.Id == currentUserService.UserId.Value)
                 .SingleOrDefaultAsync();
             if (shop == null)
-                return (OperationResultTypes.NotExist, "");
+                return _Operation.SetContent<ShopDetailsDto>(OperationResultTypes.NotExist, "ShopNotFound");
 
-            return new ShopDetailsDto
+            return _Operation.SetSuccess(new ShopDetailsDto
             {
                 Name = shop.Name,
-                Address = shop.Address.Text,
-                Lat = shop.Address.Lat,
-                Long = shop.Address.Long,
+                Address = shop.Address?.Text,
+                Lat = shop.Address?.Lat,
+                Long = shop.Address?.Long,
                 CategoryId = shop.MainCategories.Select(x => x.CategoryId).FirstOrDefault(),
                 CategoryName = shop.MainCategories.Select(x => x.Category.Name).FirstOrDefault(),
                 Contacts = shop.ShopContacts.Select(x => new ContactInformationDto
@@ -232,7 +262,7 @@ namespace Passengers.Security.ShopService
                     Text = x.Text,
                     Type = x.Type
                 }).ToList(),
-            };
+            });
         }
 
         public async Task<OperationResult<ShopDetailsDto>> Update(ShopDetailsDto dto)
@@ -242,7 +272,7 @@ namespace Passengers.Security.ShopService
                 .Where(x => x.Id == currentUserService.UserId.Value)
                 .SingleOrDefaultAsync();
             if (shop == null)
-                return (OperationResultTypes.NotExist, "");
+                return _Operation.SetContent<ShopDetailsDto>(OperationResultTypes.NotExist, "ShopNotFound");
             
             shop.Name = dto.Name;
 
@@ -257,7 +287,27 @@ namespace Passengers.Security.ShopService
                 AreaId = shop.Address.AreaId
             });
 
-            var shopContacts = dto.Contacts.Select(x => new ShopContact
+            await UpdateContracts(shop, dto.Contacts);
+
+            if(!Context.ShopCategories.Where(x => x.CategoryId == dto.CategoryId && x.ShopId == shop.Id).Any())
+            {
+                Context.ShopCategories.RemoveRange(shop.MainCategories);
+
+                var categoryShop = new ShopCategory
+                {
+                    ShopId = shop.Id,
+                    CategoryId = dto.CategoryId
+                };
+                Context.ShopCategories.Add(categoryShop);
+            }
+
+            await Context.SaveChangesAsync();
+            return dto;
+        }
+
+        private async Task UpdateContracts(AppUser shop, List<ContactInformationDto> contacts)
+        {
+            var shopContacts = contacts.Select(x => new ShopContact
             {
                 Text = x.Text,
                 Type = x.Type,
@@ -271,15 +321,57 @@ namespace Passengers.Security.ShopService
             foreach (var contact in updatedContacts)
             {
                 var contactEntity = shop.ShopContacts.Where(x => x.Type == contact.Type).FirstOrDefault();
-                if(contactEntity != null)
+                if (contactEntity != null)
                     contactEntity.Text = contact.Text;
             }
 
             Context.ShopContacts.RemoveRange(removedContacts);
             Context.ShopContacts.AddRange(addedContacts);
+        }
 
-            await Context.SaveChangesAsync();
-            return dto;
+        public async Task<OperationResult<ShopHomeDto>> Home()
+        {
+            var topProducts = await Context.Products.Where(x => x.Tag.ShopId == currentUserService.UserId.Value)
+                .Include(x => x.Rates).Include(x => x.Documents).Include(x => x.OrderDetails)
+                .OrderByDescending(x => x.Rates.Any() ? x.Rates.Average(x => x.Degree) : 0)
+                .Take(5).ToListAsync();
+
+            var popularProducts = await Context.Products.Where(x => x.Tag.ShopId == currentUserService.UserId.Value)
+                .Include(x => x.Rates).Include(x => x.Documents).Include(x => x.OrderDetails)
+                .OrderByDescending(x => x.OrderDetails.Sum(x => x.Quantity))
+                .Take(5).ToListAsync();
+
+            var topOffers = await Context.Offers.Where(x => x.ShopId == currentUserService.UserId.Value && x.EndDate > DateTime.Now)
+                .Include(x => x.Documents).Include(x => x.OrderDetails)
+                .OrderByDescending(x => x.OrderDetails.Sum(x => x.Quantity))
+                .Take(5).ToListAsync();
+
+            return _Operation.SetSuccess(new ShopHomeDto
+            {
+                TopOffers = topOffers.Select(x => new ItemDto
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    ImagePath = x.ImagePath,
+                    Buyers = x.Buyers,
+                }).ToList(),
+                TopProducts = topProducts.Select(x => new ItemDto
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    ImagePath = x.ImagePath,
+                    Buyers = x.Buyers,
+                    Rate = x.Rate,
+                }).ToList(),
+                PopularProducts = popularProducts.Select(x => new ItemDto
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    ImagePath = x.ImagePath,
+                    Buyers = x.Buyers,
+                    Rate = x.Rate,
+                }).ToList(),
+            });
         }
     }
 }

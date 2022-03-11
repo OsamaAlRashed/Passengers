@@ -13,7 +13,7 @@ namespace Passengers.Main.ProductService.Store
     {
         public static class Query
         {
-            public static Expression<Func<Product, GetProductDto>> GetSelectTag => c => new GetProductDto
+            public static Expression<Func<Product, GetProductDto>> GetSelectProduct => c => new GetProductDto
             {
                 Id = c.Id,
                 Name = c.Name,
@@ -24,6 +24,7 @@ namespace Passengers.Main.ProductService.Store
                 Price = c.Price,
                 TagId = c.TagId,
             };
+
         }
     }
 }

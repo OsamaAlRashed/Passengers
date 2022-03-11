@@ -4,6 +4,7 @@ using Passengers.Models.Security;
 using Passengers.Models.Shared;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,5 +31,11 @@ namespace Passengers.Models.Main
 
         public ICollection<Document> Documents { get; set; }
         public ICollection<OrderDetails> OrderDetails { get; set; }
+
+        [NotMapped]
+        public string ImagePath => Documents.Select(x => x.Path).FirstOrDefault();
+
+        [NotMapped]
+        public int Buyers => OrderDetails.Sum(x => x.Quantity);
     }
 }

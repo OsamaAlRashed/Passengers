@@ -46,8 +46,8 @@ namespace Passengers.SqlServer.DataBase
                 builder.Entity(entity).HasQueryFilter(Expression.Lambda(newbody, newParam));
             }
 
-            builder.Entity<Tag>().HasQueryFilter(x => !x.IsHidden);
-            builder.Entity<Product>().HasQueryFilter(x => !x.Tag.IsHidden);
+            builder.Entity<Tag>().HasQueryFilter(x => !x.DateDeleted.HasValue && !x.IsHidden);
+            builder.Entity<Product>().HasQueryFilter(x => !x.DateDeleted.HasValue && !x.Tag.IsHidden);
 
             base.OnModelCreating(builder);
         }

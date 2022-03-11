@@ -9,6 +9,6 @@ namespace Passengers.DataTransferObject.GeneralDtos
     public class PagnationDto<T>
     {
         public List<T> Result { get; set; }
-        public int Count => Result?.Count ?? 0;
+        public int Count { get; set; }
     }
 }

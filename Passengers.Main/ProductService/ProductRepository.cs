@@ -1,10 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Passengers.Base;
+using Passengers.DataTransferObject.GeneralDtos;
 using Passengers.DataTransferObject.ProductDtos;
 using Passengers.Models.Main;
 using Passengers.Repository.Base;
 using Passengers.Shared.DocumentService;
 using Passengers.SharedKernel.Enums;
+using Passengers.SharedKernel.ExtensionMethods;
 using Passengers.SharedKernel.OperationResult;
 using Passengers.SharedKernel.OperationResult.Enums;
 using Passengers.SharedKernel.OperationResult.ExtensionMethods;
@@ -37,6 +39,7 @@ namespace Passengers.Main.ProductService
                 PrepareTime = dto.PrepareTime,
                 Price = dto.Price,
                 TagId = dto.TagId,
+                Description = dto.Description
             };
 
             Context.Products.Add(product);
@@ -60,7 +63,7 @@ namespace Passengers.Main.ProductService
             var product = await Context.Products.Where(x => x.Id == id)
                 .SingleOrDefaultAsync();
             if (product == null)
-                return (OperationResultTypes.NotExist, "");
+                return _Operation.SetContent<bool>(OperationResultTypes.NotExist, "ProductNotExist");
             product.Avilable = !product.Avilable;
             await Context.SaveChangesAsync();
             return _Operation.SetSuccess(true);
@@ -71,7 +74,7 @@ namespace Passengers.Main.ProductService
             var product = await Context.Products.Where(x => x.Id == id)
                 .SingleOrDefaultAsync();
             if (product == null)
-                return (OperationResultTypes.NotExist, "ProductNotFound");
+                return _Operation.SetContent<bool>(OperationResultTypes.NotExist, "ProductNotExist");
             product.Price = newPrice;
             await Context.SaveChangesAsync();
             return _Operation.SetSuccess(true);
@@ -92,6 +95,8 @@ namespace Passengers.Main.ProductService
                 .Where(x => x.Id == id)
                 .SingleOrDefaultAsync();
 
+            if (product == null)
+                return _Operation.SetContent<object>(OperationResultTypes.NotExist, "ProductNotFound");
             
             var discount = GetCurrentDiscount(product.Discounts);
 
@@ -104,7 +109,7 @@ namespace Passengers.Main.ProductService
                 DiscountPrice = discount?.Price,
                 product.Avilable,
                 product.PrepareTime,
-                RateDegree = product.Rates.Average(x => x.Degree),
+                RateDegree = product.Rate,
                 RateNumber = product.Rates.Count,
                 DiscountStartDate = discount?.StartDate,
                 DiscountEndDate = discount?.EndDate ?? DateTime.MaxValue,
@@ -119,10 +124,10 @@ namespace Passengers.Main.ProductService
                     Date = r.DateCreated
                 }).OrderByDescending(x => x.Date).Take(3).ToList(),
             };
-            return _Operation.SetSuccess(result);
+            return _Operation.SetSuccess<object>(result);
         }
 
-        public async Task<OperationResult<object>> GetFoodMenu(Guid tagId, int pageSize = 10, int pageNumber = 1)
+        public async Task<OperationResult<PagnationDto<object>>> GetFoodMenu(Guid tagId, int pageSize = 10, int pageNumber = 1)
         {
             var products = await Context.Products
                 .Where(x => x.TagId == tagId)
@@ -140,16 +145,22 @@ namespace Passengers.Main.ProductService
                     DiscountPrice = GetCurrentDiscount(x.Discounts)
                 }).ToListAsync();
 
-            return _Operation.SetSuccess(products);
+            var pagnation = new PagnationDto<object>()
+            {
+                Count = products.Count,
+              //  Result = products
+            };
+
+            return _Operation.SetSuccess(pagnation);
         }
 
         public async Task<OperationResult<bool>> Remove(Guid id)
         {
             var product = await Context.Products.Where(x => x.Id == id).SingleOrDefaultAsync();
             if (product == null)
-                return (OperationResultTypes.NotExist, "");
+                return _Operation.SetContent<bool>(OperationResultTypes.NotExist, "ProductNotExist");
 
-            Context.Products.Remove(product);
+            product.DateDeleted = DateTime.Now;
             await Context.SaveChangesAsync();
             return _Operation.SetSuccess(true);
         }
@@ -158,13 +169,14 @@ namespace Passengers.Main.ProductService
         {
             var product = await Context.Products.Where(x => x.Id == dto.Id).SingleOrDefaultAsync();
             if (product == null)
-                return (OperationResultTypes.NotExist, "");
+                return _Operation.SetContent<GetProductDto>(OperationResultTypes.NotExist, "ProductNotExist");
 
             product.Avilable = dto.Avilable;
             product.Name = dto.Name;
             product.PrepareTime = dto.PrepareTime;
             product.Price = dto.Price;
             product.TagId = dto.TagId;
+            product.Description = dto.Description;
 
             await Context.SaveChangesAsync();
 

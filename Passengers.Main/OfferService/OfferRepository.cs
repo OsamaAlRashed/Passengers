@@ -54,7 +54,7 @@ namespace Passengers.Main.OfferService
         public async Task<OperationResult<List<GetOfferDto>>> Get(OfferTypes type, int pageSize, int pageNumber)
         {
             var result = await Context.Offers.Where(OfferStore.Filter.WhereType(type))
-                .Pagnation(pageSize, pageNumber)
+                //.Pagnation(pageSize, pageNumber)
                 .Select(x => OfferStore.Query.GetSelectOffer.Compile()(x))
                 .ToListAsync();
             return _Operation.SetSuccess(result);

@@ -47,6 +47,8 @@ namespace Passengers.Security.AccountService
         public async Task<OperationResult<LoginResponseDto>> Login(BaseLoginDto dto)
         {
             var user = await Context.Users
+                .Include(x => x.MainCategories).ThenInclude(x => x.Category)
+                .Include(x => x.Documents)
                 .Where(x => x.UserType == dto.UserType
                     && (x.UserName == dto.UserName || x.Email == dto.UserName || x.PhoneNumber == dto.UserName))
                 .SingleOrDefaultAsync();
@@ -54,7 +56,7 @@ namespace Passengers.Security.AccountService
             if (user == null || user.DateDeleted.HasValue)
                 return _Operation.SetFailed<LoginResponseDto>("UserNotFound", OperationResultTypes.Unauthorized);
 
-            if (user.AccountStatus != AccountStatus.Accepted)
+            if (user.AccountStatus == AccountStatus.Draft)
                 return _Operation.SetFailed<LoginResponseDto>("UserNotAccepted", OperationResultTypes.Unauthorized);
 
             var loginResult = await signInManager.CheckPasswordSignInAsync(user, dto.Password, false);
@@ -73,11 +75,9 @@ namespace Passengers.Security.AccountService
 
                 LoginResponseDto accountDto = new LoginResponseDto
                 {
-                    Id = user.Id,
+                    User = user,
                     AccessToken = GenerateAccessToken(user, roles, expierDate),
                     RefreshToken = user.RefreshToken,
-                    PhoneNumber = user.PhoneNumber,
-                    UserName = user.UserName
                 };
                 return _Operation.SetSuccess(accountDto);
             }

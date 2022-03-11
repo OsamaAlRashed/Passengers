@@ -38,7 +38,7 @@ namespace Passengers.Shared.DocumentService
                 Name = file.Name,
                 Length = file.Length,
                 Path = path,
-                Type = file.Name.GetDocumentType()
+                Type = file.FileName.GetDocumentType()
             };
             SetEntityId(document, entityId, type);
             Context.Add(document);

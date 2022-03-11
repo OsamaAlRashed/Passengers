@@ -10,11 +10,10 @@ namespace Passengers.DataTransferObject.SecurityDtos
 {
     public class CompleteInfoShopDto
     {
-        public Guid Id { get; set; }
         public IFormFile Image { get; set; }
         public List<int> Days { get; set; }
-        public TimeSpan FromTime { get; set; }
-        public TimeSpan ToTime { get; set; }
+        public string FromTime { get; set; }
+        public string ToTime { get; set; }
         public List<ContactInformationDto> Contacts { get; set; }
         public Guid CategoryId { get; set; }
         public List<Guid> TagIds { get; set; }

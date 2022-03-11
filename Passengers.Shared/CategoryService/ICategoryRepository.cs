@@ -17,6 +17,7 @@ namespace Passengers.Shared.CategoryService
 
         Task<OperationResult<List<GetCategoryDto>>> Get();
         Task<OperationResult<GetCategoryDto>> GetById(Guid id);
+        Task<string> GetByShopId(Guid id);
         Task<OperationResult<List<GetCategoryDto>>> GetChildern(Guid id);
         Task<OperationResult<List<GetCategoryDto>>> GetRoots();
         Task<OperationResult<TreeDto>> GetTree(Guid id);

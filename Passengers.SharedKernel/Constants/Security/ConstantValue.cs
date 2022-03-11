@@ -10,4 +10,13 @@ namespace Passengers.SharedKernel.Constants.Security
     {
         public const int DefaultExpireTokenMinute = 1 * 24 * 60;
     }
+
+    public class AppRoles
+    {
+        public const string Admin = "Admin";
+        public const string Shop = "Shop";
+        public const string Customer = "Customer";
+        public const string Driver = "Driver";
+        public const string Stakeholder = "Stakeholder";
+    }
 }
