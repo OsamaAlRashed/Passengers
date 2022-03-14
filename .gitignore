@@ -362,3 +362,4 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /Passengers/wwwroot/Documents/Shops
+/Passengers/wwwroot/Documents/Products

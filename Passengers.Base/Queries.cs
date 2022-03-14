@@ -3,10 +3,12 @@ using Passengers.Models.Base;
 using Passengers.Models.Main;
 using Passengers.Models.Security;
 using Passengers.SharedKernel.Enums;
+using Passengers.SharedKernel.Pagnation;
 using Passengers.SqlServer.DataBase;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -43,8 +45,11 @@ namespace Passengers.Base
         public static IQueryable<T> QueryIgnoreFilter<T>(this PassengersDbContext context) where T : BaseEntity
             => context.Set<T>().IgnoreQueryFilters();
 
-        public static IQueryable<T> Order<T>(this PassengersDbContext context) where T : BaseEntity
-            => context.Set<T>().OrderByDescending(x => x.DateCreated);
+        public static IQueryable<TSource> SortBy<TSource, TKey>(this IQueryable<TSource> source, Expression<Func<TSource, TKey>> by, bool? isDes) where TSource : BaseEntity
+            => (!isDes.HasValue || isDes.Value) ? source.OrderByDescending(by)
+                                                : source.OrderBy(by);
+
+        
 
     }
 }

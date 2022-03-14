@@ -5,6 +5,7 @@ using Passengers.DataTransferObject.ProductDtos;
 using Passengers.Main.ProductService;
 using Passengers.SharedKernel.Attribute;
 using Passengers.SharedKernel.Constants.Security;
+using Passengers.SharedKernel.Enums;
 using Passengers.SharedKernel.OperationResult.ExtensionMethods;
 using System;
 using System.ComponentModel.DataAnnotations;
@@ -22,10 +23,6 @@ namespace Passengers.Controllers
         {
             this.repository = repository;
         }
-
-        [AppAuthorize(AppRoles.Shop)]
-        [HttpGet]
-        public async Task<IActionResult> Get() => await repository.Get().ToJsonResultAsync();
 
         [AppAuthorize(AppRoles.Shop)]
         [HttpPost]
@@ -49,7 +46,7 @@ namespace Passengers.Controllers
 
         [AppAuthorize(AppRoles.Shop)]
         [HttpGet]
-        public async Task<IActionResult> GetFoodMenu(Guid tagId, int pageSize, int pageNumber) => await repository.GetFoodMenu(tagId, pageSize, pageNumber).ToJsonResultAsync();
+        public async Task<IActionResult> Get([FromQuery]ProductFilterDto filterDto, SortProductTypes? sortType, bool? isDes, int pageNumber = 1, int pageSize = 10) => await repository.Get(filterDto, sortType, isDes, pageNumber, pageSize).ToJsonResultAsync();
 
         [AppAuthorize(AppRoles.Shop)]
         [HttpDelete]

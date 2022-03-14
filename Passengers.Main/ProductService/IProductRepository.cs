@@ -3,6 +3,7 @@ using Passengers.DataTransferObject.ProductDtos;
 using Passengers.Models.Main;
 using Passengers.SharedKernel.Enums;
 using Passengers.SharedKernel.OperationResult;
+using Passengers.SharedKernel.Pagnation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,11 +19,8 @@ namespace Passengers.Main.ProductService
         Task<OperationResult<GetProductDto>> Update(SetProductDto dto);
         Task<OperationResult<bool>> Remove(Guid id);
         Task<OperationResult<bool>> ChangeAvilable(Guid id);
-        Task<OperationResult<List<GetProductDto>>> Get();
         Task<OperationResult<object>> GetById(Guid id);
-        Task<OperationResult<PagnationDto<object>>> GetFoodMenu(Guid tagId, int pageSize, int pageNumber);
+        Task<OperationResult<PagedList<GetProductDto>>> Get(ProductFilterDto filterDto, SortProductTypes? sortType, bool? isDes, int pageNumber = 1, int pageSize = 10);
         Task<OperationResult<bool>> ChangePrice(Guid id, decimal newPrice);
-
-        //int pageSize, int pageNumber, List<Guid> tagIds, SortProductTypes? type, string search, int? Rate, bool? IsAvilable, decimal? fromPrice, decimal? toPrice)
     }
 }

@@ -7,13 +7,14 @@ using System.Threading.Tasks;
 
 namespace Passengers.DataTransferObject.ProductDtos
 {
-    public class FilterFoodMenuDto
+    public class ProductFilterDto
     {
         public string Search { get; set; }
-        public SortProductTypes SortType { get; set; }
-        public bool IsDes { get; set; }
-        public List<int> Rates { get; set; }
         public List<Guid> TagIds { get; set; }
+        public int? Rate { get; set; }
         public bool? Avilable { get; set; }
+        public bool? Discount { get; set; }
+        public decimal? FromPrice { get; set; }
+        public decimal? ToPrice { get; set; }
     }
 }

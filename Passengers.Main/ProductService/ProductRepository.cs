@@ -2,6 +2,7 @@
 using Passengers.Base;
 using Passengers.DataTransferObject.GeneralDtos;
 using Passengers.DataTransferObject.ProductDtos;
+using Passengers.Main.ProductService.Store;
 using Passengers.Models.Main;
 using Passengers.Repository.Base;
 using Passengers.Shared.DocumentService;
@@ -10,6 +11,7 @@ using Passengers.SharedKernel.ExtensionMethods;
 using Passengers.SharedKernel.OperationResult;
 using Passengers.SharedKernel.OperationResult.Enums;
 using Passengers.SharedKernel.OperationResult.ExtensionMethods;
+using Passengers.SharedKernel.Pagnation;
 using Passengers.SharedKernel.Services.CurrentUserService;
 using Passengers.SqlServer.DataBase;
 using System;
@@ -80,11 +82,6 @@ namespace Passengers.Main.ProductService
             return _Operation.SetSuccess(true);
         }
 
-        public Task<OperationResult<List<GetProductDto>>> Get()
-        {
-            throw new NotImplementedException();
-        }
-
         public async Task<OperationResult<object>> GetById(Guid id)
         {
             var product = await Context.Products
@@ -112,7 +109,7 @@ namespace Passengers.Main.ProductService
                 RateDegree = product.Rate,
                 RateNumber = product.Rates.Count,
                 DiscountStartDate = discount?.StartDate,
-                DiscountEndDate = discount?.EndDate ?? DateTime.MaxValue,
+                DiscountEndDate = discount?.EndDate,
                 product.Description,
                 Rates = product.Rates.Select(r => new
                 {
@@ -125,33 +122,6 @@ namespace Passengers.Main.ProductService
                 }).OrderByDescending(x => x.Date).Take(3).ToList(),
             };
             return _Operation.SetSuccess<object>(result);
-        }
-
-        public async Task<OperationResult<PagnationDto<object>>> GetFoodMenu(Guid tagId, int pageSize = 10, int pageNumber = 1)
-        {
-            var products = await Context.Products
-                .Where(x => x.TagId == tagId)
-                .Pagnation(pageSize, pageNumber)
-                .Select(x => new
-                {
-                    x.Id,
-                    x.Name,
-                    x.Avilable,
-                    x.Description,
-                    ImagePath = x.Documents.Select(x => x.Path).FirstOrDefault(),
-                    x.PrepareTime,
-                    x.Price,
-                    x.TagId,
-                    DiscountPrice = GetCurrentDiscount(x.Discounts)
-                }).ToListAsync();
-
-            var pagnation = new PagnationDto<object>()
-            {
-                Count = products.Count,
-              //  Result = products
-            };
-
-            return _Operation.SetSuccess(pagnation);
         }
 
         public async Task<OperationResult<bool>> Remove(Guid id)
@@ -199,6 +169,18 @@ namespace Passengers.Main.ProductService
         private static Discount GetCurrentDiscount(ICollection<Discount> discounts)
         {
             return discounts.Where(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate).FirstOrDefault();
+        }
+
+        public async Task<OperationResult<PagedList<GetProductDto>>> Get(ProductFilterDto filterDto, SortProductTypes? sortType, bool? isDes, int pageNumber = 1, int pageSize = 10)
+        {
+            var products = await Context.Products
+                .Include(x => x.Documents).Include(x => x.OrderDetails).Include(x => x.Rates)
+                .Where(ProductStore.Filter.WhereFilter(filterDto))
+                .SortBy(ProductStore.Query.Sort(sortType), isDes)
+                .Select(ProductStore.Query.GetSelectProduct)
+                .ToPagedListAsync(pageNumber, pageSize);
+
+            return products;
         }
 
         //public async Task<OperationResult<object>> FilterProduct(FilterFoodMenuDto dto)

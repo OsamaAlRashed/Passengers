@@ -147,6 +147,7 @@ namespace Passengers.SharedKernel.ExtensionMethods
 
         public static bool AnyIsNullOrEmpty(this IEnumerable<string> source) => source is null || source.Any(s => s.IsNullOrEmpty());
 
+        public static bool IsNullOrEmpty<T>(this IEnumerable<T> source) => source is null || !source.Any();
 
         public static IQueryable<T> Pagnation<T>(this IQueryable<T> source, int pageSize, int pageNumber)
             => source.Skip(pageSize * (pageNumber - 1)).Take(pageSize);
@@ -162,12 +163,5 @@ namespace Passengers.SharedKernel.ExtensionMethods
 
         public static double CustomAverage<T>(this ICollection<T> source, Func<T, double> func)
             => source.Any() ? source.Average(func) : 0;
-
-        public static PagedList<T> ToPagedList<T>(IQueryable<T> source, int pageNumber, int pageSize)
-        {
-            var count = source.Count();
-            var items = source.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
-            return new PagedList<T>(items, count, pageNumber, pageSize);
-        }
     }
 }

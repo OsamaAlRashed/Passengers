@@ -14,6 +14,7 @@ using Passengers.Location.AreaService;
 using Passengers.Location.CityService;
 using Passengers.Location.CountryService;
 using Passengers.Location.LocationService;
+using Passengers.Main.DiscountService;
 using Passengers.Main.OfferService;
 using Passengers.Main.ProductService;
 using Passengers.Main.TagService;
@@ -97,6 +98,7 @@ namespace Passengers
             services.AddScoped<IProductRepository, ProductRepository>();
             services.AddScoped<IOfferRepository, OfferRepository>();
             services.AddScoped<IAddressRepository, AddressRepository>();
+            services.AddScoped<IDiscountRepository, DiscountRepository>();
             services.AddScoped<EmailService>();
         }
 

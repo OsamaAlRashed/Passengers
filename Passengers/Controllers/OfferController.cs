@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Passengers.DataTransferObject.OfferDtos;
 using Passengers.Main.OfferService;
+using Passengers.SharedKernel.Attribute;
+using Passengers.SharedKernel.Constants.Security;
 using Passengers.SharedKernel.Enums;
 using Passengers.SharedKernel.OperationResult.ExtensionMethods;
 using System;
@@ -10,6 +12,7 @@ using System.Threading.Tasks;
 
 namespace Passengers.Controllers
 {
+    [AppAuthorize(AppRoles.Shop)]
     [Route("api/[controller]/[action]")]
     [ApiController]
     public class OfferController : ControllerBase
