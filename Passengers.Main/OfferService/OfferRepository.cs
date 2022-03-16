@@ -22,19 +22,17 @@ namespace Passengers.Main.OfferService
     public class OfferRepository : BaseRepository , IOfferRepository
     {
         private readonly IDocumentRepository documentRepository;
-        private readonly ICurrentUserService currentUserService;
 
-        public OfferRepository(PassengersDbContext context, IDocumentRepository documentRepository, ICurrentUserService currentUserService): base(context)
+        public OfferRepository(PassengersDbContext context, IDocumentRepository documentRepository): base(context)
         {
             this.documentRepository = documentRepository;
-            this.currentUserService = currentUserService;
         }
 
         public async Task<OperationResult<GetOfferDto>> Add(SetOfferDto dto)
         {
             var entity = OfferStore.Query.SetSelectOffer.Compile()(dto);
-            await documentRepository.Add(dto.ImageFile, currentUserService.UserId.Value, DocumentEntityTypes.Offer);
-            entity.ShopId = currentUserService.UserId.Value;
+            await documentRepository.Add(dto.ImageFile, Context.CurrentUserId.Value, DocumentEntityTypes.Offer);
+            entity.ShopId = Context.CurrentUserId.Value;
             Context.Offers.Add(entity);
             await Context.SaveChangesAsync();
             return _Operation.SetSuccess(OfferStore.Query.GetSelectOffer.Compile()(entity));

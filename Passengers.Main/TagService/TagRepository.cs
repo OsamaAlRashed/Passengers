@@ -22,12 +22,10 @@ namespace Passengers.Main.TagService
 {
     public class TagRepository : BaseRepository, ITagRepository
     {
-        private readonly ISharedRepository sharedRepository;
         private readonly IWebHostEnvironment webHostEnvironment;
 
-        public TagRepository(PassengersDbContext context, ISharedRepository sharedRepository, IWebHostEnvironment webHostEnvironment) : base(context)
+        public TagRepository(PassengersDbContext context, IWebHostEnvironment webHostEnvironment) : base(context)
         {
-            this.sharedRepository = sharedRepository;
             this.webHostEnvironment = webHostEnvironment;
         }
 

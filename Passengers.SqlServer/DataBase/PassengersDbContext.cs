@@ -11,6 +11,8 @@ using Passengers.Models.Security;
 using Passengers.Models.Shared;
 using Passengers.SharedKernel.ExtensionMethods;
 using Passengers.SharedKernel.Services.CurrentUserService;
+using Passengers.SharedKernel.Services.LangService;
+using Passengers.SharedKernel.Services.LangService.Contant;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,10 +26,15 @@ namespace Passengers.SqlServer.DataBase
     public class PassengersDbContext : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid>
     {
         private readonly ICurrentUserService _currentUserService;
+        public string CurrentLang { get; }
+        public Guid? CurrentUserId { get; }
+
         public PassengersDbContext(DbContextOptions<PassengersDbContext> options,
-            ICurrentUserService currentUserService) : base(options)
+            ICurrentUserService currentUserService, ILangService langService) : base(options)
         {
             _currentUserService = currentUserService;
+            CurrentLang = langService?.CurrentLang ?? LangConstant.En;
+            CurrentUserId = currentUserService.UserId;
         }
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -75,7 +82,7 @@ namespace Passengers.SqlServer.DataBase
                 }
             }
 
-            return base.SaveChangesAsync();
+            return base.SaveChangesAsync(cancellationToken);
         }
 
         public DbSet<Country> Countries { get; set; }
@@ -101,6 +108,5 @@ namespace Passengers.SqlServer.DataBase
         public DbSet<ShopContact> ShopContacts { get; set; }
         public DbSet<ShopSchedule> ShopSchedules { get; set; }
         public DbSet<Tag> Tags { get; set; }
-
     }
 }

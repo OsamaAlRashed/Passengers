@@ -5,6 +5,9 @@ using Passengers.Repository.Base;
 using Passengers.SharedKernel.OperationResult;
 using Passengers.SharedKernel.OperationResult.Enums;
 using Passengers.SharedKernel.OperationResult.ExtensionMethods;
+using Passengers.SharedKernel.Services.LangService;
+using Passengers.SharedKernel.Services.LangService.Contant;
+using Passengers.SharedKernel.Services.LangService.LangErrorStore;
 using Passengers.SqlServer.DataBase;
 using System;
 using System.Collections.Generic;
@@ -16,9 +19,8 @@ namespace Passengers.Main.DiscountService
 {
     public class DiscountRepository : BaseRepository, IDiscountRepository
     {
-        public DiscountRepository(PassengersDbContext context):base(context)
+        public DiscountRepository(PassengersDbContext context) :base(context)
         {
-
         }
 
         public async Task<OperationResult<DiscountDto>> Add(DiscountDto dto)
@@ -27,7 +29,7 @@ namespace Passengers.Main.DiscountService
                 .Where(x => x.ProductId == dto.ProductId && x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate)
                 .AnyAsync();
             if (currentDiscount)
-                return _Operation.SetFailed<DiscountDto>("DiscountAlreadyExist");
+                return _Operation.SetFailed<DiscountDto>(LangErrorStore.Get(ErrorCodeConstant.DiscountAlreadyExist, Context.CurrentLang));
 
             var entity = DiscountStore.Query.SetSelectDiscount.Compile()(dto);
             Context.Discounts.Add(entity);
@@ -40,7 +42,7 @@ namespace Passengers.Main.DiscountService
         {
             var entity = await Context.Discounts.Where(x => x.Id == id).SingleOrDefaultAsync();
             if (entity == null)
-                return _Operation.SetContent<bool>(OperationResultTypes.NotExist, "DiscountNotFound");
+                return _Operation.SetContent<bool>(OperationResultTypes.NotExist, LangErrorStore.Get(ErrorCodeConstant.DiscountNotFound, Context.CurrentLang));
             entity.DateDeleted = DateTime.Now;
             await Context.SaveChangesAsync();
             return _Operation.SetSuccess(true);
@@ -82,7 +84,7 @@ namespace Passengers.Main.DiscountService
                 .Where(x => x.ProductId == productId && x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate)
                 .FirstOrDefaultAsync();
             if (currentDiscount == null)
-                return _Operation.SetContent<bool>(OperationResultTypes.NotExist, "DiscountNotFound");
+                return _Operation.SetContent<bool>(OperationResultTypes.NotExist, LangErrorStore.Get(ErrorCodeConstant.DiscountNotFound, Context.CurrentLang));
             currentDiscount.EndDate = endDate ?? DateTime.Now;
             await Context.SaveChangesAsync();
             return _Operation.SetSuccess(true);
@@ -116,11 +118,13 @@ namespace Passengers.Main.DiscountService
 
         public async Task<OperationResult<DiscountDto>> GetById(Guid id)
         {
-            var discounts = await Context.Discounts
+            var discount = await Context.Discounts
                .Where(x => x.Id == id)
                .Select(DiscountStore.Query.GetSelectDiscount)
                .FirstOrDefaultAsync();
-            return _Operation.SetSuccess(discounts);
+            if (discount == null)
+                return _Operation.SetContent<DiscountDto>(OperationResultTypes.NotExist, LangErrorStore.Get(ErrorCodeConstant.DiscountNotFound, Context.CurrentLang));
+            return _Operation.SetSuccess(discount);
         }
     }
 }

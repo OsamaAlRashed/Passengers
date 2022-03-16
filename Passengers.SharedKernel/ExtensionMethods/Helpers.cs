@@ -15,7 +15,7 @@ namespace Passengers.SharedKernel.ExtensionMethods
         //Exception
         public static string ToFullException(this System.Exception exception)
         {
-            StringBuilder FullMessage = new StringBuilder();
+            StringBuilder FullMessage = new();
             return Recursive(exception);
             //local function
             string Recursive(System.Exception deep)
@@ -89,7 +89,7 @@ namespace Passengers.SharedKernel.ExtensionMethods
         // Random
         public static string GetFourNumberToken()
         {
-            Random random = new Random();
+            Random random = new();
             var token = "";
             int c = 0;
             while (c < 4)
@@ -106,11 +106,11 @@ namespace Passengers.SharedKernel.ExtensionMethods
         public static string GetUniqueKey(int size)
         {
             byte[] data = new byte[4 * size];
-            using (System.Security.Cryptography.RNGCryptoServiceProvider crypto = new System.Security.Cryptography.RNGCryptoServiceProvider())
+            using (System.Security.Cryptography.RNGCryptoServiceProvider crypto = new())
             {
                 crypto.GetBytes(data);
             }
-            StringBuilder result = new StringBuilder(size);
+            StringBuilder result = new(size);
             for (int i = 0; i < size; i++)
             {
                 var rnd = BitConverter.ToUInt32(data, i * 4);

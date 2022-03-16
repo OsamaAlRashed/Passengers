@@ -37,20 +37,16 @@ namespace Passengers.Security.ShopService
     public class ShopRepository : BaseRepository, IShopRepository
     {
         private readonly UserManager<AppUser> userManager;
-        private readonly RoleManager<IdentityRole<Guid>> roleManager;
         private readonly IAccountRepository accountRepository;
         private readonly IDocumentRepository documentRepository;
-        private readonly ICurrentUserService currentUserService;
         private readonly IAddressRepository addressRepository;
         private readonly ICategoryRepository categoryRepository;
 
-        public ShopRepository(PassengersDbContext context, UserManager<AppUser> userManager, RoleManager<IdentityRole<Guid>> roleManager, IAccountRepository accountRepository, IDocumentRepository documentRepository, ICurrentUserService currentUserService, IAddressRepository addressRepository, ICategoryRepository categoryRepository) : base(context)
+        public ShopRepository(PassengersDbContext context, UserManager<AppUser> userManager, IAccountRepository accountRepository, IDocumentRepository documentRepository, IAddressRepository addressRepository, ICategoryRepository categoryRepository) : base(context)
         {
             this.userManager = userManager;
-            this.roleManager = roleManager;
             this.accountRepository = accountRepository;
             this.documentRepository = documentRepository;
-            this.currentUserService = currentUserService;
             this.addressRepository = addressRepository;
             this.categoryRepository = categoryRepository;
         }
@@ -119,7 +115,7 @@ namespace Passengers.Security.ShopService
 
         public async Task<OperationResult<object>> CompleteInfo(CompleteInfoShopDto dto)
         {
-            var shop = await Context.Shops(AccountStatus.WaitingCompleteInformation).Where(x => x.Id == currentUserService.UserId)
+            var shop = await Context.Shops(AccountStatus.WaitingCompleteInformation).Where(x => x.Id == Context.CurrentUserId)
                 .SingleOrDefaultAsync();
             if (shop == null)
                 return _Operation.SetContent<object>(OperationResultTypes.NotExist, "ShopNotFound");
@@ -205,7 +201,7 @@ namespace Passengers.Security.ShopService
                 .Include(x => x.MainCategories).ThenInclude(x => x.Category)
                 .Include(x => x.ShopFavorites).Include(x => x.Tags).Include(x => x.Rates).Include(x => x.ShopContacts)
                 .Include(x => x.Documents)
-                .Where(x => x.Id == currentUserService.UserId.Value)
+                .Where(x => x.Id == Context.CurrentUserId)
                 .SingleOrDefaultAsync();
             if (shop == null)
                 return _Operation.SetContent<ShopProfileDto>(OperationResultTypes.NotExist, "ShopNotFound");
@@ -228,7 +224,7 @@ namespace Passengers.Security.ShopService
 
         public async Task<OperationResult<string>> UpdateImage(IFormFile image)
         {
-            var shop = await Context.Shops().Where(x => x.Id == currentUserService.UserId.Value)
+            var shop = await Context.Shops().Where(x => x.Id == Context.CurrentUserId)
                 .SingleOrDefaultAsync();
             if (shop == null)
                 return _Operation.SetContent<string>(OperationResultTypes.NotExist, "");
@@ -244,7 +240,7 @@ namespace Passengers.Security.ShopService
         {
             var shop = await Context.Shops()
                 .Include(x => x.MainCategories).ThenInclude(x => x.Category).Include(x => x.Address).Include(x => x.ShopContacts)
-                .Where(x => x.Id == currentUserService.UserId.Value)
+                .Where(x => x.Id == Context.CurrentUserId)
                 .SingleOrDefaultAsync();
             if (shop == null)
                 return _Operation.SetContent<ShopDetailsDto>(OperationResultTypes.NotExist, "ShopNotFound");
@@ -269,7 +265,7 @@ namespace Passengers.Security.ShopService
         {
             var shop = await Context.Shops()
                 .Include(x => x.MainCategories).Include(x => x.Address).Include(x => x.ShopContacts)
-                .Where(x => x.Id == currentUserService.UserId.Value)
+                .Where(x => x.Id == Context.CurrentUserId)
                 .SingleOrDefaultAsync();
             if (shop == null)
                 return _Operation.SetContent<ShopDetailsDto>(OperationResultTypes.NotExist, "ShopNotFound");
@@ -331,17 +327,17 @@ namespace Passengers.Security.ShopService
 
         public async Task<OperationResult<ShopHomeDto>> Home()
         {
-            var topProducts = await Context.Products.Where(x => x.Tag.ShopId == currentUserService.UserId.Value)
+            var topProducts = await Context.Products.Where(x => x.Tag.ShopId == Context.CurrentUserId)
                 .Include(x => x.Rates).Include(x => x.Documents).Include(x => x.OrderDetails)
                 .OrderByDescending(x => x.Rates.Any() ? x.Rates.Average(x => x.Degree) : 0)
                 .Take(5).ToListAsync();
 
-            var popularProducts = await Context.Products.Where(x => x.Tag.ShopId == currentUserService.UserId.Value)
+            var popularProducts = await Context.Products.Where(x => x.Tag.ShopId == Context.CurrentUserId)
                 .Include(x => x.Rates).Include(x => x.Documents).Include(x => x.OrderDetails)
                 .OrderByDescending(x => x.OrderDetails.Sum(x => x.Quantity))
                 .Take(5).ToListAsync();
 
-            var topOffers = await Context.Offers.Where(x => x.ShopId == currentUserService.UserId.Value && x.EndDate > DateTime.Now)
+            var topOffers = await Context.Offers.Where(x => x.ShopId == Context.CurrentUserId && x.EndDate > DateTime.Now)
                 .Include(x => x.Documents).Include(x => x.OrderDetails)
                 .OrderByDescending(x => x.OrderDetails.Sum(x => x.Quantity))
                 .Take(5).ToListAsync();

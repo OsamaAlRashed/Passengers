@@ -32,16 +32,12 @@ namespace Passengers.Security.AccountService
     {
         private readonly UserManager<AppUser> userManager;
         private readonly SignInManager<AppUser> signInManager;
-        private readonly EmailService emailService;
         private readonly IConfiguration configuration;
-        private readonly ICurrentUserService currentUserService;
-        public AccountRepository(PassengersDbContext context, UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, EmailService emailService, IConfiguration configuration, ICurrentUserService currentUserService) :base(context)
+        public AccountRepository(PassengersDbContext context, UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, IConfiguration configuration) :base(context)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
-            this.emailService = emailService;
             this.configuration = configuration;
-            this.currentUserService = currentUserService;
         }
 
         public async Task<OperationResult<LoginResponseDto>> Login(BaseLoginDto dto)
@@ -73,7 +69,7 @@ namespace Passengers.Security.AccountService
                 user.RefreshToken = GenerateRefreshToken();
                 await Context.SaveChangesAsync();
 
-                LoginResponseDto accountDto = new LoginResponseDto
+                LoginResponseDto accountDto = new()
                 {
                     User = user,
                     AccessToken = GenerateAccessToken(user, roles, expierDate),
@@ -129,14 +125,12 @@ namespace Passengers.Security.AccountService
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-        public string GenerateRefreshToken()
+        public static string GenerateRefreshToken()
         {
             var randomNumber = new byte[32];
-            using (var rng = RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(randomNumber);
-                return Convert.ToBase64String(randomNumber);
-            }
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomNumber);
+            return Convert.ToBase64String(randomNumber);
         }
         public async Task<bool> IsPhoneNumberUsed(string phoneNumber)
         {
@@ -145,7 +139,7 @@ namespace Passengers.Security.AccountService
 
         public async Task<OperationResult<CreateAccountDto>> Create(CreateAccountDto dto)
         {
-            AppUser user = new AppUser()
+            AppUser user = new()
             {
                 UserName = dto.UserName,
                 Email = dto.UserName,

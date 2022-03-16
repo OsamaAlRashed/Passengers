@@ -30,6 +30,7 @@ using Passengers.SharedKernel.Jwt;
 using Passengers.SharedKernel.Services.ConfigureServices;
 using Passengers.SharedKernel.Services.CurrentUserService;
 using Passengers.SharedKernel.Services.EmailService;
+using Passengers.SharedKernel.Services.LangService;
 using Passengers.SharedKernel.Swagger;
 using Passengers.SqlServer.DataBase;
 using Passengers.SqlServer.DataBase.Seed;
@@ -77,6 +78,7 @@ namespace Passengers
                     options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
                 });
             services.AddSingleton<ICurrentUserService, CurrentUserService>();
+            services.AddSingleton<ILangService, LangService>();
             services.AddHttpContextAccessor();
             services.AddCors(c =>
             {
@@ -109,6 +111,7 @@ namespace Passengers
             {
                 app.UseDeveloperExceptionPage();
             }
+            
             app.ConfigureOpenAPI();
 
             app.UseHttpsRedirection();
@@ -120,6 +123,7 @@ namespace Passengers
             {
                 endpoints.MapControllers();
             });
+
 
             app.UseSqlServerSeed<PassengersDbContext>(async (context, provider) =>
             {
