@@ -45,7 +45,7 @@ namespace Passengers.Base
         public static IQueryable<T> QueryIgnoreFilter<T>(this PassengersDbContext context) where T : BaseEntity
             => context.Set<T>().IgnoreQueryFilters();
 
-        public static IQueryable<TSource> SortBy<TSource, TKey>(this IQueryable<TSource> source, Expression<Func<TSource, TKey>> by, bool? isDes) where TSource : BaseEntity
+        public static IQueryable<TSource> SortBy<TSource, TKey>(this IQueryable<TSource> source, Expression<Func<TSource, TKey>> by, bool? isDes) where TSource : IBaseEntity
             => (!isDes.HasValue || isDes.Value) ? source.OrderByDescending(by)
                                                 : source.OrderBy(by);
 

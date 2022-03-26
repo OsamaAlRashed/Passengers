@@ -20,6 +20,7 @@ using Passengers.Main.ProductService;
 using Passengers.Main.TagService;
 using Passengers.Models.Security;
 using Passengers.Security.AccountService;
+using Passengers.Security.CustomerService;
 using Passengers.Security.Shared;
 using Passengers.Security.ShopService;
 using Passengers.Shared.CategoryService;
@@ -101,6 +102,7 @@ namespace Passengers
             services.AddScoped<IOfferRepository, OfferRepository>();
             services.AddScoped<IAddressRepository, AddressRepository>();
             services.AddScoped<IDiscountRepository, DiscountRepository>();
+            services.AddScoped<ICustomerRepository, CustomerRepository>();
             services.AddScoped<EmailService>();
         }
 

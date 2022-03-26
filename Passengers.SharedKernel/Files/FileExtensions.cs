@@ -28,10 +28,8 @@ namespace Passengers.SharedKernel.Files
                     }
                     path = Path.Combine("Documents", uploadsFolderName, Guid.NewGuid().ToString() + "_" + image.FileName);
                     string filePath = Path.Combine(webRootPath, path);
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
-                    {
-                        image.CopyTo(fileStream);
-                    }
+                    using var fileStream = new FileStream(filePath, FileMode.Create);
+                    image.CopyTo(fileStream);
                 }
                 return path;
             }
@@ -69,10 +67,8 @@ namespace Passengers.SharedKernel.Files
 
                     path = Path.Combine("Documents", uploadsFolderName , Guid.NewGuid().ToString() + "_" + image.FileName);
                     string filePath = Path.Combine(webRootPath, path);
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await image.CopyToAsync(fileStream);
-                    }
+                    using var fileStream = new FileStream(filePath, FileMode.Create);
+                    await image.CopyToAsync(fileStream);
                 }
                 return path;
             }

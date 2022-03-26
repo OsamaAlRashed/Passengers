@@ -9,6 +9,7 @@ using Passengers.SharedKernel.Attribute;
 using Passengers.SharedKernel.Constants.Security;
 using Passengers.SharedKernel.Enums;
 using Passengers.SharedKernel.OperationResult.ExtensionMethods;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 
@@ -58,5 +59,17 @@ namespace Passengers.Controllers
         [AppAuthorize(AppRoles.Shop)]
         [HttpPut]
         public async Task<IActionResult> Update(ShopDetailsDto dto) => await repository.Update(dto).ToJsonResultAsync();
+
+        [AppAuthorize(AppRoles.Shop)]
+        [HttpPut]
+        public async Task<IActionResult> UpdateWorkingDays(List<int> days) => await repository.UpdateWorkingDays(days).ToJsonResultAsync();
+
+        [AppAuthorize(AppRoles.Shop)]
+        [HttpPut]
+        public async Task<IActionResult> UpdateWorkingTimes(string fromTime, string toTime) => await repository.UpdateWorkingTimes(fromTime, toTime).ToJsonResultAsync();
+
+        [AppAuthorize(AppRoles.Shop)]
+        [HttpGet]
+        public async Task<IActionResult> GetWorkingDays() => await repository.GetWorkingDays().ToJsonResultAsync();
     }
 }

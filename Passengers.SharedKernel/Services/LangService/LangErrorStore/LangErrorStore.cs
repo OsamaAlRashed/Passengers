@@ -19,6 +19,12 @@ namespace Passengers.SharedKernel.Services.LangService.LangErrorStore
 
             { (ErrorCodeConstant.DiscountAlreadyExist, LangConstant.En), "Discount Already Exist to this product." },
             { (ErrorCodeConstant.DiscountAlreadyExist, LangConstant.Ar), "الحسم موجود بالفعل لهذا المنتج." },
+
+            { (ErrorCodeConstant.TimeFormatIsNotValid, LangConstant.En), "Time format is not valid." },
+            { (ErrorCodeConstant.TimeFormatIsNotValid, LangConstant.Ar), "" },
+
+            { (ErrorCodeConstant.ChooseDayAtLeast, LangConstant.En), "Choose day at least." },
+            { (ErrorCodeConstant.ChooseDayAtLeast, LangConstant.Ar), "" },
         };
 
         public static string Get(string errorCode, string lang = LangConstant.En)

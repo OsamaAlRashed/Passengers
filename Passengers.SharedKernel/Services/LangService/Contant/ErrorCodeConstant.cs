@@ -11,5 +11,7 @@ namespace Passengers.SharedKernel.Services.LangService.Contant
         public const string UserNotFound = "UserNotFound";
         public const string DiscountNotFound = "DiscountNotFound";
         public const string DiscountAlreadyExist = "DiscountAlreadyExist";
+        public const string TimeFormatIsNotValid = "TimeFormatIsNotValid";
+        public const string ChooseDayAtLeast = "Choose day at least";
     }
 }

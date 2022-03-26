@@ -23,5 +23,8 @@ namespace Passengers.Security.ShopService
         Task<OperationResult<ShopDetailsDto>> Update(ShopDetailsDto dto);
         Task<OperationResult<List<ShopDto>>> Get(AccountStatus accountStatus);
         Task<OperationResult<ShopHomeDto>> Home();
+        Task<OperationResult<WorkingDaysDto>> GetWorkingDays();
+        Task<OperationResult<bool>> UpdateWorkingTimes(string fromTime, string toTime);
+        Task<OperationResult<bool>> UpdateWorkingDays(List<int> days);
     }
 }

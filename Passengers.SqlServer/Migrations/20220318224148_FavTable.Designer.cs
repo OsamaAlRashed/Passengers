@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Passengers.SqlServer.DataBase;
 
 namespace Passengers.SqlServer.Migrations
 {
     [DbContext(typeof(PassengersDbContext))]
-    partial class PassengersDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220318224148_FavTable")]
+    partial class FavTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -154,14 +156,8 @@ namespace Passengers.SqlServer.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("AddressLine")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<Guid>("AreaId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Building")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("uniqueidentifier");
@@ -185,15 +181,6 @@ namespace Passengers.SqlServer.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Long")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Note")
-                        .HasColumnType("int");
-
-                    b.Property<string>("OtherNote")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PhoneNumber")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid?>("ShopId")

@@ -163,5 +163,24 @@ namespace Passengers.SharedKernel.ExtensionMethods
 
         public static double CustomAverage<T>(this ICollection<T> source, Func<T, double> func)
             => source.Any() ? source.Average(func) : 0;
+
+        //Enum
+        public static List<SelectDto> EnumToList(Type enumType)
+        {
+            if (!typeof(Enum).IsAssignableFrom(enumType))
+                throw new ArgumentException("enumType should describe enum");
+
+            var names = Enum.GetNames(enumType).Cast<object>();
+            var values = Enum.GetValues(enumType).Cast<int>();
+
+            var list = names.Zip(values).ToList();
+
+            return list.Select(x => new SelectDto
+            {
+                Id = x.Second,
+                Name = x.First.ToString()
+            }).ToList();
+
+        }
     }
 }

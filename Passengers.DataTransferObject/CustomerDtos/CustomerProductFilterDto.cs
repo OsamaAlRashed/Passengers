@@ -1,20 +1,18 @@
-﻿using Passengers.SharedKernel.Enums;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Passengers.DataTransferObject.ProductDtos
+namespace Passengers.DataTransferObject.CustomerDtos
 {
-    public class ProductFilterDto
+    public class CustomerProductFilterDto
     {
         public string Search { get; set; }
-        public List<Guid> TagIds { get; set; } = new();
         public int? Rate { get; set; }
-        public bool? Avilable { get; set; }
-        public bool? Discount { get; set; }
+        public bool? WithDiscount { get; set; }
         public decimal? FromPrice { get; set; }
         public decimal? ToPrice { get; set; }
+        public Guid TagId { get; set; }
     }
 }

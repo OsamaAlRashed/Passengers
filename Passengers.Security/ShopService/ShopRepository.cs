@@ -25,6 +25,8 @@ using Passengers.SharedKernel.OperationResult;
 using Passengers.SharedKernel.OperationResult.Enums;
 using Passengers.SharedKernel.OperationResult.ExtensionMethods;
 using Passengers.SharedKernel.Services.CurrentUserService;
+using Passengers.SharedKernel.Services.LangService.Contant;
+using Passengers.SharedKernel.Services.LangService.LangErrorStore;
 using Passengers.SqlServer.DataBase;
 using System;
 using System.Collections.Generic;
@@ -368,6 +370,57 @@ namespace Passengers.Security.ShopService
                     Rate = x.Rate,
                 }).ToList(),
             });
+        }
+
+        public async Task<OperationResult<bool>> UpdateWorkingDays(List<int> days)
+        {
+            if(days == null || days.Count == 0)
+                return _Operation.SetFailed<bool>(LangErrorStore.Get(ErrorCodeConstant.ChooseDayAtLeast, Context.CurrentLang));
+
+            var schedule = await Context.ShopSchedules.Where(x => x.ShopId == Context.CurrentUserId.Value).FirstOrDefaultAsync();
+            if (schedule == null)
+                return _Operation.SetFailed<bool>(LangErrorStore.Get(ErrorCodeConstant.ChooseDayAtLeast, Context.CurrentLang));
+
+
+            schedule.Days = days.Select(i => i.ToString()).Aggregate((i, j) => i + "," + j);
+
+            await Context.SaveChangesAsync();
+            return _Operation.SetSuccess(true);
+        }
+
+        public async Task<OperationResult<bool>> UpdateWorkingTimes(string fromTime, string toTime)
+        {
+            var isValidFromTime = TimeSpan.TryParse(fromTime, out var fromTimeSpan);
+            var isValidToTime = TimeSpan.TryParse(toTime, out var toTimeSpan);
+
+            if (!isValidFromTime || !isValidToTime)
+                return _Operation.SetFailed<bool>(LangErrorStore.Get(ErrorCodeConstant.TimeFormatIsNotValid, Context.CurrentLang));
+
+            var schedule = await Context.ShopSchedules.Where(x => x.ShopId == Context.CurrentUserId.Value).FirstOrDefaultAsync();
+            if (schedule == null)
+                return _Operation.SetFailed<bool>(LangErrorStore.Get(ErrorCodeConstant.ChooseDayAtLeast, Context.CurrentLang));
+
+
+            schedule.FromTime = fromTimeSpan;
+            schedule.ToTime = toTimeSpan;
+
+            await Context.SaveChangesAsync();
+            return _Operation.SetSuccess(true);
+        }
+
+        public async Task<OperationResult<WorkingDaysDto>> GetWorkingDays()
+        {
+            var schedule = await Context.ShopSchedules.Where(x => x.ShopId == Context.CurrentUserId.Value).FirstOrDefaultAsync();
+            if (schedule == null)
+                return _Operation.SetFailed<WorkingDaysDto>("");
+
+            return _Operation.SetSuccess(new WorkingDaysDto
+            {
+                Days = schedule.Days.Split(",").Cast<int>().ToList(),
+                FromTime = schedule.FromTime.ToString(),
+                ToTime = schedule.ToTime.ToString()
+            });
+
         }
     }
 }

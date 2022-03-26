@@ -98,6 +98,7 @@ namespace Passengers.SqlServer.DataBase
         public DbSet<Rate> Rates { get; set; }
         public DbSet<ContactUs> ContactUs { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<Favorite> Favorites { get; set; }
 
 
         public DbSet<Discount> Discounts { get; set; }

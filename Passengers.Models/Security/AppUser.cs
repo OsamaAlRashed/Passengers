@@ -63,7 +63,7 @@ namespace Passengers.Models.Security
         public string Name { get; set; }
         public string Description { get; set; }
         public string OwnerName { get; set; }
-
+        public ShopOrderType? ShopOrderType { get; set; }
         public Address Address { get; set; }
 
         public ICollection<ShopCategory> MainCategories { get; set; }
