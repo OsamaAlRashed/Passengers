@@ -62,13 +62,14 @@ namespace Passengers.Shared.CategoryService
             if (entity is null)
                 return (OperationResultTypes.NotExist, $"Category: {dto.Id} not exist");
 
-            var category = CategoryStore.Query.InverseSetSelectCategory.Compile()(dto);
+            CategoryStore.Query.AssignDtoToCategory(entity, dto);
             if (dto.File is not null)
             {
-                category.LogoPath = dto.File.TryUploadImage(FolderNames.Category, webHostEnvironment.WebRootPath);
+                entity.LogoPath = dto.File.TryUploadImage(FolderNames.Category, webHostEnvironment.WebRootPath);
             }
+
             await Context.SaveChangesAsync();
-            return _Operation.SetSuccess(CategoryStore.Query.GetSelectCategory.Compile()(category));
+            return _Operation.SetSuccess(CategoryStore.Query.GetSelectCategory.Compile()(entity));
         }
         public async Task<OperationResult<bool>> Remove(Guid id)
         {

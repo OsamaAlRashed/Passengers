@@ -67,7 +67,7 @@ namespace Passengers.Controllers
 
         [AppAuthorize(AppRoles.Customer)]
         [HttpGet]
-        public async Task<IActionResult> GetShops([FromQuery] CustomerShopFilterDto filterDto, bool? topShops, int pageNumber, int pageSize) => await repository.GetShops(filterDto, topShops, pageNumber, pageSize).ToJsonResultAsync();
+        public async Task<IActionResult> GetShops([FromQuery] CustomerShopFilterDto filterDto, bool? topShops, int pageNumber = 1, int pageSize = 10) => await repository.GetShops(filterDto, topShops, pageNumber, pageSize).ToJsonResultAsync();
 
     }
 }

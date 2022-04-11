@@ -1,4 +1,5 @@
-﻿using Passengers.DataTransferObject.CustomerDtos;
+﻿using Passengers.Base;
+using Passengers.DataTransferObject.CustomerDtos;
 using Passengers.DataTransferObject.ProductDtos;
 using Passengers.DataTransferObject.SecurityDtos.Login;
 using Passengers.Models.Main;
@@ -27,10 +28,10 @@ namespace Passengers.Security.CustomerService.Store
                 (filter.WithDiscount.Value ? product.Discounts.Where(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate).Any()
                                        : true));
 
-            public static Expression<Func<AppUser, bool>> WhereFilterShop(CustomerShopFilterDto filter) => shop =>
+            public static Expression<Func<AppUser, bool>> WhereFilterShop(CustomerShopFilterDto filter, List<Guid> shopIds) => shop =>
                 (string.IsNullOrEmpty(filter.Search) || shop.Name.Contains(filter.Search))
+             && (!shopIds.Any() | shopIds.Contains(shop.Id))
              && (!filter.CategoryId.HasValue || shop.MainCategories.Select(x => x.CategoryId).Any(c => c == filter.CategoryId))
-             && (!filter.Days.Any() || shop.ShopSchedules.Where(x => x.Days.Cast<IEnumerable<char>>().Intersect(filter.Days.Cast<IEnumerable<char>>()).Any()).Any())
              /// TODo && (filter.NearWithMe.HasValue) 
              && (string.IsNullOrEmpty(filter.FromTime) || shop.ShopSchedules.Any(x => TimeSpan.Parse(filter.FromTime) <= x.FromTime))
              && (string.IsNullOrEmpty(filter.ToTime) || shop.ShopSchedules.Any(x => TimeSpan.Parse(filter.ToTime) >= x.ToTime));

@@ -130,10 +130,9 @@ namespace Passengers.Security.ShopService
 
             if(dto.Days != null && dto.Days.Count > 0)
             {
-                
                 var shopSchacule = new ShopSchedule
                 {
-                    Days = dto.Days.Select(i => i.ToString()).Aggregate((i, j) => i + "," + j),
+                    Days = dto.Days.OrderBy(x => x).Select(i => i.ToString()).Aggregate((i, j) => i + "," + j),
                     FromTime = fromTime,
                     ToTime = toTime,
                     ShopId = shop.Id
@@ -167,12 +166,15 @@ namespace Passengers.Security.ShopService
                 foreach (var tagId in dto.TagIds)
                 {
                     var publicTag = Context.Tags.Where(x => x.Id == tagId).SingleOrDefault();
-                    var tag = new Tag
+                    if(publicTag.ShopId != shop.Id)
                     {
-                        ShopId = shop.Id,
-                        Name = publicTag?.Name ?? "NoLabel",
-                        LogoPath = publicTag?.LogoPath,
-                    };
+                        var tag = new Tag
+                        {
+                            ShopId = shop.Id,
+                            Name = publicTag?.Name ?? "NoLabel",
+                            LogoPath = publicTag?.LogoPath,
+                        };
+                    }
                 }
             }
             shop.AccountStatus = AccountStatus.Accepted;
@@ -274,16 +276,27 @@ namespace Passengers.Security.ShopService
             
             shop.Name = dto.Name;
 
-            await addressRepository.UpdateShopAddress(new AddressDto
+            var addressDto = new AddressDto
             {
                 EntityId = shop.Id,
                 Lat = dto.Lat,
                 Long = dto.Long,
                 Text = dto.Address,
                 Type = AddressTypes.Shop,
-                Id = shop.Address.Id,
-                AreaId = shop.Address.AreaId
-            });
+            };
+
+            if (shop.Address == null)
+            {
+                await addressRepository.Add(addressDto);
+            }
+            else
+            {
+                addressDto.Id = shop.Address.Id;
+                addressDto.AreaId = shop.Address.AreaId;
+
+                await addressRepository.UpdateShopAddress(addressDto);
+            }
+
 
             await UpdateContracts(shop, dto.Contacts);
 
@@ -378,11 +391,18 @@ namespace Passengers.Security.ShopService
                 return _Operation.SetFailed<bool>(LangErrorStore.Get(ErrorCodeConstant.ChooseDayAtLeast, Context.CurrentLang));
 
             var schedule = await Context.ShopSchedules.Where(x => x.ShopId == Context.CurrentUserId.Value).FirstOrDefaultAsync();
+
+
             if (schedule == null)
-                return _Operation.SetFailed<bool>(LangErrorStore.Get(ErrorCodeConstant.ChooseDayAtLeast, Context.CurrentLang));
+            {
+                schedule = new ShopSchedule()
+                {
+                    ShopId = Context.CurrentUserId.Value
+                };
+                Context.ShopSchedules.Add(schedule);
+            }
 
-
-            schedule.Days = days.Select(i => i.ToString()).Aggregate((i, j) => i + "," + j);
+            schedule.Days = days.OrderBy(x => x).Select(i => i.ToString()).Aggregate((i, j) => i + "," + j);
 
             await Context.SaveChangesAsync();
             return _Operation.SetSuccess(true);
@@ -397,8 +417,15 @@ namespace Passengers.Security.ShopService
                 return _Operation.SetFailed<bool>(LangErrorStore.Get(ErrorCodeConstant.TimeFormatIsNotValid, Context.CurrentLang));
 
             var schedule = await Context.ShopSchedules.Where(x => x.ShopId == Context.CurrentUserId.Value).FirstOrDefaultAsync();
+
             if (schedule == null)
-                return _Operation.SetFailed<bool>(LangErrorStore.Get(ErrorCodeConstant.ChooseDayAtLeast, Context.CurrentLang));
+            {
+                schedule = new ShopSchedule()
+                {
+                    ShopId = Context.CurrentUserId.Value
+                };
+                Context.ShopSchedules.Add(schedule);
+            }
 
 
             schedule.FromTime = fromTimeSpan;

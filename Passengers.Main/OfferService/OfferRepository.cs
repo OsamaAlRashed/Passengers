@@ -72,7 +72,8 @@ namespace Passengers.Main.OfferService
             if (offer == null)
                 return (OperationResultTypes.NotExist, "");
 
-            offer = OfferStore.Query.SetSelectOffer.Compile()(dto);
+            OfferStore.Query.AssignDtoToOffer(offer, dto);
+
             if(dto.ImageFile != null)
                 await documentRepository.Update(dto.ImageFile, offer.Id, DocumentEntityTypes.Offer);
 

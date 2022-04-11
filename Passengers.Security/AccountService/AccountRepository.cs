@@ -60,7 +60,7 @@ namespace Passengers.Security.AccountService
             if (loginResult == SignInResult.Success)
             {
                 var roles = await userManager.GetRolesAsync(user);
-                var expierDate = dto.RemmberMe ? DateTime.MaxValue : DateTime.Now.AddDays(2);
+                var expierDate = dto.RemmberMe ? DateTime.Now.AddYears(1) : DateTime.Now.AddDays(2);
                 if (!dto.DeviceToken.IsNullOrEmpty())
                 {
                     user.DeviceTokens ??= "";
@@ -142,7 +142,7 @@ namespace Passengers.Security.AccountService
             AppUser user = new()
             {
                 UserName = dto.UserName,
-                Email = dto.UserName,
+                Email = dto.UserName + "@passengers.com",
                 UserType = dto.Type
             };
             var identityResult = await userManager.CreateAsync(user, dto.Password);

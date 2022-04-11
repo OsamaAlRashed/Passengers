@@ -98,11 +98,21 @@ namespace Passengers.Shared.DocumentService
 
             var document = await Context.Documents
                 .Where(x => type == DocumentEntityTypes.Product ? x.ProductId == entityId : x.ShopId == entityId).FirstOrDefaultAsync();
+
+            if(document == null)
+            {
+                document = new Document()
+                {
+                    ShopId = entityId,
+                    Type = DocumentTypes.Image
+                };
+                Context.Documents.Add(document);
+            }
+
             document.Path = path;
             document.Name = file.Name;
             document.Length = file.Length;
 
-            Context.Update(document);
             await Context.SaveChangesAsync();
             return new GetDocumentDto
             {

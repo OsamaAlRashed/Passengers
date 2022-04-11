@@ -38,6 +38,17 @@ namespace Passengers.Main.OfferService.Store
                 EndDate = c.EndDate
             };
 
+            public static Action<Offer, SetOfferDto> AssignDtoToOffer => (entity, dto) =>
+            {
+                entity.Id = dto.Id;
+                entity.Name = dto.Name;
+                entity.Description = dto.Description;
+                entity.PrepareTime = dto.PrepareTime;
+                entity.Price = dto.Price;
+                entity.StartDate = dto.StartDate;
+                entity.EndDate = dto.EndDate;
+            };
+
         }
 
         public static class Filter

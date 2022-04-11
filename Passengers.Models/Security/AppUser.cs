@@ -48,6 +48,7 @@ namespace Passengers.Models.Security
         public string RefreshToken { get; set; }
         public string DeviceTokens { get; set; }
         public GenderTypes? GenderType { get; set; }
+        public DateTime? DateBlocked { get; set; }
         #endregion 
 
         public double? Rate { get; set; }
@@ -65,6 +66,7 @@ namespace Passengers.Models.Security
         public string OwnerName { get; set; }
         public ShopOrderType? ShopOrderType { get; set; }
         public Address Address { get; set; }
+        public DeliveryShopStatus? DeliveryShopStatus { get; set; }
 
         public ICollection<ShopCategory> MainCategories { get; set; }
         public ICollection<Document> Documents { get; set; }

@@ -109,11 +109,18 @@ namespace Passengers.Security.CustomerService
 
         public async Task<OperationResult<PagedList<ShopCustomerDto>>> GetShops(CustomerShopFilterDto filterDto, bool? topShops, int pageNumber = 1, int pageSize = 10)
         {
+            List<Guid> shopIds = new();
+            if (filterDto.Days != null && filterDto.Days.Any())
+            {
+                string days = filterDto.Days.Select(x => x.ToString()).Aggregate((i,j) => i + j);
+                shopIds = (await Context.ShopSchedules.ToListAsync()).Where(x => x.Days.Intersect(days).Any()).Select(x => x.ShopId).ToList();
+            }
+
             var shops = await Context.Shops()
-                .Where(CustomerStore.Filter.WhereFilterShop(filterDto))
                 .Include(x => x.MainCategories).ThenInclude(x => x.Category)
                 .Include(x => x.Documents).Include(x => x.ShopSchedules)
                 .Include(x => x.Tags).ThenInclude(x => x.Products).ThenInclude(x => x.Rates)
+                .Where(CustomerStore.Filter.WhereFilterShop(filterDto, shopIds))
                 .SortBy(CustomerStore.Query.SortShop(topShops),true)
                 .Select(CustomerStore.Query.ShopToShopCustomerDto)
                 .ToPagedListAsync(pageNumber, pageSize);

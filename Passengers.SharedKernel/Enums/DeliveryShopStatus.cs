@@ -6,14 +6,8 @@ using System.Threading.Tasks;
 
 namespace Passengers.SharedKernel.Enums
 {
-    public enum ContactShopTypes
+    public enum DeliveryShopStatus
     {
-        MobilePhone,
-        Facebook,
-        Instagram,
-        Whatsapp,
-        Telegram,
-        YouTube,
-        Web
+
     }
 }

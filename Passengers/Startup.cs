@@ -20,6 +20,7 @@ using Passengers.Main.ProductService;
 using Passengers.Main.TagService;
 using Passengers.Models.Security;
 using Passengers.Security.AccountService;
+using Passengers.Security.AdminService;
 using Passengers.Security.CustomerService;
 using Passengers.Security.Shared;
 using Passengers.Security.ShopService;
@@ -103,6 +104,7 @@ namespace Passengers
             services.AddScoped<IAddressRepository, AddressRepository>();
             services.AddScoped<IDiscountRepository, DiscountRepository>();
             services.AddScoped<ICustomerRepository, CustomerRepository>();
+            services.AddScoped<IAdminRepository, AdminRepository>();
             services.AddScoped<EmailService>();
         }
 
@@ -115,6 +117,8 @@ namespace Passengers
             }
             
             app.ConfigureOpenAPI();
+
+            app.UseCors("AllowOrigin");
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();

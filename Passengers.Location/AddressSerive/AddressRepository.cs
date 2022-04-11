@@ -22,6 +22,7 @@ namespace Passengers.Location.AddressSerive
 
         public async Task<OperationResult<AddressDto>> Add(AddressDto dto)
         {
+            dto.AreaId = Context.Areas.FirstOrDefault().Id;
             var entity = AddressStore.Query.GetSelectAddress.Compile()(dto);
             Context.Addresses.Add(entity);
             await Context.SaveChangesAsync();

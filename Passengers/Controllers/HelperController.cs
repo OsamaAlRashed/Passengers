@@ -59,5 +59,8 @@ namespace Passengers.Controllers
         [HttpGet]
         public IActionResult UserTypes() => Ok(Helpers.EnumToList(typeof(UserTypes)));
 
+        [HttpGet]
+        public IActionResult DayOfWeek() => Ok(Helpers.EnumToList(typeof(DayOfWeek)));
+
     }
 }

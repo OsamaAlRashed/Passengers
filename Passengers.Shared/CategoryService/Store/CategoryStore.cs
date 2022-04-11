@@ -45,6 +45,15 @@ namespace Passengers.Shared.CategoryService.Store
                 Name = c.Name,
                 ParentId = c.ParentId
             };
+
+            public static Action<Category, SetCategoryDto> AssignDtoToCategory => (entity, dto) =>
+            {
+                entity.Id = dto.Id;
+                entity.Name = dto.Name;
+                entity.ParentId = dto.ParentId;
+            };
+
+
         }
     }
 }
