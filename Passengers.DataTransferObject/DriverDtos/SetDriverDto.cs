@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Passengers.DataTransferObject.SecurityDtos
+namespace Passengers.DataTransferObject.DriverDtos
 {
-    public class SetAdminDto
+    public class SetDriverDto
     {
         public Guid Id { get; set; }
         public string ImageFile { get; set; }

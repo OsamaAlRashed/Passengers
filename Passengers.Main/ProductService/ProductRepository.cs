@@ -180,7 +180,7 @@ namespace Passengers.Main.ProductService
                 .Select(ProductStore.Query.GetSelectProduct)
                 .ToPagedListAsync(pageNumber, pageSize);
 
-            return products;
+            return _Operation.SetSuccess(products);
         }
 
         //public async Task<OperationResult<object>> FilterProduct(FilterFoodMenuDto dto)

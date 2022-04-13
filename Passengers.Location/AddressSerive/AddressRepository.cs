@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Passengers.Base;
 using Passengers.DataTransferObject.LocationDtos;
 using Passengers.Location.AddressSerive.Store;
 using Passengers.Repository.Base;
@@ -67,7 +68,7 @@ namespace Passengers.Location.AddressSerive
 
         public async Task<OperationResult<bool>> RemoveByUserId(Guid userId)
         {
-            var entities = await Context.Addresses.Where(x => x.Id == userId).ToListAsync();
+            var entities = await Context.Addresses.Where(x => x.CustomerId == userId).ToListAsync();
             foreach (var entity in entities)
             {
                 entity.DateDeleted = DateTime.Now;

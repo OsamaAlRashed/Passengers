@@ -33,11 +33,13 @@ namespace Passengers.Security.AccountService
         private readonly UserManager<AppUser> userManager;
         private readonly SignInManager<AppUser> signInManager;
         private readonly IConfiguration configuration;
-        public AccountRepository(PassengersDbContext context, UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, IConfiguration configuration) :base(context)
+        private readonly IPasswordHasher<AppUser> passwordHasher;
+        public AccountRepository(PassengersDbContext context, UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, IConfiguration configuration, IPasswordHasher<AppUser> passwordHasher) :base(context)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
             this.configuration = configuration;
+            this.passwordHasher = passwordHasher;
         }
 
         public async Task<OperationResult<LoginResponseDto>> Login(BaseLoginDto dto)
@@ -247,6 +249,33 @@ namespace Passengers.Security.AccountService
                 AccessToken = newAccessToken,
                 RefreshToken = newRefreshToken,
             });
+        }
+
+        public async Task<OperationResult<bool>> ChangePassword(Guid id, string oldPassword, string newPassword)
+        {
+            var user = Context.Users.SingleOrDefault(u => u.Id == id);
+            if (user == null)
+                return _Operation.SetContent<bool>(OperationResultTypes.NotExist, "UserNotFound");
+
+            var result = await userManager.ChangePasswordAsync(user, oldPassword, newPassword);
+            if (!result.Succeeded)
+                return _Operation.SetFailed<bool>("");
+            return _Operation.SetSuccess(true);
+        }
+
+        public async Task<OperationResult<bool>> ChangePassword(Guid id, string newPassword)
+        {
+            var user = Context.Users.SingleOrDefault(u => u.Id == id);
+            if (user == null)
+                return _Operation.SetContent<bool>(OperationResultTypes.NotExist, "UserNotFound");
+
+            if (newPassword.IsNullOrEmpty())
+                return _Operation.SetFailed<bool>("");
+
+            user.PasswordHash = passwordHasher.HashPassword(user, newPassword);
+            await Context.SaveChangesAsync();
+
+            return _Operation.SetSuccess(true);
         }
     }
 }

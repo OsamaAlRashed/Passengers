@@ -297,10 +297,12 @@ namespace Passengers.Security.ShopService
                 await addressRepository.UpdateShopAddress(addressDto);
             }
 
+            if(dto.Contacts != null)
+            {
+                await UpdateContracts(shop, dto.Contacts);
+            }
 
-            await UpdateContracts(shop, dto.Contacts);
-
-            if(!Context.ShopCategories.Where(x => x.CategoryId == dto.CategoryId && x.ShopId == shop.Id).Any())
+            if (!Context.ShopCategories.Where(x => x.CategoryId == dto.CategoryId && x.ShopId == shop.Id).Any())
             {
                 Context.ShopCategories.RemoveRange(shop.MainCategories);
 

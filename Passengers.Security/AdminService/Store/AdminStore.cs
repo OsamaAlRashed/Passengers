@@ -21,14 +21,14 @@ namespace Passengers.Security.AdminService.Store
             public static Func<AppUser, GetAdminDto> AdminToAdminDto => c => new GetAdminDto
             {
                 Id = c.Id,
-                Address = c.Address?.Text,
                 UserName = c.UserName,
                 Age = c.DOB is null ? null : (DateTime.Today.Year - c.DOB.Value.Year),
                 FullName = c.FullName,
                 GenderType = c.GenderType,
                 IdentifierImagePath = c.IdentifierImagePath,
                 PhoneNumber = c.PhoneNumber,
-                Salary = 0,
+                Salary = c.Salary,
+                AddressText = c.AddressText,
                 IsBlocked = c.DateBlocked.HasValue
             };
 
@@ -37,12 +37,8 @@ namespace Passengers.Security.AdminService.Store
                 UserName = c.UserName,
                 FullName = c.FullName,
                 PhoneNumber = c.PhoneNumber,
-                Address = new Address
-                {
-                    Text = c.Address,
-                    AreaId = new Guid("b85a6cd6-f4c4-4a2c-7446-08d9fac0f696"),
-                },
-                //Salary = 
+                AddressText = c.AddressText,
+                Salary = c.Salary,
                 DOB = c.DOB,
                 GenderType = c.GenderType,
             };
@@ -52,14 +48,11 @@ namespace Passengers.Security.AdminService.Store
                 entity.UserName = dto.UserName;
                 entity.FullName = dto.FullName;
                 entity.PhoneNumber = dto.PhoneNumber;
-                entity.Address = new Address
-                {
-                    Text = dto.Address,
-                    AreaId = new Guid("b85a6cd6-f4c4-4a2c-7446-08d9fac0f696"),
-                };
                 entity.DOB = dto.DOB;
                 entity.GenderType = dto.GenderType;
                 entity.AccountStatus = AccountStatus.Accepted;
+                entity.Salary = dto.Salary;
+                entity.AddressText = dto.AddressText;
             };
 
         }

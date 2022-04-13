@@ -49,6 +49,8 @@ namespace Passengers.Models.Security
         public string DeviceTokens { get; set; }
         public GenderTypes? GenderType { get; set; }
         public DateTime? DateBlocked { get; set; }
+        public decimal Salary { get; set; }
+        public string AddressText { get; set; }
         #endregion 
 
         public double? Rate { get; set; }
@@ -86,5 +88,8 @@ namespace Passengers.Models.Security
 
         [InverseProperty("Customer")]
         public ICollection<Address> Addresses { get; set; }
+
+        public ICollection<Payment> Payments { get; set; }
+
     }
 }

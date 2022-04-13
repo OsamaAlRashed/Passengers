@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Passengers.SqlServer.DataBase;
 
 namespace Passengers.SqlServer.Migrations
 {
     [DbContext(typeof(PassengersDbContext))]
-    partial class PassengersDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220412092450_SalaryLog")]
+    partial class SalaryLog
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -431,54 +433,6 @@ namespace Passengers.SqlServer.Migrations
                     b.ToTable("Offers");
                 });
 
-            modelBuilder.Entity("Passengers.Models.Main.Payment", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("DateCreated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DateDeleted")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DateUpdated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Note")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DateCreated");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Payments");
-                });
-
             modelBuilder.Entity("Passengers.Models.Main.PriceLog", b =>
                 {
                     b.Property<Guid>("Id")
@@ -573,6 +527,51 @@ namespace Passengers.SqlServer.Migrations
                     b.HasIndex("TagId");
 
                     b.ToTable("Products");
+                });
+
+            modelBuilder.Entity("Passengers.Models.Main.SalaryLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DateDeleted")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DateUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DateCreated");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("SalaryLogs");
                 });
 
             modelBuilder.Entity("Passengers.Models.Main.ShopCategory", b =>
@@ -873,9 +872,6 @@ namespace Passengers.SqlServer.Migrations
 
                     b.Property<int>("AccountStatus")
                         .HasColumnType("int");
-
-                    b.Property<string>("AddressText")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("BloodType")
                         .HasColumnType("int");
@@ -1380,15 +1376,6 @@ namespace Passengers.SqlServer.Migrations
                     b.Navigation("Shop");
                 });
 
-            modelBuilder.Entity("Passengers.Models.Main.Payment", b =>
-                {
-                    b.HasOne("Passengers.Models.Security.AppUser", "User")
-                        .WithMany("Payments")
-                        .HasForeignKey("UserId");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Passengers.Models.Main.PriceLog", b =>
                 {
                     b.HasOne("Passengers.Models.Main.Product", "Product")
@@ -1409,6 +1396,17 @@ namespace Passengers.SqlServer.Migrations
                         .IsRequired();
 
                     b.Navigation("Tag");
+                });
+
+            modelBuilder.Entity("Passengers.Models.Main.SalaryLog", b =>
+                {
+                    b.HasOne("Passengers.Models.Security.AppUser", "User")
+                        .WithMany("SalaryLogs")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Passengers.Models.Main.ShopCategory", b =>
@@ -1644,9 +1642,9 @@ namespace Passengers.SqlServer.Migrations
 
                     b.Navigation("Offers");
 
-                    b.Navigation("Payments");
-
                     b.Navigation("Rates");
+
+                    b.Navigation("SalaryLogs");
 
                     b.Navigation("ShopContacts");
 

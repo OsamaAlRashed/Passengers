@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using Passengers.DataTransferObject.ProductDtos;
 using Passengers.Main.ProductService;
 using Passengers.SharedKernel.Attribute;
@@ -46,7 +47,21 @@ namespace Passengers.Controllers
 
         [AppAuthorize(AppRoles.Shop)]
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery]ProductFilterDto filterDto, SortProductTypes? sortType, bool? isDes, int pageNumber = 1, int pageSize = 10) => await repository.Get(filterDto, sortType, isDes, pageNumber, pageSize).ToJsonResultAsync();
+        public async Task<IActionResult> Get([FromQuery] ProductFilterDto filterDto, SortProductTypes? sortType, bool? isDes, int pageNumber = 1, int pageSize = 10)
+        {
+            var result = await repository.Get(filterDto, sortType, isDes, pageNumber, pageSize);
+            var metadata = new
+            {
+                result.Result.TotalCount,
+                result.Result.PageSize,
+                result.Result.CurrentPage,
+                result.Result.TotalPages,
+                result.Result.HasNext,
+                result.Result.HasPrevious
+            };
+            Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(metadata));
+            return result.ToJsonResult();
+        } 
 
         [AppAuthorize(AppRoles.Shop)]
         [HttpDelete]

@@ -19,6 +19,8 @@ namespace Passengers.Security.AccountService
         //Task<OperationResult<bool>> ForgetPassword(string email);
         //Task<OperationResult<bool>> ResetPassword(ResetPasswordDto model);
         Task<OperationResult<TokenDto>> RefreshToken(TokenRequestDto tokenDto);
+        Task<OperationResult<bool>> ChangePassword(Guid id, string oldPassword, string newPassword);
+        Task<OperationResult<bool>> ChangePassword(Guid id, string newPassword);
         Task<bool> IsPhoneNumberUsed(string phoneNumber);
 
     }

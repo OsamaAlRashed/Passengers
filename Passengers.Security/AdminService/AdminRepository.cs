@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Passengers.Base;
 using Passengers.DataTransferObject.SecurityDtos;
+using Passengers.Location.AddressSerive;
 using Passengers.Models.Location;
 using Passengers.Models.Security;
 using Passengers.Repository.Base;
@@ -32,7 +33,7 @@ namespace Passengers.Security.AdminService
         private readonly UserManager<AppUser> userManager;
 
         public AdminRepository(PassengersDbContext context, IAccountRepository accountRepository, IWebHostEnvironment webHostEnvironment
-            , UserManager<AppUser> userManager): base(context)
+            , UserManager<AppUser> userManager) : base(context)
         {
             this.accountRepository = accountRepository;
             this.webHostEnvironment = webHostEnvironment;
@@ -158,6 +159,11 @@ namespace Passengers.Security.AdminService
             if (!path.IsNullOrEmpty())
             {
                 entity.IdentifierImagePath = path;
+            }
+
+            if (!dto.Password.IsNullOrEmpty())
+            {
+                await accountRepository.ChangePassword(entity.Id, dto.Password);
             }
 
             await userManager.UpdateAsync(entity);

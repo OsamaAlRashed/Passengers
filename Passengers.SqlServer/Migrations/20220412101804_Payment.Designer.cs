@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Passengers.SqlServer.DataBase;
 
 namespace Passengers.SqlServer.Migrations
 {
     [DbContext(typeof(PassengersDbContext))]
-    partial class PassengersDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220412101804_Payment")]
+    partial class Payment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -874,9 +876,6 @@ namespace Passengers.SqlServer.Migrations
                     b.Property<int>("AccountStatus")
                         .HasColumnType("int");
 
-                    b.Property<string>("AddressText")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int?>("BloodType")
                         .HasColumnType("int");
 
@@ -1383,7 +1382,7 @@ namespace Passengers.SqlServer.Migrations
             modelBuilder.Entity("Passengers.Models.Main.Payment", b =>
                 {
                     b.HasOne("Passengers.Models.Security.AppUser", "User")
-                        .WithMany("Payments")
+                        .WithMany("SalaryLogs")
                         .HasForeignKey("UserId");
 
                     b.Navigation("User");
@@ -1644,9 +1643,9 @@ namespace Passengers.SqlServer.Migrations
 
                     b.Navigation("Offers");
 
-                    b.Navigation("Payments");
-
                     b.Navigation("Rates");
+
+                    b.Navigation("SalaryLogs");
 
                     b.Navigation("ShopContacts");
 

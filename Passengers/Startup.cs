@@ -16,7 +16,9 @@ using Passengers.Location.CountryService;
 using Passengers.Location.LocationService;
 using Passengers.Main.DiscountService;
 using Passengers.Main.OfferService;
+using Passengers.Main.PaymentService;
 using Passengers.Main.ProductService;
+using Passengers.Main.SalaryLogService;
 using Passengers.Main.TagService;
 using Passengers.Models.Security;
 using Passengers.Security.AccountService;
@@ -105,6 +107,7 @@ namespace Passengers
             services.AddScoped<IDiscountRepository, DiscountRepository>();
             services.AddScoped<ICustomerRepository, CustomerRepository>();
             services.AddScoped<IAdminRepository, AdminRepository>();
+            services.AddScoped<IPaymentRepository, PaymentRepository>();
             services.AddScoped<EmailService>();
         }
 

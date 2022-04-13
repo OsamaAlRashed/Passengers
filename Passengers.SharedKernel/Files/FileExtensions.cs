@@ -93,6 +93,8 @@ namespace Passengers.SharedKernel.Files
 
         public static string ProcessUploadedFile(this string base64Image, string uploadsFolderName, string webRootPath)
         {
+            if (base64Image.IsNullOrEmpty())
+                return base64Image;
 
             string photoPath = null;
 

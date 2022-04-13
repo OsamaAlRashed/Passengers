@@ -12,10 +12,10 @@ namespace Passengers.DataTransferObject.SecurityDtos
         public Guid Id { get; set; }
         public string FullName { get; set; }
         public string PhoneNumber { get; set; }
-        public string Address { get; set; }
+        public string AddressText { get; set; }
         public string UserName { get; set; }
         public GenderTypes? GenderType { get; set; }
-        public int Salary { get; set; }
+        public decimal Salary { get; set; }
         public int? Age { get; set; }
         public string IdentifierImagePath { get; set; }
         public bool IsBlocked { get; set; }
