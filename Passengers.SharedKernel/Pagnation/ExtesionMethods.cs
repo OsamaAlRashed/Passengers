@@ -1,9 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Passengers.SharedKernel.OperationResult;
 
 namespace Passengers.SharedKernel.Pagnation
 {
@@ -29,5 +33,24 @@ namespace Passengers.SharedKernel.Pagnation
             var items = source.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
             return new PagedList<T>(items, count, pageNumber, pageSize);
         }
+
+        public static OperationResult<PagedList<T>> AddPagnationHeader<T>(this OperationResult<PagedList<T>> result, ControllerBase controllerBase)
+        {
+            var metadata = new
+            {
+                result.Result.TotalCount,
+                result.Result.PageSize,
+                result.Result.CurrentPage,
+                result.Result.TotalPages,
+                result.Result.HasNext,
+                result.Result.HasPrevious
+            };
+            controllerBase.Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(metadata));
+
+            return result;
+        }
+
+        public static async Task<OperationResult<PagedList<T>>> AddPagnationHeaderAsync<T>(this Task<OperationResult<PagedList<T>>> result, ControllerBase controllerBase)
+            => (await result).AddPagnationHeader(controllerBase);
     }
 }

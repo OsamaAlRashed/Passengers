@@ -7,6 +7,7 @@ using Passengers.Repository.Base;
 using Passengers.Shared.CategoryService.Store;
 using Passengers.Shared.SharedService;
 using Passengers.SharedKernel.Constants;
+using Passengers.SharedKernel.Enums;
 using Passengers.SharedKernel.Files;
 using Passengers.SharedKernel.OperationResult;
 using Passengers.SharedKernel.OperationResult.Enums;
@@ -31,7 +32,13 @@ namespace Passengers.Main.TagService
 
         public async Task<OperationResult<GetTagDto>> Add(SetTagDto dto)
         {
+            var user = await Context.Users.Where(x => x.Id == Context.CurrentUserId).SingleOrDefaultAsync();
+            if(user == null)
+                return _Operation.SetContent<GetTagDto>(OperationResultTypes.NotExist, "");
+
             var tag = TagStore.Query.InverseSetSelectCategory.Compile()(dto);
+
+            tag.ShopId = user.UserType == UserTypes.Shop ? Context.CurrentUserId : null;
             tag.LogoPath = dto.LogoFile.TryUploadImage(FolderNames.Tag, webHostEnvironment.WebRootPath);
             Context.Tags.Add(tag);
             await Context.SaveChangesAsync();
@@ -43,7 +50,7 @@ namespace Passengers.Main.TagService
             var tag = await Context.Tags.Include(x => x.Products)
                 .Where(x => x.Id == id).SingleOrDefaultAsync();
             if (tag == null)
-                return _Operation.SetFailed<bool>("", OperationResultTypes.NotExist);
+                return _Operation.SetContent<bool>(OperationResultTypes.NotExist, "");
 
             tag.IsHidden = status;
             foreach (var product in tag.Products)
@@ -74,10 +81,10 @@ namespace Passengers.Main.TagService
             return _Operation.SetSuccess(tag);
         }
 
-        public async Task<OperationResult<List<GetTagDto>>> GetByShopId(Guid id)
+        public async Task<OperationResult<List<GetTagDto>>> GetByShopId(Guid? id)
         {
             var tags = await Context.Tags
-                .Where(x => x.ShopId == id)
+                .Where(x => !id.HasValue || x.ShopId == Context.CurrentUserId)
                 .Select(TagStore.Query.GetSelectTag)
                 .ToListAsync();
             return _Operation.SetSuccess(tags);
@@ -96,8 +103,10 @@ namespace Passengers.Main.TagService
         {
             var tag = await Context.Tags.Where(x => x.Id == id).SingleOrDefaultAsync();
             if (tag == null)
-                return _Operation.SetFailed<bool>("Category Not Found.", OperationResultTypes.NotExist);
-            //await RemoveProducts(Guid id);
+                return _Operation.SetFailed<bool>("Tag Not Found.", OperationResultTypes.NotExist);
+
+            tag.DateDeleted = DateTime.Now;
+            await Context.SaveChangesAsync();
             return _Operation.SetSuccess(true);
         }
 

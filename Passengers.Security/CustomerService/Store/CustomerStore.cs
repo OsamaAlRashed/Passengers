@@ -19,14 +19,14 @@ namespace Passengers.Security.CustomerService.Store
         public static class Filter
         {
             public static Expression<Func<Product, bool>> WhereFilterProduct(CustomerProductFilterDto filter) => product =>
-                (filter.TagId == product.TagId)
+                (!filter.TagId.HasValue || filter.TagId == product.TagId)
              && (string.IsNullOrEmpty(filter.Search) || product.Name.Contains(filter.Search))
              && (!filter.FromPrice.HasValue || filter.FromPrice <= product.Price)
              && (!filter.ToPrice.HasValue || filter.ToPrice >= product.Price)
-             && (!filter.Rate.HasValue || (int)(product.Rates.Any() ? product.Rates.Average(x => x.Degree) : 0) == filter.Rate)
+             && (!filter.Rate.HasValue || ((int)(product.Rates.Any() ? Math.Ceiling(product.Rates.Average(x => x.Degree)) : 1) == filter.Rate))
              && ((!filter.WithDiscount.HasValue) ||
                 (filter.WithDiscount.Value ? product.Discounts.Where(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate).Any()
-                                       : true));
+                                       : !product.Discounts.Where(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate).Any()));
 
             public static Expression<Func<AppUser, bool>> WhereFilterShop(CustomerShopFilterDto filter, List<Guid> shopIds) => shop =>
                 (string.IsNullOrEmpty(filter.Search) || shop.Name.Contains(filter.Search))
@@ -80,6 +80,28 @@ namespace Passengers.Security.CustomerService.Store
                     return x => x.ShopSchedules.Any(x => x.Days.Contains(DateTime.Now.Day.ToString()) && x.FromTime <= DateTime.Now.TimeOfDay && DateTime.Now.TimeOfDay <= x.ToTime);
                 return x => x.Tags.SelectMany(x => x.Products.SelectMany(x => x.Rates)).Average(x => x.Degree);
             }
+
+            //Home
+            public static Expression<Func<AppUser, ShopDto>> ShopToShopDto => c => new ShopDto
+            {
+                Id = c.Id,
+                ImagePath = c.Documents.Select(x => x.Path).FirstOrDefault(),
+                Name = c.Name,
+                Online = c.ShopSchedules.Any(x => x.Days.Contains(DateTime.Now.Day.ToString()) && x.FromTime <= DateTime.Now.TimeOfDay && DateTime.Now.TimeOfDay <= x.ToTime)
+            };
+
+            public static Func<Product, ProductDto> ProductToProductDto => c => new ProductDto
+            {
+                Id = c.Id,
+                Name = c.Name,
+                Avilable = c.Avilable,
+                ImagePath = c.ImagePath,
+                Price = c.Price,
+                Rate = c.Rates.Any() ? c.Rates.Average(x => x.Degree) : 0,
+                ShopId = c.Tag.ShopId.Value,
+                ShopOnline = c.Tag.Shop.ShopSchedules.Any(x => x.Days.Contains(DateTime.Now.Day.ToString()) && x.FromTime <= DateTime.Now.TimeOfDay && DateTime.Now.TimeOfDay <= x.ToTime),
+                ShopImagePath = c.Tag.Shop.Documents.Select(x => x.Path).FirstOrDefault(),
+            };
         }
     }
 }

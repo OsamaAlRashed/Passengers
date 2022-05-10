@@ -8,7 +8,7 @@ namespace Passengers.SharedKernel.Enums
 {
     public enum GenderTypes
     {
-        Male,
+        Male = 1,
         Female
     }
 }

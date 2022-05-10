@@ -62,7 +62,7 @@ namespace Passengers.Security.AccountService
             if (loginResult == SignInResult.Success)
             {
                 var roles = await userManager.GetRolesAsync(user);
-                var expierDate = dto.RemmberMe ? DateTime.Now.AddYears(1) : DateTime.Now.AddDays(2);
+                var expierDate = dto.RemmberMe ? DateTime.Now.AddYears(1) : DateTime.Now.AddMinutes(30);
                 if (!dto.DeviceToken.IsNullOrEmpty())
                 {
                     user.DeviceTokens ??= "";
@@ -108,6 +108,8 @@ namespace Passengers.Security.AccountService
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.UserName.ToString()),
+                new Claim("Type", user.UserType.ToString()),
             };
 
             foreach (var role in roles)
@@ -127,6 +129,26 @@ namespace Passengers.Security.AccountService
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
+        public ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
+        {
+            var tokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateAudience = false, //you might want to validate the audience and issuer depending on your use case
+                ValidateIssuer = false,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"])),
+                ValidateLifetime = false //here we are saying that we don't care about the token's expiration date
+            };
+            var tokenHandler = new JwtSecurityTokenHandler();
+            SecurityToken securityToken;
+            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out securityToken);
+            var jwtSecurityToken = securityToken as JwtSecurityToken;
+            if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256Signature, StringComparison.InvariantCultureIgnoreCase))
+                throw new SecurityTokenException("Invalid token");
+            return principal;
+        }
+
         public static string GenerateRefreshToken()
         {
             var randomNumber = new byte[32];
@@ -229,17 +251,20 @@ namespace Passengers.Security.AccountService
             return _Operation.SetFailed<bool>("", OperationResultTypes.Failed);
         }
 
-        public async Task<OperationResult<TokenDto>> RefreshToken(TokenRequestDto tokenDto)
+        public async Task<OperationResult<TokenDto>> RefreshToken(string accessToken, string refreshToken)
         {
-            var user = Context.Users.SingleOrDefault(u => u.Id == tokenDto.Id);
-            if (user == null)
-                return (OperationResultTypes.NotExist, "UserNotFound");
+            var principal = GetPrincipalFromExpiredToken(accessToken);
+            var username = principal.Identity.Name; //this is mapped to the Name claim by default
 
-            if (user.RefreshToken != tokenDto.RefreshToken)
-                return (OperationResultTypes.Failed, "RefreshTokenUnCorrect");
+            var user = Context.Users.SingleOrDefault(u => u.UserName == username);
+            if (user == null)
+                return _Operation.SetContent<TokenDto>(OperationResultTypes.NotExist, "UserNotFound");
+
+            if (user.RefreshToken != refreshToken)
+                return _Operation.SetFailed<TokenDto>("RefreshTokenUnCorrect");
 
             var roles = await userManager.GetRolesAsync(user);
-            var newAccessToken = GenerateAccessToken(user, roles, DateTime.Now.AddDays(1));
+            var newAccessToken = GenerateAccessToken(user, roles, DateTime.Now.AddMinutes(30));
             var newRefreshToken = GenerateRefreshToken();
             user.RefreshToken = newRefreshToken;
 
@@ -277,5 +302,31 @@ namespace Passengers.Security.AccountService
 
             return _Operation.SetSuccess(true);
         }
+
+        public async Task<OperationResult<bool>> Block(Guid id)
+        {
+            var user = await Context.Users.Where(x => x.Id == id).SingleOrDefaultAsync();
+            if (user == null)
+                return _Operation.SetContent<bool>(OperationResultTypes.NotExist, "UserNotFound");
+
+            user.DateBlocked = user.DateBlocked.HasValue ? null : DateTime.Now;
+            await Context.SaveChangesAsync();
+
+            return _Operation.SetSuccess(true);
+        }
+
+        public async Task<OperationResult<bool>> Delete(Guid id)
+        {
+            var user = await Context.Users.Where(x => x.Id == id).SingleOrDefaultAsync();
+            if (user == null)
+                return _Operation.SetContent<bool>(OperationResultTypes.NotExist, "UserNotFound");
+
+            user.DateDeleted = DateTime.Now;
+            await Context.SaveChangesAsync();
+
+            return _Operation.SetSuccess(true);
+        }
+
+        
     }
 }

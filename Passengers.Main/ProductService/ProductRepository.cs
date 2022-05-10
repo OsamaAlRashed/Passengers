@@ -99,6 +99,8 @@ namespace Passengers.Main.ProductService
 
             var result = new
             {
+                product.Id,
+                ImagePath = product.Documents.Select(x => x.Path).FirstOrDefault(),
                 product.TagId,
                 TagName = product.Tag.Name,
                 product.Name,

@@ -15,8 +15,7 @@ namespace Passengers.Security.AdminService
         Task<OperationResult<GetAdminDto>> GetById(Guid id);
         Task<OperationResult<GetAdminDto>> Add(SetAdminDto dto);
         Task<OperationResult<GetAdminDto>> Update(SetAdminDto dto);
-        Task<OperationResult<GetAdminDto>> Delete(Guid id);
-        Task<OperationResult<bool>> Block(Guid id);
+        Task<OperationResult<bool>> Delete(Guid id);
 
         Task<OperationResult<PagedList<DashboardShopDto>>> GetShops(int pageNumber, int pageSize, string search);
 

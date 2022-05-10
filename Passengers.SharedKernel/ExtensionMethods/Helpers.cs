@@ -7,6 +7,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Passengers.SharedKernel.ExtensionMethods
 {
@@ -103,7 +104,7 @@ namespace Passengers.SharedKernel.ExtensionMethods
 
         internal static readonly char[] chars =
           "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".ToCharArray();
-        public static string GetUniqueKey(int size)
+        public static string GetUniqueKey(int size = 6)
         {
             byte[] data = new byte[4 * size];
             using (System.Security.Cryptography.RNGCryptoServiceProvider crypto = new())
@@ -182,5 +183,6 @@ namespace Passengers.SharedKernel.ExtensionMethods
             }).ToList();
 
         }
+
     }
 }

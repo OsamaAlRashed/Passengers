@@ -69,21 +69,11 @@ namespace Passengers.Security.AdminService
             return _Operation.SetFailed<GetAdminDto>("Error");
         }
 
-        public async Task<OperationResult<bool>> Block(Guid id)
+        
+
+        public async Task<OperationResult<bool>> Delete(Guid id)
         {
-            var user = await Context.Users.Where(x => x.Id == id).SingleOrDefaultAsync();
-            if (user == null)
-                return _Operation.SetContent<bool>(OperationResultTypes.NotExist, "UserNotFound");
-
-            user.DateBlocked = user.DateBlocked.HasValue ? null : DateTime.Now;
-            await Context.SaveChangesAsync();
-
-            return _Operation.SetSuccess(true);
-        }
-
-        public async Task<OperationResult<GetAdminDto>> Delete(Guid id)
-        {
-            throw new NotImplementedException();
+            return await accountRepository.Delete(id);
         }
 
         public async Task<OperationResult<PagedList<GetAdminDto>>> Get(int pageNumber, int pageSize, string search)

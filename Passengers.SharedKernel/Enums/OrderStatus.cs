@@ -6,9 +6,9 @@ namespace Passengers.SharedKernel.Enums
 {
     public enum OrderStatus
     {
-        Open = 0,
-        InShop = 1,
-        OnWay = 2,
-        Close = 3
+        Open = 1,
+        InShop,
+        OnWay,
+        Close
     }
 }

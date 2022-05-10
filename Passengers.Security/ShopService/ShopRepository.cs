@@ -137,6 +137,8 @@ namespace Passengers.Security.ShopService
                     ToTime = toTime,
                     ShopId = shop.Id
                 };
+
+                Context.ShopSchedules.Add(shopSchacule);
             }
 
             var document = await documentRepository.Add(dto.Image, shop.Id, DocumentEntityTypes.Shop);
@@ -163,19 +165,22 @@ namespace Passengers.Security.ShopService
 
             if(dto.TagIds != null)
             {
+                List<Tag> newTags = new();
                 foreach (var tagId in dto.TagIds)
                 {
-                    var publicTag = Context.Tags.Where(x => x.Id == tagId).SingleOrDefault();
-                    if(publicTag.ShopId != shop.Id)
+                    var currentTag = Context.Tags.Where(x => x.Id == tagId).SingleOrDefault();
+                    if(currentTag != null && currentTag.ShopId != shop.Id)
                     {
                         var tag = new Tag
                         {
                             ShopId = shop.Id,
-                            Name = publicTag?.Name ?? "NoLabel",
-                            LogoPath = publicTag?.LogoPath,
+                            Name = currentTag.Name,
+                            LogoPath = currentTag.LogoPath,
                         };
+                        newTags.Add(tag);
                     }
                 }
+                Context.Tags.AddRange(newTags);
             }
             shop.AccountStatus = AccountStatus.Accepted;
             await Context.SaveChangesAsync();
@@ -441,11 +446,11 @@ namespace Passengers.Security.ShopService
         {
             var schedule = await Context.ShopSchedules.Where(x => x.ShopId == Context.CurrentUserId.Value).FirstOrDefaultAsync();
             if (schedule == null)
-                return _Operation.SetFailed<WorkingDaysDto>("");
+                return _Operation.SetContent<WorkingDaysDto>(OperationResultTypes.NotExist, "");
 
             return _Operation.SetSuccess(new WorkingDaysDto
             {
-                Days = schedule.Days.Split(",").Cast<int>().ToList(),
+                Days = schedule.Days.Split(",").Select(x => int.Parse(x)).ToList(),
                 FromTime = schedule.FromTime.ToString(),
                 ToTime = schedule.ToTime.ToString()
             });

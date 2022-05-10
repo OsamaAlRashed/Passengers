@@ -5,7 +5,9 @@ using Passengers.DataTransferObject.SecurityDtos;
 using Passengers.DataTransferObject.SecurityDtos.Login;
 using Passengers.Security.AccountService;
 using Passengers.SharedKernel.Enums;
+using Passengers.SharedKernel.OperationResult.Enums;
 using Passengers.SharedKernel.OperationResult.ExtensionMethods;
+using Passengers.SharedKernel.Swagger.ApiGroup;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
@@ -43,7 +45,13 @@ namespace Passengers.Controllers
 
         [HttpPost]
         [AllowAnonymous]
-        public async Task<IActionResult> RefreshToken(TokenRequestDto dto) => await repository.RefreshToken(dto).ToJsonResultAsync();
-
+        [ApiGroup(ApiGroupNames.Dashboard, ApiGroupNames.Shop, ApiGroupNames.Customer, ApiGroupNames.Driver)]
+        public async Task<IActionResult> RefreshToken(string refreshToken)
+        {
+            Request.Headers.TryGetValue("Authorization", out var accessToken);
+            if (string.IsNullOrEmpty(accessToken) || accessToken.ToString().Split(" ").Length != 2)
+                return NotFound("HeaderNotContainAccessToken");
+            return await repository.RefreshToken(accessToken.ToString().Split(" ")[1], refreshToken).ToJsonResultAsync();
+        }
     }
 }

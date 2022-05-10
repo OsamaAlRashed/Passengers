@@ -8,7 +8,7 @@ namespace Passengers.SharedKernel.Enums
 {
     public enum OfferTypes
     {
-        Active,
+        Active = 1,
         Pending,
         Archive
     }

@@ -15,13 +15,16 @@ namespace Passengers.Security.AccountService
         Task<OperationResult<LoginResponseDto>> Login(BaseLoginDto dto);
         Task<OperationResult<CreateAccountDto>> Create(CreateAccountDto dto);
         Task<OperationResult<bool>> ChangeStatus(Guid id, AccountStatus accountStatus);
-        //Task<OperationResult<bool>> ResendToken(Guid id, TokenTypes type);
-        //Task<OperationResult<bool>> ForgetPassword(string email);
-        //Task<OperationResult<bool>> ResetPassword(ResetPasswordDto model);
-        Task<OperationResult<TokenDto>> RefreshToken(TokenRequestDto tokenDto);
+        Task<OperationResult<TokenDto>> RefreshToken(string accessToken, string refreshToken);
         Task<OperationResult<bool>> ChangePassword(Guid id, string oldPassword, string newPassword);
         Task<OperationResult<bool>> ChangePassword(Guid id, string newPassword);
         Task<bool> IsPhoneNumberUsed(string phoneNumber);
+        Task<OperationResult<bool>> Delete(Guid id);
+        Task<OperationResult<bool>> Block(Guid id);
 
+
+        //Task<OperationResult<bool>> ResendToken(Guid id, TokenTypes type);
+        //Task<OperationResult<bool>> ForgetPassword(string email);
+        //Task<OperationResult<bool>> ResetPassword(ResetPasswordDto model);
     }
 }

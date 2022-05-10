@@ -26,5 +26,7 @@ namespace Passengers.Security.CustomerService
         Task<OperationResult<bool>> Follow(Guid shopId);
         Task<OperationResult<PagedList<GetProductDto>>> GetProducts(CustomerProductFilterDto filterDto, int pageNumber = 1, int pageSize = 10);
         Task<OperationResult<PagedList<ShopCustomerDto>>> GetShops(CustomerShopFilterDto filterDto, bool? topShop, int pageNumber = 1, int pageSize = 10);
+        Task<OperationResult<CustomerHomeDto>> Home();
+        Task<OperationResult<object>> GetProductById(Guid id);
     }
 }

@@ -96,6 +96,54 @@ namespace Passengers.Security.CustomerService
             return _Operation.SetSuccess(products);
         }
 
+        public async Task<OperationResult<object>> GetProductById(Guid id)
+        {
+            var product = await Context.Products
+                .Include(x => x.Tag)
+                .Include(x => x.Discounts)
+                .Include(x => x.Rates)
+                .ThenInclude(x => x.Customer)
+                .Where(x => x.Id == id)
+                .SingleOrDefaultAsync();
+
+            if (product == null)
+                return _Operation.SetContent<object>(OperationResultTypes.NotExist, "ProductNotFound");
+             
+            //var discount = GetCurrentDiscount(product.Discounts);
+
+            var result = new
+            {
+                product.Id,
+                ImagePath = product.Documents.Select(x => x.Path).FirstOrDefault(),
+                product.TagId,
+                TagName = product.Tag.Name,
+                product.Name,
+                product.Price,
+                //DiscountPrice = discount?.Price,
+                product.Avilable,
+                product.PrepareTime,
+                RateDegree = product.Rate,
+                RateNumber = product.Rates.Count,
+                product.Description,
+                product.Tag.Shop.DeliveryShopStatus,
+                ShopName = product.Tag.Shop.Name,
+                ShopId = product.Tag.Shop.Id,
+                ShopCategory = product.Tag.Shop.MainCategories.Select(x => x.Category.Name).FirstOrDefault(),
+                ShopImagePath = product.Tag.Shop.Documents.Select(x => x.Path).FirstOrDefault(),
+                ShopOnline = product.Tag.Shop.ShopSchedules.Any(x => x.Days.Contains(DateTime.Now.Day.ToString()) && x.FromTime <= DateTime.Now.TimeOfDay && DateTime.Now.TimeOfDay <= x.ToTime),
+                Rates = product.Rates.Select(r => new
+                {
+                    r.Id,
+                    r.Degree,
+                    r.Descreption,
+                    CustomerName = r.Customer.Name,
+                    r.CustomerId,
+                    Date = r.DateCreated
+                }).OrderByDescending(x => x.Date).Take(3).ToList(),
+            };
+            return _Operation.SetSuccess<object>(result);
+        }
+
         public async Task<OperationResult<PagedList<GetProductDto>>> GetProducts(CustomerProductFilterDto filterDto, int pageNumber = 1, int pageSize = 10)
         {
             var products = await Context.Products
@@ -126,6 +174,38 @@ namespace Passengers.Security.CustomerService
                 .ToPagedListAsync(pageNumber, pageSize);
 
             return _Operation.SetSuccess(shops);
+        }
+
+        public async Task<OperationResult<CustomerHomeDto>> Home()
+        {
+            var products = await Context.Products
+                .Include(x => x.Rates).Include(x => x.Documents).Include(x => x.OrderDetails).Include(x => x.OrderDetails)
+                .Include(x => x.Tag).ThenInclude(x => x.Shop).ThenInclude(x => x.ShopSchedules)
+                .Include(x => x.Tag).ThenInclude(x => x.Shop).ThenInclude(x => x.Documents)
+                .ToListAsync();
+
+            var homeDto = new CustomerHomeDto
+            {
+                NewShops = await Context.Shops()
+                    .OrderByDescending(x => x.DateCreated)
+                    .Include(x => x.Documents).Include(x => x.ShopSchedules)
+                    .Take(5).Select(CustomerStore.Query.ShopToShopDto)
+                    .ToListAsync(),
+                TopProducts = products
+                    .OrderByDescending(x => x.Rates.Any() ? x.Rates.Average(x => x.Degree) : 0)
+                    .Take(5).Select(CustomerStore.Query.ProductToProductDto).ToList(),
+                NewProducts = products
+                    .OrderByDescending(x => x.DateCreated)
+                    .Take(5).Select(CustomerStore.Query.ProductToProductDto).ToList(),
+                PopularProducts = products
+                    .OrderByDescending(x => x.OrderDetails.Sum(x => x.Quantity))
+                    .Take(5).Select(CustomerStore.Query.ProductToProductDto).ToList(),
+                SuggestionProducts = products
+                    .OrderByDescending(x => Guid.NewGuid())
+                    .Take(5).Select(CustomerStore.Query.ProductToProductDto).ToList()
+            };
+
+            return _Operation.SetSuccess<CustomerHomeDto>(homeDto);
         }
 
         public async Task<OperationResult<object>> Login(LoginCustomerDto dto)

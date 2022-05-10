@@ -13,6 +13,6 @@ namespace Passengers.DataTransferObject.CustomerDtos
         public bool? WithDiscount { get; set; }
         public decimal? FromPrice { get; set; }
         public decimal? ToPrice { get; set; }
-        public Guid TagId { get; set; }
+        public Guid? TagId { get; set; }
     }
 }

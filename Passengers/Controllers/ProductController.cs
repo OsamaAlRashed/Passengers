@@ -8,12 +8,15 @@ using Passengers.SharedKernel.Attribute;
 using Passengers.SharedKernel.Constants.Security;
 using Passengers.SharedKernel.Enums;
 using Passengers.SharedKernel.OperationResult.ExtensionMethods;
+using Passengers.SharedKernel.Pagnation;
+using Passengers.SharedKernel.Swagger.ApiGroup;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 
 namespace Passengers.Controllers
 {
+    [ApiGroup(ApiGroupNames.Shop)]
     [Route("api/[controller]/[action]")]
     [ApiController]
     public class ProductController : ControllerBase
@@ -48,21 +51,8 @@ namespace Passengers.Controllers
         [AppAuthorize(AppRoles.Shop)]
         [HttpGet]
         public async Task<IActionResult> Get([FromQuery] ProductFilterDto filterDto, SortProductTypes? sortType, bool? isDes, int pageNumber = 1, int pageSize = 10)
-        {
-            var result = await repository.Get(filterDto, sortType, isDes, pageNumber, pageSize);
-            var metadata = new
-            {
-                result.Result.TotalCount,
-                result.Result.PageSize,
-                result.Result.CurrentPage,
-                result.Result.TotalPages,
-                result.Result.HasNext,
-                result.Result.HasPrevious
-            };
-            Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(metadata));
-            return result.ToJsonResult();
-        } 
-
+            => await repository.Get(filterDto, sortType, isDes, pageNumber, pageSize).AddPagnationHeaderAsync(this).ToJsonResultAsync();
+        
         [AppAuthorize(AppRoles.Shop)]
         [HttpDelete]
         public async Task<IActionResult> Delete([Required] Guid id) => await repository.Remove(id).ToJsonResultAsync();

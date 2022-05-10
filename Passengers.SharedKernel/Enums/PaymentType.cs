@@ -8,7 +8,7 @@ namespace Passengers.SharedKernel.Enums
 {
     public enum PaymentType
     {
-        AdminSalary,
+        AdminSalary = 1,
         DriverSalary,
         OtherExport,
         DriverImport,

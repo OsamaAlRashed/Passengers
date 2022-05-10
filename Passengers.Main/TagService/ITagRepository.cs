@@ -16,7 +16,7 @@ namespace Passengers.Main.TagService
         Task<OperationResult<List<GetTagDto>>> Get(bool isHidden);
         Task<OperationResult<GetTagDto>> GetById(Guid id);
         Task<OperationResult<List<GetTagDto>>> GetPublicTag();
-        Task<OperationResult<List<GetTagDto>>> GetByShopId(Guid id);
+        Task<OperationResult<List<GetTagDto>>> GetByShopId(Guid? id);
         Task<OperationResult<bool>> ChangeStatus(Guid id, bool status);
     }
 }

@@ -24,6 +24,7 @@ using Passengers.Models.Security;
 using Passengers.Security.AccountService;
 using Passengers.Security.AdminService;
 using Passengers.Security.CustomerService;
+using Passengers.Security.DriveService;
 using Passengers.Security.Shared;
 using Passengers.Security.ShopService;
 using Passengers.Shared.CategoryService;
@@ -108,6 +109,7 @@ namespace Passengers
             services.AddScoped<ICustomerRepository, CustomerRepository>();
             services.AddScoped<IAdminRepository, AdminRepository>();
             services.AddScoped<IPaymentRepository, PaymentRepository>();
+            services.AddScoped<IDriverRepository, DriverRepository>();
             services.AddScoped<EmailService>();
         }
 

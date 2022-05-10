@@ -16,7 +16,7 @@ namespace Passengers.DataTransferObject.DriverDtos
         public string UserName { get; set; }
         public GenderTypes? GenderType { get; set; }
         public BloodTypes? BloodType { get; set; }
-        public decimal Salary { get; set; }
+        public decimal FixedAmount { get; set; }
         public int? Age { get; set; }
         public string IdentifierImagePath { get; set; }
         public bool IsBlocked { get; set; }

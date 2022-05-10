@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Text;
+using Passengers.SharedKernel.Enums;
 
 namespace Passengers.SharedKernel.Services.CurrentUserService
 {
@@ -17,5 +18,7 @@ namespace Passengers.SharedKernel.Services.CurrentUserService
         }
 
         public Guid? UserId => _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value?.StringToGuid();
+
+        //public UserTypes? Type => _httpContextAccessor.HttpContext?.User?.FindFirst("Type")?.Value?.
     }
 }

@@ -8,8 +8,7 @@ namespace Passengers.SharedKernel.Enums
 {
     public enum ShopOrderType
     {
-        Open,
-        Puase,
+        Open = 1,
         Closed
     }
 }
