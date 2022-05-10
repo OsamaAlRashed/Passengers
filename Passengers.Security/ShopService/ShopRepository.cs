@@ -67,7 +67,7 @@ namespace Passengers.Security.ShopService
                 Description = dto.Decription,
                 OwnerName = dto.OwnerName,
                 UserType = UserTypes.Shop,
-                AccountStatus = AccountStatus.Draft,
+                AccountStatus = AccountStatus.WaitingCompleteInformation, ///ToDo Draft
                 Address = new Address
                 {
                     Lat = dto.Lat,

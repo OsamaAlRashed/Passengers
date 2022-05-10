@@ -18,7 +18,7 @@ namespace Passengers.DataTransferObject.ProductDtos
         public bool Avilable { get; set; }
         public Guid TagId { get; set; }
         public bool IsNew { get; set; }
-        public bool IsHaveDiscount { get; set; }
+        public bool HasDiscount { get; set; }
         public decimal? Discount { get; set; }
         public double Rate { get; set; }
     }

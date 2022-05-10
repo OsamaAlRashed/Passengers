@@ -38,7 +38,7 @@ namespace Passengers.Main.ProductService.Store
                 PrepareTime = c.PrepareTime,
                 Price = c.Price,
                 TagId = c.TagId,
-                IsHaveDiscount = c.Discounts.Any(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate),
+                HasDiscount = c.Discounts.Any(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate),
                 Discount = c.Discounts.Any(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate) ? c.Discounts.FirstOrDefault(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate).Price : null,
                 IsNew = DateTime.Now.Day - c.DateCreated.Day <= 2,
                 Rate = c.Rates.Any() ? c.Rates.Average(x => x.Degree) : 0

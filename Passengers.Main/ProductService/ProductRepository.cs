@@ -89,6 +89,7 @@ namespace Passengers.Main.ProductService
                 .Include(x => x.Discounts)
                 .Include(x => x.Rates)
                 .ThenInclude(x=> x.Customer)
+                .Include(x => x.Documents)
                 .Where(x => x.Id == id)
                 .SingleOrDefaultAsync();
 
@@ -105,6 +106,7 @@ namespace Passengers.Main.ProductService
                 TagName = product.Tag.Name,
                 product.Name,
                 product.Price,
+                HasDiscount = discount != null,
                 DiscountPrice = discount?.Price,
                 product.Avilable,
                 product.PrepareTime,
