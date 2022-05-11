@@ -191,10 +191,10 @@ namespace Passengers.Shared.CategoryService
 
         public async Task<string> GetByShopId(Guid id)
         {
-            var shop = await Context.Shops().Where(x => x.Id == id).Include(x => x.MainCategories).ThenInclude(x => x.Category).SingleOrDefaultAsync();
+            var shop = await Context.Shops().Where(x => x.Id == id).Include(x => x.Category).SingleOrDefaultAsync();
             if (shop is null)
                 return null;
-            var name = shop.MainCategories.Select(x => x.Category?.Name).FirstOrDefault() ?? "";
+            var name = shop.Category?.Name;
             return name;
         }
         #endregion

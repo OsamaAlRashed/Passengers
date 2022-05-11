@@ -95,10 +95,10 @@ namespace Passengers.Security.AdminService
         public async Task<OperationResult<PagedList<DashboardShopDto>>> GetShops(int pageNumber, int pageSize, string search)
         {
             var shops = await Context.Shops()
-                .Include(x => x.MainCategories).ThenInclude(x => x.Category)
+                .Include(x => x.Category)
                 .Include(x => x.Documents).Include(x => x.ShopSchedules)
-                .Include(x => x.Tags).ThenInclude(x => x.Products).ThenInclude(x => x.Rates)
-                .Where(x => x.Name.Contains(search) || x.MainCategories.Select(x => x.Category.Name).Select(cat => cat.Contains(search)).Any())
+                .Include(x => x.Tags).ThenInclude(x => x.Products).ThenInclude(x => x.Reviews)
+                .Where(x => x.Name.Contains(search) || x.Category.Name.Contains(search))
                 .OrderByDescending(x => x.DateCreated)
                 .Select(x => new DashboardShopDto
                 {
@@ -106,7 +106,7 @@ namespace Passengers.Security.AdminService
                     Name= x.Name,
                     PhoneNumber = x.PhoneNumber,
                     ImagePath = x.Documents.Select(x => x.Path).FirstOrDefault(),
-                    Category = x.MainCategories.Select(x => x.Category.Name).FirstOrDefault(),
+                    Category = x.Category.Name,
                     Online = x.ShopSchedules.Any(x => x.Days.Contains(DateTime.Now.Day.ToString()) 
                                                    && x.FromTime <= DateTime.Now.TimeOfDay 
                                                    && x.ToTime >= DateTime.Now.TimeOfDay),

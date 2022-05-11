@@ -19,7 +19,7 @@ namespace Passengers.Models.Main
             Documents = new HashSet<Document>();
             Discounts = new HashSet<Discount>();
             PriceLogs = new HashSet<PriceLog>();
-            Rates = new HashSet<Rate>();
+            Reviews = new HashSet<Review>();
             Favorites = new HashSet<Favorite>();
             OrderDetails = new HashSet<OrderDetails>();
         }
@@ -37,7 +37,7 @@ namespace Passengers.Models.Main
         public ICollection<Document> Documents { get; set; }
         public ICollection<Discount> Discounts { get; set; }
         public ICollection<PriceLog> PriceLogs { get; set; }
-        public ICollection<Rate> Rates { get; set; }
+        public ICollection<Review> Reviews { get; set; }
         public ICollection<Favorite> Favorites { get; set; }
         public ICollection<OrderDetails> OrderDetails { get; set; }
 
@@ -45,7 +45,7 @@ namespace Passengers.Models.Main
         public string ImagePath => Documents.Select(x => x.Path).FirstOrDefault();
 
         [NotMapped]
-        public double Rate => Rates.Any() ? Rates.Average(x => x.Degree) : 0;
+        public double Rate => Reviews.Any() ? Reviews.Average(x => x.Rate) : 0;
 
         [NotMapped]
         public int Buyers => OrderDetails.Sum(x => x.Quantity);

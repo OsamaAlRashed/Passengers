@@ -95,7 +95,7 @@ namespace Passengers.SqlServer.DataBase
 
         public DbSet<Category> Categories { get; set; }
         public DbSet<Document> Documents { get; set; }
-        public DbSet<Rate> Rates { get; set; }
+        public DbSet<Review> Reviews { get; set; }
         public DbSet<ContactUs> ContactUs { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<Favorite> Favorites { get; set; }
@@ -105,7 +105,6 @@ namespace Passengers.SqlServer.DataBase
         public DbSet<PriceLog> PriceLogs { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<Offer> Offers { get; set; }
-        public DbSet<ShopCategory> ShopCategories { get; set; }
         public DbSet<ShopContact> ShopContacts { get; set; }
         public DbSet<ShopSchedule> ShopSchedules { get; set; }
         public DbSet<Payment> Payments { get; set; }

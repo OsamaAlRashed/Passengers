@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 
 namespace Passengers.Models.Shared
 {
-    public class Rate : BaseEntity
+    public class Review : BaseEntity
     {
-        public int Degree { get; set; }
+        public int Rate { get; set; }
         public string Descreption { get; set; }
 
         public Guid CustomerId { get; set; }

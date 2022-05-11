@@ -13,7 +13,7 @@ namespace Passengers.Models.Order
     {
         public Order()
         {
-            Rates = new HashSet<Rate>();
+            Rates = new HashSet<Review>();
             OrderDetails = new HashSet<OrderDetails>();
         }
         
@@ -36,6 +36,6 @@ namespace Passengers.Models.Order
 
 
         public ICollection<OrderDetails> OrderDetails { get; set; }
-        public ICollection<Rate> Rates { get; set; }
+        public ICollection<Review> Rates { get; set; }
     }
 }

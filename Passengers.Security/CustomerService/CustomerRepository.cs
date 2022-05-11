@@ -88,7 +88,7 @@ namespace Passengers.Security.CustomerService
         public async Task<OperationResult<PagedList<GetProductDto>>> GetMyFavorite(int pageNumber = 1, int pageSize = 10)
         {
             var products = await Context.Products
-                .Include(x => x.Documents).Include(x => x.OrderDetails).Include(x => x.Rates).Include(x => x.Discounts)
+                .Include(x => x.Documents).Include(x => x.OrderDetails).Include(x => x.Reviews).Include(x => x.Discounts)
                 .Where(x => x.Favorites.Select(x => x.CustomerId).Contains(Context.CurrentUserId.Value))
                 .Select(CustomerStore.Query.GetSelectProduct)
                 .ToPagedListAsync(pageNumber, pageSize);
@@ -101,7 +101,7 @@ namespace Passengers.Security.CustomerService
             var product = await Context.Products
                 .Include(x => x.Tag)
                 .Include(x => x.Discounts)
-                .Include(x => x.Rates)
+                .Include(x => x.Reviews)
                 .ThenInclude(x => x.Customer)
                 .Where(x => x.Id == id)
                 .SingleOrDefaultAsync();
@@ -122,19 +122,19 @@ namespace Passengers.Security.CustomerService
                 //DiscountPrice = discount?.Price,
                 product.Avilable,
                 product.PrepareTime,
-                RateDegree = product.Rate,
-                RateNumber = product.Rates.Count,
+                Rate = product.Rate,
+                RateNumber = product.Reviews.Count,
                 product.Description,
                 product.Tag.Shop.DeliveryShopStatus,
                 ShopName = product.Tag.Shop.Name,
                 ShopId = product.Tag.Shop.Id,
-                ShopCategory = product.Tag.Shop.MainCategories.Select(x => x.Category.Name).FirstOrDefault(),
+                ShopCategory = product.Tag.Shop.Category.Name,
                 ShopImagePath = product.Tag.Shop.Documents.Select(x => x.Path).FirstOrDefault(),
                 ShopOnline = product.Tag.Shop.ShopSchedules.Any(x => x.Days.Contains(DateTime.Now.Day.ToString()) && x.FromTime <= DateTime.Now.TimeOfDay && DateTime.Now.TimeOfDay <= x.ToTime),
-                Rates = product.Rates.Select(r => new
+                Reviews = product.Reviews.Select(r => new
                 {
                     r.Id,
-                    r.Degree,
+                    r.Rate,
                     r.Descreption,
                     CustomerName = r.Customer.Name,
                     r.CustomerId,
@@ -147,7 +147,7 @@ namespace Passengers.Security.CustomerService
         public async Task<OperationResult<PagedList<GetProductDto>>> GetProducts(CustomerProductFilterDto filterDto, int pageNumber = 1, int pageSize = 10)
         {
             var products = await Context.Products
-                .Include(x => x.Documents).Include(x => x.OrderDetails).Include(x => x.Rates).Include(x => x.Discounts)
+                .Include(x => x.Documents).Include(x => x.OrderDetails).Include(x => x.Reviews).Include(x => x.Discounts)
                 .Where(CustomerStore.Filter.WhereFilterProduct(filterDto))
                 .Select(CustomerStore.Query.GetSelectProduct)
                 .ToPagedListAsync(pageNumber, pageSize);
@@ -165,9 +165,9 @@ namespace Passengers.Security.CustomerService
             }
 
             var shops = await Context.Shops()
-                .Include(x => x.MainCategories).ThenInclude(x => x.Category)
+                .Include(x => x.Category)
                 .Include(x => x.Documents).Include(x => x.ShopSchedules)
-                .Include(x => x.Tags).ThenInclude(x => x.Products).ThenInclude(x => x.Rates)
+                .Include(x => x.Tags).ThenInclude(x => x.Products).ThenInclude(x => x.Reviews)
                 .Where(CustomerStore.Filter.WhereFilterShop(filterDto, shopIds))
                 .SortBy(CustomerStore.Query.SortShop(topShops),true)
                 .Select(CustomerStore.Query.ShopToShopCustomerDto)
@@ -179,7 +179,7 @@ namespace Passengers.Security.CustomerService
         public async Task<OperationResult<CustomerHomeDto>> Home()
         {
             var products = await Context.Products
-                .Include(x => x.Rates).Include(x => x.Documents).Include(x => x.OrderDetails).Include(x => x.OrderDetails)
+                .Include(x => x.Reviews).Include(x => x.Documents).Include(x => x.OrderDetails).Include(x => x.OrderDetails)
                 .Include(x => x.Tag).ThenInclude(x => x.Shop).ThenInclude(x => x.ShopSchedules)
                 .Include(x => x.Tag).ThenInclude(x => x.Shop).ThenInclude(x => x.Documents)
                 .ToListAsync();
@@ -192,7 +192,7 @@ namespace Passengers.Security.CustomerService
                     .Take(5).Select(CustomerStore.Query.ShopToShopDto)
                     .ToListAsync(),
                 TopProducts = products
-                    .OrderByDescending(x => x.Rates.Any() ? x.Rates.Average(x => x.Degree) : 0)
+                    .OrderByDescending(x => x.Reviews.Any() ? x.Reviews.Average(x => x.Rate) : 0)
                     .Take(5).Select(CustomerStore.Query.ProductToProductDto).ToList(),
                 NewProducts = products
                     .OrderByDescending(x => x.DateCreated)

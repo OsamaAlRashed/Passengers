@@ -13,7 +13,7 @@ namespace Passengers.Models.Shared
         public Category()
         {
             Categories = new HashSet<Category>();
-            ShopCategories = new HashSet<ShopCategory>();
+            Shops = new HashSet<AppUser>();
         }
 
         public string Name { get; set; }
@@ -23,6 +23,6 @@ namespace Passengers.Models.Shared
         public Category Parent { get; set; }
 
         public ICollection<Category> Categories { get; set; }
-        public ICollection<ShopCategory> ShopCategories { get; set; }
+        public ICollection<AppUser> Shops { get; set; }
     }
 }

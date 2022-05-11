@@ -107,7 +107,7 @@ namespace Passengers.Security.ShopService
                     result.Result.RefreshToken,
                     user.AccountStatus,
                     user.Name,
-                    CategoryName = user.MainCategories.Select(x => x.Category?.Name).FirstOrDefault(),
+                    CategoryName = user.Category?.Name,
                     ImagePath = user.Documents.Select(x => x.Path).FirstOrDefault()
                 };
                 return _Operation.SetSuccess<object>(response);
@@ -128,7 +128,9 @@ namespace Passengers.Security.ShopService
             if (!isValidFromTime || !isValidToTime)
                 return _Operation.SetFailed<object>("TimeFormatIsNotValid");
 
-            if(dto.Days != null && dto.Days.Count > 0)
+            shop.CategoryId = dto.CategoryId;
+
+            if (dto.Days != null && dto.Days.Count > 0)
             {
                 var shopSchacule = new ShopSchedule
                 {
@@ -155,13 +157,6 @@ namespace Passengers.Security.ShopService
                     };
                 }
             }
-
-            var categoryShop = new ShopCategory
-            {
-                ShopId = shop.Id,
-                CategoryId = dto.CategoryId
-            };
-            Context.ShopCategories.Add(categoryShop);
 
             if(dto.TagIds != null)
             {
@@ -207,8 +202,8 @@ namespace Passengers.Security.ShopService
         public async Task<OperationResult<ShopProfileDto>> GetProfile()
         {
             var shop = await Context.Shops()
-                .Include(x => x.MainCategories).ThenInclude(x => x.Category)
-                .Include(x => x.ShopFavorites).Include(x => x.Tags).Include(x => x.Rates).Include(x => x.ShopContacts)
+                .Include(x => x.Category)
+                .Include(x => x.ShopFavorites).Include(x => x.Tags).Include(x => x.Reviews).Include(x => x.ShopContacts)
                 .Include(x => x.Documents)
                 .Where(x => x.Id == Context.CurrentUserId)
                 .SingleOrDefaultAsync();
@@ -218,10 +213,10 @@ namespace Passengers.Security.ShopService
             return _Operation.SetSuccess(new ShopProfileDto()
             {
                 Name = shop.Name,
-                CategoryName = shop.MainCategories.Select(x => x.Category?.Name).FirstOrDefault(),
+                CategoryName = shop.Category?.Name,
                 FollowerCount = shop.ShopFavorites.Count,
                 ProductCount = shop.Tags.Sum(x => x.Products.Count),
-                Rate = shop.Rates.ToList().CustomAverage(x => x.Degree),
+                Rate = shop.Reviews.ToList().CustomAverage(x => x.Rate),
                 ImagePath = shop.Documents.Select(x => x.Path).FirstOrDefault(),
                 Contacts = shop.ShopContacts.Select(x => new ContactInformationDto
                 {
@@ -248,7 +243,7 @@ namespace Passengers.Security.ShopService
         public async Task<OperationResult<ShopDetailsDto>> Details()
         {
             var shop = await Context.Shops()
-                .Include(x => x.MainCategories).ThenInclude(x => x.Category).Include(x => x.Address).Include(x => x.ShopContacts)
+                .Include(x => x.Category).Include(x => x.Address).Include(x => x.ShopContacts)
                 .Where(x => x.Id == Context.CurrentUserId)
                 .SingleOrDefaultAsync();
             if (shop == null)
@@ -260,8 +255,8 @@ namespace Passengers.Security.ShopService
                 Address = shop.Address?.Text,
                 Lat = shop.Address?.Lat,
                 Long = shop.Address?.Long,
-                CategoryId = shop.MainCategories.Select(x => x.CategoryId).FirstOrDefault(),
-                CategoryName = shop.MainCategories.Select(x => x.Category.Name).FirstOrDefault(),
+                CategoryId = shop.CategoryId.GetValueOrDefault(),
+                CategoryName = shop.Category?.Name,
                 Contacts = shop.ShopContacts.Select(x => new ContactInformationDto
                 {
                     Text = x.Text,
@@ -273,13 +268,14 @@ namespace Passengers.Security.ShopService
         public async Task<OperationResult<ShopDetailsDto>> Update(ShopDetailsDto dto)
         {
             var shop = await Context.Shops()
-                .Include(x => x.MainCategories).Include(x => x.Address).Include(x => x.ShopContacts)
+                .Include(x => x.Category).Include(x => x.Address).Include(x => x.ShopContacts)
                 .Where(x => x.Id == Context.CurrentUserId)
                 .SingleOrDefaultAsync();
             if (shop == null)
                 return _Operation.SetContent<ShopDetailsDto>(OperationResultTypes.NotExist, "ShopNotFound");
             
             shop.Name = dto.Name;
+            shop.CategoryId = dto.CategoryId;
 
             var addressDto = new AddressDto
             {
@@ -305,18 +301,6 @@ namespace Passengers.Security.ShopService
             if(dto.Contacts != null)
             {
                 await UpdateContracts(shop, dto.Contacts);
-            }
-
-            if (!Context.ShopCategories.Where(x => x.CategoryId == dto.CategoryId && x.ShopId == shop.Id).Any())
-            {
-                Context.ShopCategories.RemoveRange(shop.MainCategories);
-
-                var categoryShop = new ShopCategory
-                {
-                    ShopId = shop.Id,
-                    CategoryId = dto.CategoryId
-                };
-                Context.ShopCategories.Add(categoryShop);
             }
 
             await Context.SaveChangesAsync();
@@ -350,12 +334,12 @@ namespace Passengers.Security.ShopService
         public async Task<OperationResult<ShopHomeDto>> Home()
         {
             var topProducts = await Context.Products.Where(x => x.Tag.ShopId == Context.CurrentUserId)
-                .Include(x => x.Rates).Include(x => x.Documents).Include(x => x.OrderDetails)
-                .OrderByDescending(x => x.Rates.Any() ? x.Rates.Average(x => x.Degree) : 0)
+                .Include(x => x.Reviews).Include(x => x.Documents).Include(x => x.OrderDetails)
+                .OrderByDescending(x => x.Reviews.Any() ? x.Reviews.Average(x => x.Rate) : 0)
                 .Take(5).ToListAsync();
 
             var popularProducts = await Context.Products.Where(x => x.Tag.ShopId == Context.CurrentUserId)
-                .Include(x => x.Rates).Include(x => x.Documents).Include(x => x.OrderDetails)
+                .Include(x => x.Reviews).Include(x => x.Documents).Include(x => x.OrderDetails)
                 .OrderByDescending(x => x.OrderDetails.Sum(x => x.Quantity))
                 .Take(5).ToListAsync();
 

@@ -13,7 +13,7 @@ namespace Passengers.Shared.RateService.Store
     {
         public static class Query
         {
-            public static Expression<Func<Rate, RateDto>> GetSelectCategory => c => new RateDto
+            public static Expression<Func<Review, RateDto>> GetSelectCategory => c => new RateDto
             {
                 Id = c.Id,
                 

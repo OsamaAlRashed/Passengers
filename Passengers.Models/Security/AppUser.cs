@@ -18,12 +18,11 @@ namespace Passengers.Models.Security
         {
             CustomerOrders = new HashSet<OrderSet>();
             DriverOrders = new HashSet<OrderSet>();
-            MainCategories = new HashSet<ShopCategory>();
             Documents = new HashSet<Document>();
             ShopSchedules = new HashSet<ShopSchedule>();
             Tags = new HashSet<Tag>();
             Offers = new HashSet<Offer>();
-            Rates = new HashSet<Rate>();
+            Reviews = new HashSet<Review>();
             CustomerFavorites = new HashSet<Favorite>();
             ShopFavorites = new HashSet<Favorite>();
             Addresses = new HashSet<Address>();
@@ -69,8 +68,9 @@ namespace Passengers.Models.Security
         public ShopOrderType? ShopOrderType { get; set; }
         public Address Address { get; set; }
         public DeliveryShopStatus? DeliveryShopStatus { get; set; }
+        public Guid? CategoryId { get; set; }
+        public Category Category { get; set; }
 
-        public ICollection<ShopCategory> MainCategories { get; set; }
         public ICollection<Document> Documents { get; set; }
         public ICollection<ShopSchedule> ShopSchedules { get; set; }
         public ICollection<ShopContact> ShopContacts { get; set; }
@@ -78,7 +78,7 @@ namespace Passengers.Models.Security
         public ICollection<Offer> Offers { get; set; }
 
         #endregion
-        public ICollection<Rate> Rates { get; set; }
+        public ICollection<Review> Reviews { get; set; }
 
         [InverseProperty("Customer")]
         public ICollection<Favorite> CustomerFavorites { get; set; }

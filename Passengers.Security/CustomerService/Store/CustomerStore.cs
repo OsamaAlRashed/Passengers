@@ -24,7 +24,7 @@ namespace Passengers.Security.CustomerService.Store
              && (string.IsNullOrEmpty(filter.Search) || product.Name.Contains(filter.Search))
              && (!filter.FromPrice.HasValue || filter.FromPrice <= product.Price)
              && (!filter.ToPrice.HasValue || filter.ToPrice >= product.Price)
-             && (!filter.Rate.HasValue || ((int)(product.Rates.Any() ? Math.Ceiling(product.Rates.Average(x => x.Degree)) : 1) == filter.Rate))
+             && (!filter.Rate.HasValue || ((int)(product.Reviews.Any() ? Math.Ceiling(product.Reviews.Average(x => x.Rate)) : 1) == filter.Rate))
              && ((!filter.WithDiscount.HasValue) ||
                 (filter.WithDiscount.Value ? product.Discounts.Where(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate).Any()
                                        : !product.Discounts.Where(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate).Any()));
@@ -32,7 +32,7 @@ namespace Passengers.Security.CustomerService.Store
             public static Expression<Func<AppUser, bool>> WhereFilterShop(CustomerShopFilterDto filter, List<Guid> shopIds) => shop =>
                 (string.IsNullOrEmpty(filter.Search) || shop.Name.Contains(filter.Search))
              && (!shopIds.Any() | shopIds.Contains(shop.Id))
-             && (!filter.CategoryId.HasValue || shop.MainCategories.Select(x => x.CategoryId).Any(c => c == filter.CategoryId))
+             && (!filter.CategoryId.HasValue || shop.CategoryId == filter.CategoryId)
              /// TODo && (filter.NearWithMe.HasValue) 
              && (string.IsNullOrEmpty(filter.FromTime) || shop.ShopSchedules.Any(x => TimeSpan.Parse(filter.FromTime) <= x.FromTime))
              && (string.IsNullOrEmpty(filter.ToTime) || shop.ShopSchedules.Any(x => TimeSpan.Parse(filter.ToTime) >= x.ToTime));
@@ -62,16 +62,16 @@ namespace Passengers.Security.CustomerService.Store
                 HasDiscount = c.Discounts.Any(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate),
                 Discount = c.Discounts.Any(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate) ? c.Discounts.FirstOrDefault(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate).Price : null,
                 IsNew = DateTime.Now.Day - c.DateCreated.Day <= 2,
-                Rate = c.Rates.Any() ? c.Rates.Average(x => x.Degree) : 0
+                Rate = c.Reviews.Any() ? c.Reviews.Average(x => x.Rate) : 0
             };
 
             public static Expression<Func<AppUser, ShopCustomerDto>> ShopToShopCustomerDto => c => new ShopCustomerDto
             {
                 Id = c.Id,
-                CategoryName = c.MainCategories.Select(x => x.Category.Name).FirstOrDefault(),
+                CategoryName = c.Category.Name,
                 ImagePath = c.Documents.Select(x => x.Path).FirstOrDefault(),
                 Name = c.Name,
-                Rate = c.Tags.SelectMany(x => x.Products.SelectMany(x => x.Rates)).Any() ? c.Tags.SelectMany(x => x.Products.SelectMany(x => x.Rates)).Average(x => x.Degree) : 0,
+                Rate = c.Tags.SelectMany(x => x.Products.SelectMany(x => x.Reviews)).Any() ? c.Tags.SelectMany(x => x.Products.SelectMany(x => x.Reviews)).Average(x => x.Rate) : 0,
                 Online = c.ShopSchedules.Any(x => x.Days.Contains(DateTime.Now.Day.ToString()) && x.FromTime <= DateTime.Now.TimeOfDay && DateTime.Now.TimeOfDay <= x.ToTime)
             };
 
@@ -79,7 +79,7 @@ namespace Passengers.Security.CustomerService.Store
             {
                 if (topShops == null || !topShops.Value)
                     return x => x.ShopSchedules.Any(x => x.Days.Contains(DateTime.Now.Day.ToString()) && x.FromTime <= DateTime.Now.TimeOfDay && DateTime.Now.TimeOfDay <= x.ToTime);
-                return x => x.Tags.SelectMany(x => x.Products.SelectMany(x => x.Rates)).Average(x => x.Degree);
+                return x => x.Tags.SelectMany(x => x.Products.SelectMany(x => x.Reviews)).Average(x => x.Rate);
             }
 
             //Home
@@ -98,7 +98,7 @@ namespace Passengers.Security.CustomerService.Store
                 Avilable = c.Avilable,
                 ImagePath = c.ImagePath,
                 Price = c.Price,
-                Rate = c.Rates.Any() ? c.Rates.Average(x => x.Degree) : 0,
+                Rate = c.Reviews.Any() ? c.Reviews.Average(x => x.Rate) : 0,
                 ShopId = c.Tag.ShopId.Value,
                 ShopOnline = c.Tag.Shop.ShopSchedules.Any(x => x.Days.Contains(DateTime.Now.Day.ToString()) && x.FromTime <= DateTime.Now.TimeOfDay && DateTime.Now.TimeOfDay <= x.ToTime),
                 ShopImagePath = c.Tag.Shop.Documents.Select(x => x.Path).FirstOrDefault(),

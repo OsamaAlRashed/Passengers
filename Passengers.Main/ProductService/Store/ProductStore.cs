@@ -16,7 +16,7 @@ namespace Passengers.Main.ProductService.Store
         public static class Filter
         {
             public static Expression<Func<Product, bool>> WhereFilter(ProductFilterDto filter) => product =>
-                (!filter.Rate.HasValue || (int)(product.Rates.Any() ? product.Rates.Average(x => x.Degree) : 0) == filter.Rate)
+                (!filter.Rate.HasValue || (int)(product.Reviews.Any() ? product.Reviews.Average(x => x.Rate) : 0) == filter.Rate)
              && (!filter.FromPrice.HasValue || filter.FromPrice <= product.Price)
              && (!filter.ToPrice.HasValue || filter.ToPrice >= product.Price)
              && ((!filter.Discount.HasValue) ||
@@ -41,7 +41,7 @@ namespace Passengers.Main.ProductService.Store
                 HasDiscount = c.Discounts.Any(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate),
                 Discount = c.Discounts.Any(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate) ? c.Discounts.FirstOrDefault(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate).Price : null,
                 IsNew = DateTime.Now.Day - c.DateCreated.Day <= 2,
-                Rate = c.Rates.Any() ? c.Rates.Average(x => x.Degree) : 0
+                Rate = c.Reviews.Any() ? c.Reviews.Average(x => x.Rate) : 0
             };
 
             public static Expression<Func<Product, object>> Sort(SortProductTypes? sortType)
@@ -51,7 +51,7 @@ namespace Passengers.Main.ProductService.Store
                 return sortType switch
                 {
                     SortProductTypes.Name => x => x.Name,
-                    SortProductTypes.Rate => x => x.Rates.Any() ? x.Rates.Average(x => x.Degree) : 0,
+                    SortProductTypes.Rate => x => x.Reviews.Any() ? x.Reviews.Average(x => x.Rate) : 0,
                     SortProductTypes.PrepareTime => x => x.PrepareTime,
                     SortProductTypes.Avilable => x => x.Avilable,
                     SortProductTypes.Price => x => x.Price,

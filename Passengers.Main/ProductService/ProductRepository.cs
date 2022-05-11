@@ -87,7 +87,7 @@ namespace Passengers.Main.ProductService
             var product = await Context.Products
                 .Include(x => x.Tag)
                 .Include(x => x.Discounts)
-                .Include(x => x.Rates)
+                .Include(x => x.Reviews)
                 .ThenInclude(x=> x.Customer)
                 .Include(x => x.Documents)
                 .Where(x => x.Id == id)
@@ -111,14 +111,14 @@ namespace Passengers.Main.ProductService
                 product.Avilable,
                 product.PrepareTime,
                 RateDegree = product.Rate,
-                RateNumber = product.Rates.Count,
+                RateNumber = product.Reviews.Count,
                 DiscountStartDate = discount?.StartDate,
                 DiscountEndDate = discount?.EndDate,
                 product.Description,
-                Rates = product.Rates.Select(r => new
+                Reviews = product.Reviews.Select(r => new
                 {
                     r.Id,
-                    r.Degree,
+                    r.Rate,
                     r.Descreption,
                     CustomerName = r.Customer.Name,
                     r.CustomerId,
@@ -178,7 +178,7 @@ namespace Passengers.Main.ProductService
         public async Task<OperationResult<PagedList<GetProductDto>>> Get(ProductFilterDto filterDto, SortProductTypes? sortType, bool? isDes, int pageNumber = 1, int pageSize = 10)
         {
             var products = await Context.Products
-                .Include(x => x.Documents).Include(x => x.OrderDetails).Include(x => x.Rates)
+                .Include(x => x.Documents).Include(x => x.OrderDetails).Include(x => x.Reviews)
                 .Where(ProductStore.Filter.WhereFilter(filterDto))
                 .SortBy(ProductStore.Query.Sort(sortType), isDes)
                 .Select(ProductStore.Query.GetSelectProduct)

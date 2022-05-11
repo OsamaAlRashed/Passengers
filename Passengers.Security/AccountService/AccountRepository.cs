@@ -45,7 +45,7 @@ namespace Passengers.Security.AccountService
         public async Task<OperationResult<LoginResponseDto>> Login(BaseLoginDto dto)
         {
             var user = await Context.Users
-                .Include(x => x.MainCategories).ThenInclude(x => x.Category)
+                .Include(x => x.Category)
                 .Include(x => x.Documents)
                 .Where(x => x.UserType == dto.UserType
                     && (x.UserName == dto.UserName || x.Email == dto.UserName || x.PhoneNumber == dto.UserName))
