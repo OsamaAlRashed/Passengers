@@ -8,12 +8,13 @@ namespace Passengers.SharedKernel.Enums
 {
     public enum ContactShopTypes
     {
-        MobilePhone,
+        QuadPhone,
+        Phone,
         Facebook,
         Instagram,
         Whatsapp,
         Telegram,
         YouTube,
-        Web
+        Website
     }
 }

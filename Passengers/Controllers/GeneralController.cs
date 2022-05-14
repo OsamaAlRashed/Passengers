@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Passengers.Security.AccountService;
 using Passengers.SharedKernel.Enums;
 using Passengers.SharedKernel.ExtensionMethods;
+using Passengers.SharedKernel.OperationResult.ExtensionMethods;
 using System;
 using System.Threading.Tasks;
 
@@ -9,8 +11,18 @@ namespace Passengers.Controllers
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
-    public class HelperController : ControllerBase
+    public class GeneralController : ControllerBase
     {
+        private readonly IAccountRepository accountRepository;
+
+        public GeneralController(IAccountRepository accountRepository)
+        {
+            this.accountRepository = accountRepository;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Users(UserTypes? type) => await accountRepository.Users(type).ToJsonResultAsync();
+
         [HttpGet]
         public IActionResult AccountStatus() => Ok(Helpers.EnumToList(typeof(AccountStatus)));
 
@@ -61,6 +73,9 @@ namespace Passengers.Controllers
 
         [HttpGet]
         public IActionResult DayOfWeek() => Ok(Helpers.EnumToList(typeof(DayOfWeek)));
+
+        [HttpGet]
+        public IActionResult PaymentTypes() => Ok(Helpers.EnumToList(typeof(PaymentType)));
 
     }
 }

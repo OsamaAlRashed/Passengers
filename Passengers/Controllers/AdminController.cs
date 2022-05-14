@@ -4,11 +4,13 @@ using Passengers.DataTransferObject.SecurityDtos;
 using Passengers.Security.AccountService;
 using Passengers.Security.AdminService;
 using Passengers.SharedKernel.OperationResult.ExtensionMethods;
+using Passengers.SharedKernel.Swagger.ApiGroup;
 using System;
 using System.Threading.Tasks;
 
 namespace Passengers.Controllers
 {
+    [ApiGroup(ApiGroupNames.Dashboard)]
     [Route("api/[controller]/[action]")]
     [ApiController]
     public class AdminController : ControllerBase
@@ -40,6 +42,7 @@ namespace Passengers.Controllers
         [HttpPut]
         public async Task<IActionResult> Block(Guid id) => await accountRepository.Block(id).ToJsonResultAsync();
 
-
+        [HttpDelete]
+        public async Task<IActionResult> Delete(Guid id) => await accountRepository.Delete(id).ToJsonResultAsync();
     }
 }

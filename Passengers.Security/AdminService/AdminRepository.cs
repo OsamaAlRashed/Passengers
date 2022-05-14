@@ -42,11 +42,17 @@ namespace Passengers.Security.AdminService
 
         public async Task<OperationResult<GetAdminDto>> Add(SetAdminDto dto)
         {
+            if (string.IsNullOrEmpty(dto.UserName))
+                dto.UserName = UserTypes.Admin.ToString() + Helpers.GetUniqueKey(6);
+
+            if (string.IsNullOrEmpty(dto.Password))
+                dto.Password = Helpers.GetUniqueKey(6);
+
             var user = (await accountRepository.Create(new CreateAccountDto
             {
                 PhoneNumber = dto.PhoneNumber,
                 UserName = dto.UserName,
-                Type = SharedKernel.Enums.UserTypes.Admin,
+                Type = UserTypes.Admin,
                 Password = dto.Password,
             })).Result;
 
@@ -56,14 +62,20 @@ namespace Passengers.Security.AdminService
 
                 AdminStore.Query.AssignDtoToAdmin(entity, dto);
                 
-                var path = FileExtensions.ProcessUploadedFile(dto.ImageFile, FolderNames.Admin, webHostEnvironment.WebRootPath);
-                if (!path.IsNullOrEmpty())
+                if(dto.ImageFile != null)
                 {
-                    entity.IdentifierImagePath = path;
+                    var path = FileExtensions.ProcessUploadedFile(dto.ImageFile, FolderNames.Admin, webHostEnvironment.WebRootPath);
+                    if (!path.IsNullOrEmpty())
+                    {
+                        entity.IdentifierImagePath = path;
+                    }
                 }
 
                 await Context.SaveChangesAsync();
-                return _Operation.SetSuccess(AdminStore.Query.AdminToAdminDto(entity));
+
+                var result = AdminStore.Query.AdminToAdminDto(entity);
+                result.Password = dto.Password;
+                return _Operation.SetSuccess(result);
             }
 
             return _Operation.SetFailed<GetAdminDto>("Error");

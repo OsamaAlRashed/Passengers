@@ -158,22 +158,25 @@ namespace Passengers.Security.ShopService
                 }
             }
 
-            if(dto.TagIds != null)
+            if (dto.Tags != null)
             {
                 List<Tag> newTags = new();
-                foreach (var tagId in dto.TagIds)
+                var newTag = new Tag();
+                foreach (var tag in dto.Tags)
                 {
-                    var currentTag = Context.Tags.Where(x => x.Id == tagId).SingleOrDefault();
+                    newTag = new();
+                    var currentTag = Context.Tags.Where(x => x.Id == tag.Id).SingleOrDefault();
                     if(currentTag != null && currentTag.ShopId != shop.Id)
                     {
-                        var tag = new Tag
-                        {
-                            ShopId = shop.Id,
-                            Name = currentTag.Name,
-                            LogoPath = currentTag.LogoPath,
-                        };
-                        newTags.Add(tag);
+                        newTag.Name = currentTag.Name;
+                        newTag.LogoPath = currentTag.LogoPath;
                     }
+                    else
+                    {
+                        newTag.Name = tag.Name;
+                    }
+                    newTag.ShopId = shop.Id;
+                    newTags.Add(newTag);
                 }
                 Context.Tags.AddRange(newTags);
             }

@@ -19,6 +19,8 @@ namespace Passengers.DataTransferObject.SecurityDtos
         public int? Age { get; set; }
         public string IdentifierImagePath { get; set; }
         public bool IsBlocked { get; set; }
+        public string Password { get; set; }
+        public DateTime? DOB { get; set; }
 
     }
 }

@@ -25,9 +25,6 @@ namespace Passengers.Base
         public static IQueryable<AppUser> Customers(this PassengersDbContext context)
             => context.Users(UserTypes.Customer);
 
-        public static IQueryable<AppUser> Employees(this PassengersDbContext context)
-            => context.Users(UserTypes.Stakeholder);
-
         public static IQueryable<AppUser> Shops(this PassengersDbContext context, AccountStatus status = AccountStatus.Accepted)
             => context.Users(UserTypes.Shop, status);
 

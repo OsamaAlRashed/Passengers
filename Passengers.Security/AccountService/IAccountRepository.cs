@@ -1,4 +1,5 @@
-﻿using Passengers.DataTransferObject.SecurityDtos;
+﻿using Passengers.DataTransferObject.GeneralDtos;
+using Passengers.DataTransferObject.SecurityDtos;
 using Passengers.DataTransferObject.SecurityDtos.Login;
 using Passengers.SharedKernel.Enums;
 using Passengers.SharedKernel.OperationResult;
@@ -21,6 +22,7 @@ namespace Passengers.Security.AccountService
         Task<bool> IsPhoneNumberUsed(string phoneNumber);
         Task<OperationResult<bool>> Delete(Guid id);
         Task<OperationResult<bool>> Block(Guid id);
+        Task<OperationResult<List<SelectDto>>> Users(UserTypes? type);
 
 
         //Task<OperationResult<bool>> ResendToken(Guid id, TokenTypes type);

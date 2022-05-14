@@ -29,7 +29,8 @@ namespace Passengers.Security.AdminService.Store
                 PhoneNumber = c.PhoneNumber,
                 Salary = c.Salary,
                 AddressText = c.AddressText,
-                IsBlocked = c.DateBlocked.HasValue
+                IsBlocked = c.DateBlocked.HasValue,
+                DOB = c.DOB
             };
 
             public static Func<SetAdminDto, AppUser> AdminDtoToAdmin => c => new AppUser
@@ -45,12 +46,10 @@ namespace Passengers.Security.AdminService.Store
 
             public static Action<AppUser, SetAdminDto> AssignDtoToAdmin => (entity, dto) =>
             {
-                entity.UserName = dto.UserName;
                 entity.FullName = dto.FullName;
                 entity.PhoneNumber = dto.PhoneNumber;
                 entity.DOB = dto.DOB;
                 entity.GenderType = dto.GenderType;
-                entity.AccountStatus = AccountStatus.Accepted;
                 entity.Salary = dto.Salary;
                 entity.AddressText = dto.AddressText;
             };

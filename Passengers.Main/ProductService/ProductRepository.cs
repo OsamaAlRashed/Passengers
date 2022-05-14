@@ -179,6 +179,7 @@ namespace Passengers.Main.ProductService
         {
             var products = await Context.Products
                 .Include(x => x.Documents).Include(x => x.OrderDetails).Include(x => x.Reviews)
+                .Where(x => x.Tag.ShopId == Context.CurrentUserId)
                 .Where(ProductStore.Filter.WhereFilter(filterDto))
                 .SortBy(ProductStore.Query.Sort(sortType), isDes)
                 .Select(ProductStore.Query.GetSelectProduct)

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Passengers.Models.Security;
 using Passengers.SharedKernel.Enums;
@@ -16,11 +17,12 @@ namespace Passengers.SqlServer.DataBase.Seed
         {
             var roleManager = services.GetService<RoleManager<IdentityRole<Guid>>>();
             var userManager = services.GetService<UserManager<AppUser>>();
+            var context = services.GetService<PassengersDbContext>();
 
             var newRole = await CreateNewRoles(roleManager);
             await ClearRoles(roleManager);
 
-            await InsureCreateAccountAsync(userManager, roleManager, newRole);
+            await InsureCreateAccountAsync(userManager, roleManager, newRole, context);
         }
 
         private static async Task<IEnumerable<string>> CreateNewRoles(RoleManager<IdentityRole<Guid>> roleManager)
@@ -52,10 +54,33 @@ namespace Passengers.SqlServer.DataBase.Seed
             return clearRoles.Select(x => x.Name);
         }
 
-        private static async Task InsureCreateAccountAsync(UserManager<AppUser> userManager, RoleManager<IdentityRole<Guid>> roleManager, IEnumerable<string> newRoles)
+        private static async Task InsureCreateAccountAsync(UserManager<AppUser> userManager, RoleManager<IdentityRole<Guid>> roleManager, IEnumerable<string> newRoles, PassengersDbContext context)
         {
+            #region Super User
+            var superUser = await context.Users.IgnoreQueryFilters().SingleOrDefaultAsync(x => x.UserName == "SuperUser");
+            if (superUser is null)
+            {
+                superUser = new AppUser()
+                {
+                    UserName = "SuperUser",
+                    FullName = "Super User",
+                    Email = "SuperUser@SuperUser",
+                    UserType = UserTypes.Admin,
+                    AccountStatus = AccountStatus.Accepted
+                };
+                var createResult = await userManager.CreateAsync(superUser, "1111");
+                if (createResult.Succeeded)
+                {
+                    var identityRoles = roleManager.Roles.Select(a => a.Name).ToList();
+                    var roleResult = await userManager.AddToRolesAsync(superUser, identityRoles);
+                    if (!roleResult.Succeeded)
+                        throw new Exception(String.Join("\n", roleResult.Errors.Select(error => error.Description)));
+                }
+            }
+            #endregion
+
             #region Admin
-            var admin = await userManager.FindByNameAsync("admin");
+            var admin = await context.Users.IgnoreQueryFilters().SingleOrDefaultAsync(x => x.UserName == "admin");
             if (admin is null)
             {
                 admin = new AppUser()
@@ -64,11 +89,11 @@ namespace Passengers.SqlServer.DataBase.Seed
                     FullName = "admin admin",
                     Email = "admin@admin",
                     UserType = UserTypes.Admin,
+                    AccountStatus = AccountStatus.Accepted
                 };
                 var createResult = await userManager.CreateAsync(admin, "1111");
                 if (createResult.Succeeded)
                 {
-                    var identityRoles = roleManager.Roles.Select(a => a.Name).ToList();
                     var roleResult = await userManager.AddToRoleAsync(admin, UserTypes.Admin.ToString());
                     if (!roleResult.Succeeded)
                         throw new Exception(String.Join("\n", roleResult.Errors.Select(error => error.Description)));
@@ -77,7 +102,7 @@ namespace Passengers.SqlServer.DataBase.Seed
             #endregion
 
             #region Shop
-            var shop = await userManager.FindByNameAsync("shop1");
+            var shop = await context.Users.IgnoreQueryFilters().SingleOrDefaultAsync(x => x.UserName == "shop1");
             if (shop is null)
             {
                 shop = new AppUser()
@@ -90,13 +115,12 @@ namespace Passengers.SqlServer.DataBase.Seed
                 var createResult = await userManager.CreateAsync(shop, "1111");
                 if (createResult.Succeeded)
                 {
-                    var identityRoles = roleManager.Roles.Select(a => a.Name).ToList();
                     var roleResult = await userManager.AddToRoleAsync(shop, UserTypes.Shop.ToString());
                     if (!roleResult.Succeeded)
                         throw new Exception(String.Join("\n", roleResult.Errors.Select(error => error.Description)));
                 }
             }
-            var shop2 = await userManager.FindByNameAsync("shop2");
+            var shop2 = await context.Users.IgnoreQueryFilters().SingleOrDefaultAsync(x => x.UserName == "shop2");
             if (shop2 is null)
             {
                 shop2 = new AppUser()
@@ -109,8 +133,31 @@ namespace Passengers.SqlServer.DataBase.Seed
                 var createResult = await userManager.CreateAsync(shop2, "1111");
                 if (createResult.Succeeded)
                 {
-                    var identityRoles = roleManager.Roles.Select(a => a.Name).ToList();
                     var roleResult = await userManager.AddToRoleAsync(shop2, UserTypes.Shop.ToString());
+                    if (!roleResult.Succeeded)
+                        throw new Exception(String.Join("\n", roleResult.Errors.Select(error => error.Description)));
+                }
+            }
+            #endregion
+
+            #region 
+            var customer1 = await context.Users.IgnoreQueryFilters().SingleOrDefaultAsync(x => x.UserName == "customer1");
+            if (customer1 is null)
+            {
+                customer1 = new AppUser()
+                {
+                    UserName = "customer1",
+                    FullName = "customer1 customer1",
+                    Email = "customer1@customer1",
+                    UserType = UserTypes.Customer,
+                    DOB = new DateTime(1998, 12, 2),
+                    GenderType = GenderTypes.Male,
+                    AccountStatus = AccountStatus.Accepted
+                };
+                var createResult = await userManager.CreateAsync(customer1, "1111");
+                if (createResult.Succeeded)
+                {
+                    var roleResult = await userManager.AddToRoleAsync(customer1, UserTypes.Shop.ToString());
                     if (!roleResult.Succeeded)
                         throw new Exception(String.Join("\n", roleResult.Errors.Select(error => error.Description)));
                 }

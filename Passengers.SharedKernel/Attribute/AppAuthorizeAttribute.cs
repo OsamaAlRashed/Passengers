@@ -13,9 +13,9 @@ namespace Passengers.SharedKernel.Attribute
         {
         }
 
-        public AppAuthorizeAttribute(string roles)
+        public AppAuthorizeAttribute(params string[] roles)
         {
-            base.Roles = roles;
+            base.Roles = String.Join(",", roles);
         }
     }
 }

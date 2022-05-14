@@ -84,7 +84,7 @@ namespace Passengers.Main.TagService
         public async Task<OperationResult<List<GetTagDto>>> GetByShopId(Guid? id)
         {
             var tags = await Context.Tags
-                .Where(x => !id.HasValue || x.ShopId == Context.CurrentUserId)
+                .Where(x => !id.HasValue ? x.ShopId == Context.CurrentUserId : x.ShopId == id)
                 .Select(TagStore.Query.GetSelectTag)
                 .ToListAsync();
             return _Operation.SetSuccess(tags);

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Passengers.DataTransferObject.GeneralDtos;
 using Passengers.DataTransferObject.ShopDtos;
 using System;
 using System.Collections.Generic;
@@ -16,6 +17,6 @@ namespace Passengers.DataTransferObject.SecurityDtos
         public string ToTime { get; set; }
         public List<ContactInformationDto> Contacts { get; set; }
         public Guid CategoryId { get; set; }
-        public List<Guid> TagIds { get; set; }
+        public List<SelectDto> Tags { get; set; }
     }
 }

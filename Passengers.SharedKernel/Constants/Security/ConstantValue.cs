@@ -17,6 +17,5 @@ namespace Passengers.SharedKernel.Constants.Security
         public const string Shop = "Shop";
         public const string Customer = "Customer";
         public const string Driver = "Driver";
-        public const string Stakeholder = "Stakeholder";
     }
 }

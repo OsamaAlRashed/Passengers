@@ -10,6 +10,5 @@ namespace Passengers.SharedKernel.Enums
         Shop = 1,
         Customer = 2,
         Driver = 3,
-        Stakeholder = 4,
     }
 }

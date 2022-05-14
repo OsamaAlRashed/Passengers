@@ -22,15 +22,33 @@ namespace Passengers.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get() => await repository.Get().ToJsonResultAsync();
+        public async Task<IActionResult> Get(int? year, int? month) => await repository.Get(year, month).ToJsonResultAsync();
+
+        [HttpGet]
+        public async Task<IActionResult> GetSalaries(int? year, int? month) => await repository.GetSalaries(year, month).ToJsonResultAsync();
+
+        [HttpGet]
+        public async Task<IActionResult> GetImports(int? year, int? month) => await repository.GetImports(year, month).ToJsonResultAsync();
+
+        [HttpGet]
+        public async Task<IActionResult> GetExports(int? year, int? month) => await repository.GetExports(year, month).ToJsonResultAsync();
 
         [HttpGet]
         public async Task<IActionResult> GetById([Required] Guid id) => await repository.GetById(id).ToJsonResultAsync();
+
+        [HttpGet]
+        public async Task<IActionResult> GetNameAndSalary([Required] Guid userId) => await repository.GetNameAndSalary(userId).ToJsonResultAsync();
 
         [HttpPost]
         public async Task<IActionResult> Add(PaymentDto dto) => await repository.Add(dto).ToJsonResultAsync();
 
         [HttpPost]
+        public async Task<IActionResult> Import(ImportPaymentDto dto) => await repository.Import(dto).ToJsonResultAsync();
+
+        [HttpPost]
+        public async Task<IActionResult> Export(ExportPaymentDto dto) => await repository.Export(dto).ToJsonResultAsync();
+
+        [HttpPut]
         public async Task<IActionResult> Update(PaymentDto dto) => await repository.Update(dto).ToJsonResultAsync();
 
         [HttpDelete]

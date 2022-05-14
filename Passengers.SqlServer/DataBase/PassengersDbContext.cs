@@ -85,6 +85,15 @@ namespace Passengers.SqlServer.DataBase
             return base.SaveChangesAsync(cancellationToken);
         }
 
+        public static Guid? LastActionBy(IBaseEntity entity)
+        {
+            if (entity.DateCreated >= entity.DateUpdated && entity.DateCreated > entity.DateUpdated)
+                return entity.CreatedBy;
+            else if (entity.DateUpdated >= entity.DateCreated && entity.DateUpdated > entity.DateDeleted)
+                return entity.UpdatedBy;
+            return entity.DeletedBy;
+        }
+
         public DbSet<Country> Countries { get; set; }
         public DbSet<City> Cities { get; set; }
         public DbSet<Area> Areas { get; set; }

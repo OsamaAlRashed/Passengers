@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Passengers.Base;
+using Passengers.DataTransferObject.GeneralDtos;
 using Passengers.DataTransferObject.SecurityDtos;
 using Passengers.DataTransferObject.SecurityDtos.Login;
 using Passengers.Models.Security;
@@ -327,6 +328,16 @@ namespace Passengers.Security.AccountService
             return _Operation.SetSuccess(true);
         }
 
-        
+        public async Task<OperationResult<List<SelectDto>>> Users(UserTypes? type)
+        {
+            var data = await Context.Users.Where(x => !type.HasValue || x.UserType == type)
+                .Select(x => new SelectDto
+                {
+                    Id = x.Id,
+                    Name = x.FullName
+                }).ToListAsync();
+
+            return _Operation.SetSuccess(data);
+        }
     }
 }
