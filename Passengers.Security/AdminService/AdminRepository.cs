@@ -31,13 +31,16 @@ namespace Passengers.Security.AdminService
         private readonly IAccountRepository accountRepository;
         private readonly IWebHostEnvironment webHostEnvironment;
         private readonly UserManager<AppUser> userManager;
+        private readonly IPasswordHasher<AppUser> passwordHasher;
+
 
         public AdminRepository(PassengersDbContext context, IAccountRepository accountRepository, IWebHostEnvironment webHostEnvironment
-            , UserManager<AppUser> userManager) : base(context)
+            , UserManager<AppUser> userManager, IPasswordHasher<AppUser> passwordHasher) : base(context)
         {
             this.accountRepository = accountRepository;
             this.webHostEnvironment = webHostEnvironment;
             this.userManager = userManager;
+            this.passwordHasher = passwordHasher;
         }
 
         public async Task<OperationResult<GetAdminDto>> Add(SetAdminDto dto)
@@ -90,7 +93,10 @@ namespace Passengers.Security.AdminService
 
         public async Task<OperationResult<PagedList<GetAdminDto>>> Get(int pageNumber, int pageSize, string search)
         {
-            var users = await Context.Admins().Where(x => string.IsNullOrEmpty(search) || x.FullName.Contains(search)).ToPagedListAsync(pageNumber, pageSize);
+            ///ToDO
+            pageSize = 100000;
+            var users = await Context.Admins().Where(x => string.IsNullOrEmpty(search) || x.FullName.Contains(search))
+                .OrderByDescending(x => x.DateCreated).ToPagedListAsync(pageNumber, pageSize);
             var result = users.Select(AdminStore.Query.AdminToAdminDto).ToPagedList(pageNumber, pageSize);
             return _Operation.SetSuccess(result);
         }
@@ -106,6 +112,8 @@ namespace Passengers.Security.AdminService
 
         public async Task<OperationResult<PagedList<DashboardShopDto>>> GetShops(int pageNumber, int pageSize, string search)
         {
+            //TODo
+            pageSize = 100000;
             var shops = await Context.Shops()
                 .Include(x => x.Category)
                 .Include(x => x.Documents).Include(x => x.ShopSchedules)
@@ -157,15 +165,13 @@ namespace Passengers.Security.AdminService
 
             AdminStore.Query.AssignDtoToAdmin(entity, dto);
 
-            var path = FileExtensions.ProcessUploadedFile(dto.ImageFile, FolderNames.Admin, webHostEnvironment.WebRootPath);
-            if (!path.IsNullOrEmpty())
+            if(dto.ImageFile != null)
             {
-                entity.IdentifierImagePath = path;
-            }
-
-            if (!dto.Password.IsNullOrEmpty())
-            {
-                await accountRepository.ChangePassword(entity.Id, dto.Password);
+                var path = FileExtensions.ProcessUploadedFile(dto.ImageFile, FolderNames.Admin, webHostEnvironment.WebRootPath);
+                if (!path.IsNullOrEmpty())
+                {
+                    entity.IdentifierImagePath = path;
+                }
             }
 
             await userManager.UpdateAsync(entity);

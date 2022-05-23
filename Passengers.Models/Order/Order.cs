@@ -18,12 +18,12 @@ namespace Passengers.Models.Order
         }
         
         public OrderStatus OrderStatus { get; set; }
-        public long TotalPrice { get; set; }
         public string Note { get; set; }
         public OrderTypes OrderType { get; set; }
         public DateTime? InShopDate { get; set; }
         public DateTime? OnWay { get; set; }
         public DateTime? CloseDate { get; set; }
+        public decimal? DeliveryAmount { get; set; }
 
 
         public Guid CustomerId { get; set; }

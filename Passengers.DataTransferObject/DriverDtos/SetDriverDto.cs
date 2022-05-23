@@ -16,7 +16,6 @@ namespace Passengers.DataTransferObject.DriverDtos
         public string AddressText { get; set; }
         public GenderTypes? GenderType { get; set; }
         public BloodTypes BloodType { get; set; }
-        public decimal FixedAmount { get; set; }
         public DateTime DOB { get; set; }
     }
 }

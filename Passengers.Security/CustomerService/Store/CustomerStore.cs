@@ -19,7 +19,7 @@ namespace Passengers.Security.CustomerService.Store
         public static class Filter
         {
             public static Expression<Func<Product, bool>> WhereFilterProduct(CustomerProductFilterDto filter) => product =>
-             (filter.ShopId == product.Tag.ShopId)
+             (!filter.ShopId.HasValue || filter.ShopId == product.Tag.ShopId)
              && (!filter.TagId.HasValue || filter.TagId == product.TagId)
              && (string.IsNullOrEmpty(filter.Search) || product.Name.Contains(filter.Search))
              && (!filter.FromPrice.HasValue || filter.FromPrice <= product.Price)
@@ -31,7 +31,7 @@ namespace Passengers.Security.CustomerService.Store
 
             public static Expression<Func<AppUser, bool>> WhereFilterShop(CustomerShopFilterDto filter, List<Guid> shopIds) => shop =>
                 (string.IsNullOrEmpty(filter.Search) || shop.Name.Contains(filter.Search))
-             && (!shopIds.Any() | shopIds.Contains(shop.Id))
+             && (shopIds == null || !shopIds.Any() | shopIds.Contains(shop.Id))
              && (!filter.CategoryId.HasValue || shop.CategoryId == filter.CategoryId)
              /// TODo && (filter.NearWithMe.HasValue) 
              && (string.IsNullOrEmpty(filter.FromTime) || shop.ShopSchedules.Any(x => TimeSpan.Parse(filter.FromTime) <= x.FromTime))

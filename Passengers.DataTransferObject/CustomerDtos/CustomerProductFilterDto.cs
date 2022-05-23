@@ -14,6 +14,6 @@ namespace Passengers.DataTransferObject.CustomerDtos
         public decimal? FromPrice { get; set; }
         public decimal? ToPrice { get; set; }
         public Guid? TagId { get; set; }
-        public Guid ShopId { get; set; }
+        public Guid? ShopId { get; set; }
     }
 }

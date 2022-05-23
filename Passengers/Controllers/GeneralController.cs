@@ -77,5 +77,10 @@ namespace Passengers.Controllers
         [HttpGet]
         public IActionResult PaymentTypes() => Ok(Helpers.EnumToList(typeof(PaymentType)));
 
+        [HttpGet]
+        public IActionResult ImportTypes() => Ok(Helpers.EnumToList(typeof(ImportType)));
+
+        [HttpGet]
+        public IActionResult ExportTypes() => Ok(Helpers.EnumToList(typeof(ExportType)));
     }
 }

@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Passengers.Base;
 using Passengers.DataTransferObject.DriverDtos;
 using Passengers.DataTransferObject.SecurityDtos;
+using Passengers.Models.Security;
 using Passengers.Repository.Base;
 using Passengers.Security.AccountService;
 using Passengers.Security.DriveService.Store;
@@ -26,11 +28,13 @@ namespace Passengers.Security.DriveService
     {
         private readonly IAccountRepository accountRepository;
         private readonly IWebHostEnvironment webHostEnvironment;
+        private readonly UserManager<AppUser> userManager;
 
-        public DriverRepository(PassengersDbContext context, IAccountRepository accountRepository, IWebHostEnvironment webHostEnvironment): base(context)
+        public DriverRepository(PassengersDbContext context, IAccountRepository accountRepository, IWebHostEnvironment webHostEnvironment, UserManager<AppUser> userManager) : base(context)
         {
             this.accountRepository = accountRepository;
             this.webHostEnvironment = webHostEnvironment;
+            this.userManager = userManager;
         }
 
         public async Task<OperationResult<GetDriverDto>> Add(SetDriverDto dto)
@@ -38,21 +42,24 @@ namespace Passengers.Security.DriveService
             var user = (await accountRepository.Create(new CreateAccountDto
             {
                 PhoneNumber = dto.PhoneNumber,
-                UserName = "Passenger" + Helpers.GetUniqueKey(),
+                UserName = "Driver" + Helpers.GetUniqueKey(),
                 Type = SharedKernel.Enums.UserTypes.Driver,
-                Password = Helpers.GetUniqueKey(4),
+                Password = Helpers.GetUniqueKey(),
             })).Result;
 
             if (user != null)
             {
-                var entity = await Context.Drivers().Where(x => x.Id == user.Id).SingleOrDefaultAsync();
+                var entity = await Context.Drivers().Include(x => x.Payments).Where(x => x.Id == user.Id).SingleOrDefaultAsync();
 
                 DriverStore.Query.AssignDtoToDriver(entity, dto);
 
-                var path = FileExtensions.ProcessUploadedFile(dto.ImageFile, FolderNames.Admin, webHostEnvironment.WebRootPath);
-                if (!path.IsNullOrEmpty())
+                if(dto.ImageFile != null)
                 {
-                    entity.IdentifierImagePath = path;
+                    var path = FileExtensions.ProcessUploadedFile(dto.ImageFile, FolderNames.Admin, webHostEnvironment.WebRootPath);
+                    if (!path.IsNullOrEmpty())
+                    {
+                        entity.IdentifierImagePath = path;
+                    }
                 }
 
                 await Context.SaveChangesAsync();
@@ -64,43 +71,62 @@ namespace Passengers.Security.DriveService
 
         public async Task<OperationResult<bool>> Delete(Guid id)
         {
-            throw new NotImplementedException();
+            return await accountRepository.Delete(id);
         }
 
         public async Task<OperationResult<DetailsDriverDto>> Details(Guid id, DateTime? day)
         {
-            var entity = await Context.Drivers().Include(x => x.DriverOrders).Where(x => x.Id == id).SingleOrDefaultAsync();
+            var entity = await Context.Drivers().Include(x => x.DriverOrders).Include(x => x.Payments)
+                .Where(x => x.Id == id).SingleOrDefaultAsync();
             if (entity == null)
                 return _Operation.SetContent<DetailsDriverDto>(OperationResultTypes.NotExist, "");
 
-            var orders = entity.DriverOrders;
-            if (day != null)
-            {
-                orders = orders.Where(x => x.DateCreated == day).ToList();
-            }
-
-            var result = DriverStore.Query.DriverToDetailsDriverDto(entity);
-            //result.DeliveryAmount = orders.Sum(x => x.DeliveryCost);
-            result.OrderCount = orders.Count();
-            //result.OnlineTime = 
+            var result = DriverStore.Query.DriverToDetailsDriverDto(entity, day);
             return _Operation.SetSuccess(result);
         }
 
-        public async Task<OperationResult<PagedList<GetDriverDto>>> Get(int pageNumber, int pageSize, string search)
+        public async Task<OperationResult<PagedList<GetDriverDto>>> Get(int pageNumber, int pageSize, string search, bool? online)
         {
-            var users = await Context.Drivers().Where(x => string.IsNullOrEmpty(search) || x.FullName.Contains(search)).ToPagedListAsync(pageNumber, pageSize);
+            ///ToDO
+            pageSize = 100000;
+            var users = await Context.Drivers()
+                .Include(x => x.DriverOrders).Include(x => x.Payments)
+                .Where(x => string.IsNullOrEmpty(search) || x.FullName.Contains(search))
+                .OrderByDescending(x => x.DateCreated)
+                .ToPagedListAsync(pageNumber, pageSize);
             var result = users.Select(DriverStore.Query.DriverToDriverDto).ToPagedList(pageNumber, pageSize);
             return _Operation.SetSuccess(result);
         }
 
-        public Task<OperationResult<GetDriverDto>> GetById(Guid id)
+        public async Task<OperationResult<GetDriverDto>> GetById(Guid id)
         {
-            throw new NotImplementedException();
+            var entity = await Context.Drivers().Include(x => x.Payments).Where(x => x.Id == id).SingleOrDefaultAsync();
+            if (entity == null)
+                return _Operation.SetContent<GetDriverDto>(OperationResultTypes.NotExist, "");
+
+            return _Operation.SetSuccess(DriverStore.Query.DriverToDriverDto(entity));
         }
 
-        public Task<OperationResult<GetDriverDto>> Update(SetDriverDto dto)
+        public async Task<OperationResult<GetDriverDto>> Update(SetDriverDto dto)
         {
-            throw new NotImplementedException();
+            var entity = await Context.Drivers().Include(x => x.Payments).Where(x => x.Id == dto.Id).SingleOrDefaultAsync();
+            if (entity == null)
+                return _Operation.SetContent<GetDriverDto>(OperationResultTypes.NotExist, "");
+
+            DriverStore.Query.AssignDtoToDriver(entity, dto);
+
+            if(dto.ImageFile != null)
+            {
+                var path = FileExtensions.ProcessUploadedFile(dto.ImageFile, FolderNames.Admin, webHostEnvironment.WebRootPath);
+                if (!path.IsNullOrEmpty())
+                {
+                    entity.IdentifierImagePath = path;
+                }
+            }
+
+            await userManager.UpdateAsync(entity);
+            await Context.SaveChangesAsync();
+            return _Operation.SetSuccess(DriverStore.Query.DriverToDriverDto(entity));
         }
     }
 }

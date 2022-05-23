@@ -46,20 +46,24 @@ namespace Passengers.Controllers
         [HttpGet]
         public async Task<IActionResult> Details() => await repository.Details().ToJsonResultAsync();
 
+        [HttpGet]
+        public async Task<IActionResult> GetProfile() => await repository.GetProfile().ToJsonResultAsync();
+
         [HttpPatch]
         public async Task<IActionResult> Favorite([Required] Guid productId) => await repository.Favorite(productId).ToJsonResultAsync();
 
         [HttpPatch]
-        public async Task<IActionResult> Follow([Required] Guid productId) => await repository.Follow(productId).ToJsonResultAsync();
+        public async Task<IActionResult> Follow([Required] Guid shopId) => await repository.Follow(shopId).ToJsonResultAsync();
 
         [HttpPatch]
-        public async Task<IActionResult> UnFollow([Required] Guid productId) => await repository.UnFollow(productId).ToJsonResultAsync();
+        public async Task<IActionResult> UnFollow([Required] Guid shopId) => await repository.UnFollow(shopId).ToJsonResultAsync();
 
         [HttpPatch]
         public async Task<IActionResult> UnFavorite([Required] Guid productId) => await repository.UnFavorite(productId).ToJsonResultAsync();
 
         [HttpGet]
-        public async Task<IActionResult> GetMyFavorite() => await repository.GetMyFavorite().ToJsonResultAsync();
+        public async Task<IActionResult> GetMyFavorite(string search, int pageNumber = 1, int pageSize = 10) 
+            => await repository.GetMyFavorite(search, pageNumber, pageSize).AddPagnationHeaderAsync(this).ToJsonResultAsync();
 
         [HttpGet]
         public async Task<IActionResult> GetShops([FromQuery] CustomerShopFilterDto filterDto, bool? topShops, int pageNumber = 1, int pageSize = 10)

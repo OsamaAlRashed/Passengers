@@ -11,13 +11,11 @@ namespace Passengers.Security.DriveService
 {
     public interface IDriverRepository
     {
-        Task<OperationResult<PagedList<GetDriverDto>>> Get(int pageNumber, int pageSize, string search);
+        Task<OperationResult<PagedList<GetDriverDto>>> Get(int pageNumber, int pageSize, string search, bool? online);
         Task<OperationResult<GetDriverDto>> GetById(Guid id);
         Task<OperationResult<GetDriverDto>> Add(SetDriverDto dto);
         Task<OperationResult<GetDriverDto>> Update(SetDriverDto dto);
         Task<OperationResult<bool>> Delete(Guid id);
         Task<OperationResult<DetailsDriverDto>> Details(Guid id, DateTime? day);
-
-
     }
 }

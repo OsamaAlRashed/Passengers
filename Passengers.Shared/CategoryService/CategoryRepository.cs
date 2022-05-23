@@ -80,9 +80,10 @@ namespace Passengers.Shared.CategoryService
             return _Operation.SetSuccess(true);
         }
         
-        public async Task<OperationResult<List<GetCategoryDto>>> Get()
+        public async Task<OperationResult<List<GetCategoryDto>>> Get(string search)
         {
             var categories = await Context.Categories
+                .Where(x => string.IsNullOrEmpty(search) || x.Name.Contains(search))
                 .Select(CategoryStore.Query.GetSelectCategory)
                 .ToListAsync();
             return _Operation.SetSuccess(categories);

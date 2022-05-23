@@ -31,7 +31,7 @@ namespace Passengers.Main.PaymentService.Store
                 Date = c.Date,
                 Note = c.Note,
                 Type = SharedKernel.Enums.PaymentTypesHelper.Map(c.Type),
-                UserId = c.UserId
+                UserId = c.UserId == Guid.Empty ? null : c.UserId,
             };
 
             public static Func<ExportPaymentDto, Payment> ExportDtoToPayment => c => new Payment
@@ -41,7 +41,7 @@ namespace Passengers.Main.PaymentService.Store
                 Date = c.Date,
                 Note = c.Note,
                 Type = SharedKernel.Enums.PaymentTypesHelper.Map(c.Type),
-                UserId = c.UserId
+                UserId = c.UserId == Guid.Empty ? null : c.UserId,
             };
 
             public static Expression<Func<Payment, ExportPaymentDto>> PaymentToExportDto => c => new ExportPaymentDto

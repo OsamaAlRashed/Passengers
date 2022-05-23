@@ -24,7 +24,7 @@ namespace Passengers.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get(int pageNumber = 1, int pageSize = 10, string search = "") => await repository.Get(pageNumber, pageSize, search).ToJsonResultAsync();
+        public async Task<IActionResult> Get(string search, bool? online, int pageNumber = 1, int pageSize = 10) => await repository.Get(pageNumber, pageSize, search, online).ToJsonResultAsync();
 
         [HttpGet]
         public async Task<IActionResult> GetById(Guid id) => await repository.GetById(id).ToJsonResultAsync();
@@ -40,5 +40,8 @@ namespace Passengers.Controllers
 
         [HttpPut]
         public async Task<IActionResult> Block(Guid id) => await accountRepository.Block(id).ToJsonResultAsync();
+
+        [HttpDelete]
+        public async Task<IActionResult> Delete(Guid id) => await accountRepository.Delete(id).ToJsonResultAsync();
     }
 }

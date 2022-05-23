@@ -19,7 +19,7 @@ namespace Passengers.Security.CustomerService
         Task<OperationResult<string>> UploadImage(IFormFile file);
         Task<OperationResult<CustomerInformationDto>> Details();
         Task<OperationResult<bool>> UpdateInformation(CustomerInformationDto dto);
-        Task<OperationResult<PagedList<GetProductDto>>> GetMyFavorite(int pageNumber = 1, int pageSize = 10);
+        Task<OperationResult<PagedList<GetProductDto>>> GetMyFavorite(string search, int pageNumber = 1, int pageSize = 10);
         Task<OperationResult<bool>> UnFavorite(Guid productId);
         Task<OperationResult<bool>> UnFollow(Guid shopId);
         Task<OperationResult<bool>> Favorite(Guid productId);
@@ -28,5 +28,6 @@ namespace Passengers.Security.CustomerService
         Task<OperationResult<PagedList<ShopCustomerDto>>> GetShops(CustomerShopFilterDto filterDto, bool? topShop, int pageNumber = 1, int pageSize = 10);
         Task<OperationResult<CustomerHomeDto>> Home();
         Task<OperationResult<object>> GetProductById(Guid id);
+        Task<OperationResult<object>> GetProfile();
     }
 }

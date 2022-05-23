@@ -26,10 +26,12 @@ namespace Passengers.Security.DriveService.Store
                 GenderType = c.GenderType,
                 IdentifierImagePath = c.IdentifierImagePath,
                 PhoneNumber = c.PhoneNumber,
-                FixedAmount = c.Salary,
                 AddressText = c.AddressText,
                 IsBlocked = c.DateBlocked.HasValue,
                 BloodType = c.BloodType,
+                DOB = c.DOB,
+                FixedAmount = -1 * c.Payments.Where(payment => payment.Type.IsFixed())
+                    .Sum(payment => payment.Amount * payment.Type.PaymentSign()),
                 ///ToDo
                 Online = true
             };
@@ -39,7 +41,6 @@ namespace Passengers.Security.DriveService.Store
                 FullName = c.FullName,
                 PhoneNumber = c.PhoneNumber,
                 AddressText = c.AddressText,
-                Salary = c.FixedAmount,
                 DOB = c.DOB,
                 GenderType = c.GenderType,
                 BloodType = c.BloodType,
@@ -51,12 +52,11 @@ namespace Passengers.Security.DriveService.Store
                 entity.PhoneNumber = dto.PhoneNumber;
                 entity.DOB = dto.DOB;
                 entity.GenderType = dto.GenderType;
-                entity.Salary = dto.FixedAmount;
                 entity.AddressText = dto.AddressText;
                 entity.BloodType = dto.BloodType;
             };
 
-            public static Func<AppUser, DetailsDriverDto> DriverToDetailsDriverDto => c => new DetailsDriverDto
+            public static Func<AppUser, DateTime?, DetailsDriverDto> DriverToDetailsDriverDto => (c, day) => new DetailsDriverDto
             {
                 Id = c.Id,
                 UserName = c.UserName,
@@ -65,15 +65,18 @@ namespace Passengers.Security.DriveService.Store
                 GenderType = c.GenderType,
                 IdentifierImagePath = c.IdentifierImagePath,
                 PhoneNumber = c.PhoneNumber,
-                FixedAmount = c.Salary,
                 AddressText = c.AddressText,
                 IsBlocked = c.DateBlocked.HasValue,
                 BloodType = c.BloodType,
+                DOB = c.DOB,
+                FixedAmount = -1 * c.Payments.Where(payment => payment.Type.IsFixed())
+                    .Sum(payment => payment.Amount * payment.Type.PaymentSign()),
+                DeliveryAmount = c.DriverOrders.Where(x => !day.HasValue || x.DateCreated.Date == day)
+                    .Sum(x => x.DeliveryAmount.GetValueOrDefault()),
                 ///ToDo
                 Online = true,
-                DeliveryAmount = 2000,
-                OnlineTime = 1000,
-                OrderCount = 100
+                OnlineTime = 100,
+                OrderCount = c.DriverOrders.Where(x => !day.HasValue || x.DateCreated.Date == day).Count(),
             };
         }
 

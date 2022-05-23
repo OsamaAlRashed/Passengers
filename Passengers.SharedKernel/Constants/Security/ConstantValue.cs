@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 
 namespace Passengers.SharedKernel.Constants.Security
 {
-    public class ConstantValue
+    public static class ConstantValue
     {
-        public const int DefaultExpireTokenMinute = 1 * 24 * 60;
+        public const int DefaultExpireTokenMinute = 30;
+        public static DateTime ExpireDateTime = DateTime.Now.AddMinutes(30);
     }
 
     public class AppRoles

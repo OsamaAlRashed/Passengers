@@ -27,7 +27,7 @@ namespace Passengers.Controllers
         [ApiGroup(ApiGroupNames.Shop, ApiGroupNames.Dashboard)]
         [AppAuthorize(AppRoles.Shop, AppRoles.Admin)]
         [HttpGet]
-        public async Task<IActionResult> Get() => await repository.Get().ToJsonResultAsync();
+        public async Task<IActionResult> Get(string search) => await repository.Get(search).ToJsonResultAsync();
 
         [AppAuthorize(AppRoles.Admin)]
         [ApiGroup(ApiGroupNames.Dashboard)]

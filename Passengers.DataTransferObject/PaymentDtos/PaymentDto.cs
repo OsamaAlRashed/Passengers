@@ -20,7 +20,17 @@ namespace Passengers.DataTransferObject.PaymentDtos
 
         public static Expression<Func<Payment, PaymentDto>> Selector { get; set; } = entity => new PaymentDto() { Id = entity.Id, Note = entity.Note, UserId = entity.UserId, Amount = entity.Amount, Date = entity.Date, Type = entity.Type };
         public static Expression<Func<PaymentDto, Payment>> InverseSelector { get; set; } = dto => new Payment() { Id = dto.Id, Note = dto.Note, UserId = dto.UserId, Amount = dto.Amount, Date = dto.Date, Type = dto.Type };
-        public static Action<PaymentDto, Payment> AssignSelector { get; set; } = (dto, entity) => { entity.Note = dto.Note; entity.UserId = dto.UserId; entity.Date = dto.Date; entity.Amount = dto.Amount; entity.Type = dto.Type; };
+        public static Action<PaymentDto, Payment> AssignSelector { get; set; } = (dto, entity) 
+            => 
+        { 
+            entity.Note = dto.Note;
+            entity.Date = dto.Date;
+            entity.Amount = dto.Amount;
+            if(entity.UserId != dto.UserId)
+            {
+                entity.UserId = dto.UserId;
+            }
+        };
 
     }
 }

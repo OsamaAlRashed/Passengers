@@ -9,24 +9,31 @@ namespace Passengers.SharedKernel.Enums
 
     public static class PaymentTypesHelper
     {
-        public static bool IsExportWithoutSalary(PaymentType payment)
+        public static bool IsExportWithoutSalary(this PaymentType payment)
         {
-            if(payment is PaymentType.Salary)
-                throw new Exception("Invalid type");
+            if (payment is PaymentType.Salary)
+                return false;
             return IsExport(payment);
         }
 
-        public static bool IsExport(PaymentType payment)
+        public static bool IsExport(this PaymentType payment)
         {
             if(payment is PaymentType.Salary or PaymentType.FixedExport or PaymentType.OtherExport)
-                return false;
-            return true;
+                return true;
+            return false;
         }
 
-        public static int PaymentSign(PaymentType payment) 
+        public static bool IsFixed(this PaymentType payment)
+        {
+            if (payment is PaymentType.FixedExport or PaymentType.FixedImport)
+                return true;
+            return false;
+        }
+
+        public static int PaymentSign(this PaymentType payment) 
             => IsExport(payment) ? -1 : 1;
 
-        public static PaymentType Map(ImportType importType)
+        public static PaymentType Map(this ImportType importType)
         {
             if (importType == ImportType.Delivery)
                 return PaymentType.Delivery;
@@ -36,7 +43,7 @@ namespace Passengers.SharedKernel.Enums
                 return PaymentType.OtherImport;
         }
 
-        public static ImportType MapImport(PaymentType paymentType)
+        public static ImportType MapImport(this PaymentType paymentType)
         {
             if (paymentType == PaymentType.FixedImport)
                 return ImportType.Fixed;
@@ -48,7 +55,7 @@ namespace Passengers.SharedKernel.Enums
                 throw new Exception("Invalid type");
         }
 
-        public static PaymentType Map(ExportType exportType)
+        public static PaymentType Map(this ExportType exportType)
         {
             if (exportType == ExportType.Fixed)
                 return PaymentType.FixedExport;
@@ -56,7 +63,7 @@ namespace Passengers.SharedKernel.Enums
                 return PaymentType.OtherExport;
         }
 
-        public static ExportType MapExport(PaymentType paymentType)
+        public static ExportType MapExport(this PaymentType paymentType)
         {
             if (paymentType == PaymentType.FixedExport)
                 return ExportType.Fixed;

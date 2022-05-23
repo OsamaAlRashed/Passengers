@@ -8,7 +8,6 @@ namespace Passengers.DataTransferObject.DriverDtos
 {
     public class DetailsDriverDto : GetDriverDto
     {
-        public decimal FixedAmount { get; set; }
         public decimal DeliveryAmount { get; set; }
         public decimal TotalAmount => FixedAmount + DeliveryAmount;
         public int OrderCount { get; set; }

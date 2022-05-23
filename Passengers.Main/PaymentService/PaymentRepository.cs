@@ -101,7 +101,7 @@ namespace Passengers.Main.SalaryLogService
         public async Task<OperationResult<List<ImportPaymentDto>>> GetImports(int? year, int? month)
         {
             var data = await Context.Payments
-                .Where(x => !PaymentTypesHelper.IsExportWithoutSalary(x.Type))
+                .Where(x => x.Type == PaymentType.Delivery || x.Type == PaymentType.FixedImport || x.Type == PaymentType.OtherImport)
                 .Where(PaymentStore.Filter.WhereDateFilter(year, month))
                 .Select(PaymentStore.Query.PaymentToImportDto)
                 .ToListAsync();
@@ -112,7 +112,7 @@ namespace Passengers.Main.SalaryLogService
         public async Task<OperationResult<List<ExportPaymentDto>>> GetExports(int? year, int? month)
         {
             var data = await Context.Payments
-                .Where(x => PaymentTypesHelper.IsExportWithoutSalary(x.Type))
+                .Where(x => x.Type == PaymentType.FixedExport || x.Type == PaymentType.OtherExport)
                 .Where(PaymentStore.Filter.WhereDateFilter(year, month))
                 .Select(PaymentStore.Query.PaymentToExportDto)
                 .ToListAsync();

@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Passengers.DataTransferObject.SecurityDtos;
 using Passengers.Security.AccountService;
 using Passengers.Security.AdminService;
+using Passengers.SharedKernel.Attribute;
+using Passengers.SharedKernel.Constants.Security;
 using Passengers.SharedKernel.OperationResult.ExtensionMethods;
 using Passengers.SharedKernel.Swagger.ApiGroup;
 using System;
@@ -13,6 +15,7 @@ namespace Passengers.Controllers
     [ApiGroup(ApiGroupNames.Dashboard)]
     [Route("api/[controller]/[action]")]
     [ApiController]
+    //[AppAuthorize(AppRoles.Shop)]
     public class AdminController : ControllerBase
     {
         private readonly IAdminRepository repository;

@@ -10,6 +10,7 @@ using Passengers.DataTransferObject.SecurityDtos.Login;
 using Passengers.Models.Security;
 using Passengers.Repository.Base;
 using Passengers.Security.Shared;
+using Passengers.SharedKernel.Constants.Security;
 using Passengers.SharedKernel.Enums;
 using Passengers.SharedKernel.ExtensionMethods;
 using Passengers.SharedKernel.OperationResult;
@@ -63,7 +64,7 @@ namespace Passengers.Security.AccountService
             if (loginResult == SignInResult.Success)
             {
                 var roles = await userManager.GetRolesAsync(user);
-                var expierDate = dto.RemmberMe ? DateTime.Now.AddYears(1) : DateTime.Now.AddMinutes(30);
+                //var expierDate = dto.RemmberMe ? ConstantValue.ExpireDateTime DateTime.Now.AddYears(1) : DateTime.Now.AddMinutes(1);
                 if (!dto.DeviceToken.IsNullOrEmpty())
                 {
                     user.DeviceTokens ??= "";
@@ -75,7 +76,7 @@ namespace Passengers.Security.AccountService
                 LoginResponseDto accountDto = new()
                 {
                     User = user,
-                    AccessToken = GenerateAccessToken(user, roles, expierDate),
+                    AccessToken = GenerateAccessToken(user, roles, ConstantValue.ExpireDateTime),
                     RefreshToken = user.RefreshToken,
                 };
                 return _Operation.SetSuccess(accountDto);
@@ -168,7 +169,8 @@ namespace Passengers.Security.AccountService
             {
                 UserName = dto.UserName,
                 Email = dto.UserName + "@passengers.com",
-                UserType = dto.Type
+                UserType = dto.Type,
+                AccountStatus = dto.Type == UserTypes.Shop ? AccountStatus.WaitingCompleteInformation : AccountStatus.Accepted
             };
             var identityResult = await userManager.CreateAsync(user, dto.Password);
 
@@ -251,7 +253,7 @@ namespace Passengers.Security.AccountService
 
             return _Operation.SetFailed<bool>("", OperationResultTypes.Failed);
         }
-
+            
         public async Task<OperationResult<TokenDto>> RefreshToken(string accessToken, string refreshToken)
         {
             var principal = GetPrincipalFromExpiredToken(accessToken);
@@ -265,7 +267,7 @@ namespace Passengers.Security.AccountService
                 return _Operation.SetFailed<TokenDto>("RefreshTokenUnCorrect");
 
             var roles = await userManager.GetRolesAsync(user);
-            var newAccessToken = GenerateAccessToken(user, roles, DateTime.Now.AddMinutes(30));
+            var newAccessToken = GenerateAccessToken(user, roles, ConstantValue.ExpireDateTime);
             var newRefreshToken = GenerateRefreshToken();
             user.RefreshToken = newRefreshToken;
 

@@ -40,6 +40,7 @@ namespace Passengers.Models.Security
 
         #region Shared
         public UserTypes UserType { get; set; }
+
         [DefaultValue(AccountStatus.Accepted)]
         public AccountStatus AccountStatus { get; set; }
         public string FullName { get; set; }

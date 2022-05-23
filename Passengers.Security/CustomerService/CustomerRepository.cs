@@ -61,35 +61,52 @@ namespace Passengers.Security.CustomerService
 
         public async Task<OperationResult<bool>> Favorite(Guid productId)
         {
-            var fav = new Favorite
-            {
-                ProductId = productId,
-                CustomerId = Context.CurrentUserId.Value
-            };
+            var isExist = await Context.Favorites
+                .Where(x => x.ProductId == productId && x.CustomerId == Context.CurrentUserId.Value)
+                .AnyAsync();
 
-            Context.Favorites.Add(fav);
-            await Context.SaveChangesAsync();
+            if (!isExist)
+            {
+                var fav = new Favorite
+                {
+                    ProductId = productId,
+                    CustomerId = Context.CurrentUserId.Value
+                };
+
+                Context.Favorites.Add(fav);
+                await Context.SaveChangesAsync();
+            }
+            
             return _Operation.SetSuccess(true);
         }
 
         public async Task<OperationResult<bool>> Follow(Guid shopId)
         {
-            var fav = new Favorite
-            {
-                ShopId = shopId,
-                CustomerId = Context.CurrentUserId.Value
-            };
+            var isExist = await Context.Favorites
+                .Where(x => x.ShopId == shopId && x.CustomerId == Context.CurrentUserId.Value)
+                .AnyAsync();
 
-            Context.Favorites.Add(fav);
-            await Context.SaveChangesAsync();
+            if (!isExist)
+            {
+                var fav = new Favorite
+                {
+                    ShopId = shopId,
+                    CustomerId = Context.CurrentUserId.Value
+                };
+
+                Context.Favorites.Add(fav);
+                await Context.SaveChangesAsync();
+            }
+                
             return _Operation.SetSuccess(true);
         }
 
-        public async Task<OperationResult<PagedList<GetProductDto>>> GetMyFavorite(int pageNumber = 1, int pageSize = 10)
+        public async Task<OperationResult<PagedList<GetProductDto>>> GetMyFavorite(string search, int pageNumber = 1, int pageSize = 10)
         {
             var products = await Context.Products
                 .Include(x => x.Documents).Include(x => x.OrderDetails).Include(x => x.Reviews).Include(x => x.Discounts)
-                .Where(x => x.Favorites.Select(x => x.CustomerId).Contains(Context.CurrentUserId.Value))
+                .Where(x => (string.IsNullOrEmpty(search) || x.Name.Contains(search)) 
+                    && x.Favorites.Select(x => x.CustomerId).Contains(Context.CurrentUserId.Value))
                 .Select(CustomerStore.Query.GetSelectProduct)
                 .ToPagedListAsync(pageNumber, pageSize);
 
@@ -153,6 +170,21 @@ namespace Passengers.Security.CustomerService
                 .ToPagedListAsync(pageNumber, pageSize);
 
             return _Operation.SetSuccess(products);
+        }
+
+        public async Task<OperationResult<object>> GetProfile()
+        {
+            var customer = await Context.Customers().Where(x => x.Id == Context.CurrentUserId)
+                .SingleOrDefaultAsync();
+            if (customer == null)
+                return _Operation.SetContent<CustomerInformationDto>(OperationResultTypes.NotExist, "");
+
+            return _Operation.SetSuccess<object>(new
+            {
+                ImagePath = customer.IdentifierImagePath,
+                Name = customer.FullName,
+                customer.PhoneNumber
+            });
         }
 
         public async Task<OperationResult<PagedList<ShopCustomerDto>>> GetShops(CustomerShopFilterDto filterDto, bool? topShops, int pageNumber = 1, int pageSize = 10)
