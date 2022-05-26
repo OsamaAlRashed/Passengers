@@ -18,11 +18,9 @@ namespace Passengers.Models.Location
 
         public string Title { get; set; }
         public string Building { get; set; }
-        public string AddressLine { get; set; }
         public string PhoneNumber { get; set; }
         public string Text { get; set; }
-        public NotesToDrive Note { get; set; }
-        public string OtherNote { get; set; }
+        public string Note { get; set; }
         public string Lat { get; set; }
         public string Long { get; set; }
 

@@ -21,28 +21,29 @@ namespace Passengers.Location.AddressSerive
 
         }
 
-        public async Task<OperationResult<AddressDto>> Add(AddressDto dto)
+        public async Task<OperationResult<CustomerAddressDto>> Add(CustomerAddressDto dto)
         {
-            dto.AreaId = Context.Areas.FirstOrDefault().Id;
-            var entity = AddressStore.Query.GetSelectAddress.Compile()(dto);
+            var entity = AddressStore.Query.InverseSelectCustomerAddressDto.Compile()(dto);
+            entity.CustomerId = Context.CurrentUserId;
+            entity.AreaId = Context.Areas.FirstOrDefault().Id;
             Context.Addresses.Add(entity);
             await Context.SaveChangesAsync();
             dto.Id = entity.Id;
             return dto;
         }
 
-        public async Task<OperationResult<List<CustomerAddressDto>>> GetByCustomerId(Guid id)
+        public async Task<OperationResult<List<CustomerAddressDto>>> GetByCustomerId(Guid? id)
         {
             var result = await Context.Addresses
-                .Where(x => x.CustomerId == id).Select(AddressStore.Query.SelectCustomerAddressDto)
+                .Where(x => id.HasValue ? x.CustomerId == id : x.CustomerId == Context.CurrentUserId).Select(AddressStore.Query.SelectCustomerAddressDto)
                 .ToListAsync();
             return result;
         }
 
-        public async Task<OperationResult<AddressDto>> GetById(Guid id)
+        public async Task<OperationResult<CustomerAddressDto>> GetById(Guid id)
         {
             var result = await Context.Addresses
-                .Where(x => x.ShopId == id).Select(AddressStore.Query.InverseSelectAddress)
+                .Where(x => x.Id == id).Select(AddressStore.Query.SelectCustomerAddressDto)
                 .FirstOrDefaultAsync();
             return result;
         }
@@ -77,13 +78,34 @@ namespace Passengers.Location.AddressSerive
             return true;
         }
 
-        public async Task<OperationResult<AddressDto>> UpdateShopAddress(AddressDto dto)
+        public async Task<OperationResult<ShopAddressDto>> Update(ShopAddressDto dto)
         {
-            var entity = await Context.Addresses.Where(x => x.ShopId == dto.EntityId).FirstOrDefaultAsync();
+            var entity = await Context.Addresses.Where(x => x.ShopId == dto.ShopId).FirstOrDefaultAsync();
             if (entity == null)
                 return (OperationResultTypes.NotExist, "");
-            entity = AddressStore.Query.GetSelectAddress.Compile()(dto);
+            AddressStore.Query.AssignShopAddressDtoToAddress(entity, dto);
             await Context.SaveChangesAsync();
+            return dto;
+        }
+
+        public async Task<OperationResult<CustomerAddressDto>> Update(CustomerAddressDto dto)
+        {
+            var entity = await Context.Addresses.Where(x => x.Id == dto.Id).FirstOrDefaultAsync();
+            if (entity == null)
+                return (OperationResultTypes.NotExist, "");
+            AddressStore.Query.AssignCustomerAddressDtoToAddress(entity, dto);
+            await Context.SaveChangesAsync();
+            return dto;
+        }
+
+        public async Task<OperationResult<ShopAddressDto>> Add(ShopAddressDto dto)
+        {
+            var entity = AddressStore.Query.InverseSelectShopAddressDto.Compile()(dto);
+            entity.ShopId = Context.CurrentUserId;
+            entity.AreaId = Context.Areas.FirstOrDefault().Id;
+            Context.Addresses.Add(entity);
+            await Context.SaveChangesAsync();
+            dto.Id = entity.Id;
             return dto;
         }
     }

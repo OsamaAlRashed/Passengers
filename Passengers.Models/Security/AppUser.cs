@@ -66,9 +66,8 @@ namespace Passengers.Models.Security
         public string Name { get; set; }
         public string Description { get; set; }
         public string OwnerName { get; set; }
-        public ShopOrderType? ShopOrderType { get; set; }
         public Address Address { get; set; }
-        public DeliveryShopStatus? DeliveryShopStatus { get; set; }
+        public bool? OrderStatus { get; set; }
         public Guid? CategoryId { get; set; }
         public Category Category { get; set; }
 

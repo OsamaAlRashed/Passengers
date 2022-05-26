@@ -11,12 +11,14 @@ namespace Passengers.Location.AddressSerive
 {
     public interface IAddressRepository
     {
-        Task<OperationResult<AddressDto>> Add(AddressDto dto);
-        Task<OperationResult<AddressDto>> UpdateShopAddress(AddressDto dto);
+        Task<OperationResult<CustomerAddressDto>> Add(CustomerAddressDto dto);
+        Task<OperationResult<ShopAddressDto>> Add(ShopAddressDto dto);
+        Task<OperationResult<ShopAddressDto>> Update(ShopAddressDto dto);
+        Task<OperationResult<CustomerAddressDto>> Update(CustomerAddressDto dto);
         Task<OperationResult<bool>> Remove(Guid id);
         Task<OperationResult<bool>> RemoveByUserId(Guid id);
-        Task<OperationResult<AddressDto>> GetById(Guid id);
-        Task<OperationResult<List<CustomerAddressDto>>> GetByCustomerId(Guid id);
+        Task<OperationResult<CustomerAddressDto>> GetById(Guid id);
+        Task<OperationResult<List<CustomerAddressDto>>> GetByCustomerId(Guid? id);
         Task<OperationResult<ShopAddressDto>> GetByShopId(Guid id);
     }
 }

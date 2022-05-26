@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Passengers.SqlServer.DataBase;
 
 namespace Passengers.SqlServer.Migrations
 {
     [DbContext(typeof(PassengersDbContext))]
-    partial class PassengersDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220525212558_RemoveNote")]
+    partial class RemoveNote
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -153,6 +155,9 @@ namespace Passengers.SqlServer.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AddressLine")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("AreaId")
                         .HasColumnType("uniqueidentifier");
@@ -864,6 +869,9 @@ namespace Passengers.SqlServer.Migrations
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int?>("DeliveryShopStatus")
+                        .HasColumnType("int");
+
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
@@ -903,9 +911,6 @@ namespace Passengers.SqlServer.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
-                    b.Property<bool?>("OrderStatus")
-                        .HasColumnType("bit");
-
                     b.Property<string>("OwnerName")
                         .HasColumnType("nvarchar(max)");
 
@@ -929,6 +934,9 @@ namespace Passengers.SqlServer.Migrations
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("ShopOrderType")
+                        .HasColumnType("int");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");

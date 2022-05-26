@@ -280,13 +280,12 @@ namespace Passengers.Security.ShopService
             shop.Name = dto.Name;
             shop.CategoryId = dto.CategoryId;
 
-            var addressDto = new AddressDto
+            var addressDto = new ShopAddressDto
             {
-                EntityId = shop.Id,
+                ShopId = shop.Id,
                 Lat = dto.Lat,
                 Long = dto.Long,
                 Text = dto.Address,
-                Type = AddressTypes.Shop,
             };
 
             if (shop.Address == null)
@@ -298,7 +297,7 @@ namespace Passengers.Security.ShopService
                 addressDto.Id = shop.Address.Id;
                 addressDto.AreaId = shop.Address.AreaId;
 
-                await addressRepository.UpdateShopAddress(addressDto);
+                await addressRepository.Update(addressDto);
             }
 
             if(dto.Contacts != null)

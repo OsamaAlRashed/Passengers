@@ -142,7 +142,7 @@ namespace Passengers.Security.CustomerService
                 Rate = product.Rate,
                 RateNumber = product.Reviews.Count,
                 product.Description,
-                product.Tag.Shop.DeliveryShopStatus,
+                product.Tag.Shop.OrderStatus,
                 ShopName = product.Tag.Shop.Name,
                 ShopId = product.Tag.Shop.Id,
                 ShopCategory = product.Tag.Shop.Category.Name,

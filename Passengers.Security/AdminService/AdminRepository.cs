@@ -151,7 +151,7 @@ namespace Passengers.Security.AdminService
                         Long = x.Address.Long,
                         Text = x.Address.Text
                     },
-                    DeliveryShopStatus = x.DeliveryShopStatus
+                    OrderStatus = x.OrderStatus
                 }).ToPagedListAsync(pageNumber, pageSize);
 
             return _Operation.SetSuccess(shops);

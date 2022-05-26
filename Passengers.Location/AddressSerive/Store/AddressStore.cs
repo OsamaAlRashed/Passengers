@@ -48,11 +48,50 @@ namespace Passengers.Location.AddressSerive.Store
 
             public static Expression<Func<Address, CustomerAddressDto>> SelectCustomerAddressDto => c => new CustomerAddressDto
             {
-                AreaId = c.AreaId,
-                CustomerId = c.CustomerId.Value,
                 Text = c.Text,
                 Lat = c.Lat,
                 Long = c.Long,
+                Building = c.Building,
+                Note = c.Note,
+                PhoneNumber = c.PhoneNumber,
+                Title = c.Title,
+                Id = c.Id
+            };
+
+            public static Expression<Func<CustomerAddressDto, Address>> InverseSelectCustomerAddressDto => c => new Address
+            {
+                Text = c.Text,
+                Lat = c.Lat,
+                Long = c.Long,
+                Building = c.Building,
+                Note = c.Note,
+                PhoneNumber = c.PhoneNumber,
+                Title = c.Title,
+            };
+
+            public static Expression<Func<ShopAddressDto, Address>> InverseSelectShopAddressDto => c => new Address
+            {
+                Text = c.Text,
+                Lat = c.Lat,
+                Long = c.Long,
+            };
+
+            public static Action<Address, CustomerAddressDto> AssignCustomerAddressDtoToAddress => (entity, dto) =>
+            {
+                entity.Lat = dto.Lat;
+                entity.Long = dto.Long;
+                entity.Note = dto.Note;
+                entity.PhoneNumber = dto.PhoneNumber;
+                entity.Title = dto.Title;
+                entity.Building = dto.Title;
+                entity.Text = dto.Text;
+            };
+
+            public static Action<Address, ShopAddressDto> AssignShopAddressDtoToAddress => (entity, dto) =>
+            {
+                entity.Lat = dto.Lat;
+                entity.Long = dto.Long;
+                entity.Text = dto.Text;
             };
 
         }

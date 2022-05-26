@@ -20,6 +20,6 @@ namespace Passengers.DataTransferObject.SecurityDtos
         public string ToTime { get; set; }
         public object Contacts { get; set; }
         public object Address { get; set; }
-        public Passengers.SharedKernel.Enums.DeliveryShopStatus? DeliveryShopStatus { get; set; }
+        public bool? OrderStatus { get; set; }
     }
 }
