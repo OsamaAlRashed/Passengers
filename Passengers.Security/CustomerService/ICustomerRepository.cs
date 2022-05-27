@@ -29,5 +29,7 @@ namespace Passengers.Security.CustomerService
         Task<OperationResult<CustomerHomeDto>> Home();
         Task<OperationResult<object>> GetProductById(Guid id);
         Task<OperationResult<object>> GetProfile();
+        Task<OperationResult<object>> ShopDetails(Guid shopId);
+        Task<OperationResult<object>> ProductDetails(Guid productId);
     }
 }

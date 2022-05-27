@@ -14,6 +14,7 @@ namespace Passengers.Security.AccountService
     public interface IAccountRepository
     {
         Task<OperationResult<LoginResponseDto>> Login(BaseLoginDto dto);
+        Task<OperationResult<bool>> Logout(string refreshToken);
         Task<OperationResult<CreateAccountDto>> Create(CreateAccountDto dto);
         Task<OperationResult<bool>> ChangeStatus(Guid id, AccountStatus accountStatus);
         Task<OperationResult<TokenDto>> RefreshToken(string accessToken, string refreshToken);

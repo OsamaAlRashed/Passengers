@@ -34,6 +34,11 @@ namespace Passengers.Main.ProductService
 
         public async Task<OperationResult<GetProductDto>> Add(SetProductDto dto)
         {
+            var tag = await Context.Tags.Where(x => x.Id == dto.TagId).SingleOrDefaultAsync();
+            if(tag == null)
+                return _Operation.SetContent<GetProductDto>(OperationResultTypes.NotExist, "TagNotFound");
+            if (tag.ShopId == null)
+                return _Operation.SetFailed<GetProductDto>("TagNotAllowed");
             var product = new Product
             {
                 Avilable = true,

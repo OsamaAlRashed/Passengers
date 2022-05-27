@@ -24,8 +24,8 @@ namespace Passengers.Controllers
             repository = countryRepository;
         }
 
-        [ApiGroup(ApiGroupNames.Shop, ApiGroupNames.Dashboard)]
-        [AppAuthorize(AppRoles.Shop, AppRoles.Admin)]
+        [ApiGroup(ApiGroupNames.Shop, ApiGroupNames.Dashboard, ApiGroupNames.Customer)]
+        [AppAuthorize(AppRoles.Shop, AppRoles.Admin, AppRoles.Customer)]
         [HttpGet]
         public async Task<IActionResult> Get(string search) => await repository.Get(search).ToJsonResultAsync();
 

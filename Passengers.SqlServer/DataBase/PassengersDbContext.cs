@@ -98,18 +98,14 @@ namespace Passengers.SqlServer.DataBase
         public DbSet<City> Cities { get; set; }
         public DbSet<Area> Areas { get; set; }
         public DbSet<Address> Addresses { get; set; }
-
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderDetails> OrderDetails { get; set; }
-
         public DbSet<Category> Categories { get; set; }
         public DbSet<Document> Documents { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<ContactUs> ContactUs { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<Favorite> Favorites { get; set; }
-
-
         public DbSet<Discount> Discounts { get; set; }
         public DbSet<PriceLog> PriceLogs { get; set; }
         public DbSet<Product> Products { get; set; }
@@ -118,5 +114,6 @@ namespace Passengers.SqlServer.DataBase
         public DbSet<ShopSchedule> ShopSchedules { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Tag> Tags { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
     }
 }

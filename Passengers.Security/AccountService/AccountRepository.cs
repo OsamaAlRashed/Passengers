@@ -10,6 +10,7 @@ using Passengers.DataTransferObject.SecurityDtos.Login;
 using Passengers.Models.Security;
 using Passengers.Repository.Base;
 using Passengers.Security.Shared;
+using Passengers.Security.TokenService;
 using Passengers.SharedKernel.Constants.Security;
 using Passengers.SharedKernel.Enums;
 using Passengers.SharedKernel.ExtensionMethods;
@@ -36,12 +37,15 @@ namespace Passengers.Security.AccountService
         private readonly SignInManager<AppUser> signInManager;
         private readonly IConfiguration configuration;
         private readonly IPasswordHasher<AppUser> passwordHasher;
-        public AccountRepository(PassengersDbContext context, UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, IConfiguration configuration, IPasswordHasher<AppUser> passwordHasher) :base(context)
+        private readonly ITokenService tokenService;
+        public AccountRepository(PassengersDbContext context, UserManager<AppUser> userManager, SignInManager<AppUser> signInManager,
+            IConfiguration configuration, IPasswordHasher<AppUser> passwordHasher, ITokenService tokenService) :base(context)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
             this.configuration = configuration;
             this.passwordHasher = passwordHasher;
+            this.tokenService = tokenService;
         }
 
         public async Task<OperationResult<LoginResponseDto>> Login(BaseLoginDto dto)
@@ -64,20 +68,19 @@ namespace Passengers.Security.AccountService
             if (loginResult == SignInResult.Success)
             {
                 var roles = await userManager.GetRolesAsync(user);
-                //var expierDate = dto.RemmberMe ? ConstantValue.ExpireDateTime DateTime.Now.AddYears(1) : DateTime.Now.AddMinutes(1);
                 if (!dto.DeviceToken.IsNullOrEmpty())
                 {
                     user.DeviceTokens ??= "";
                     user.DeviceTokens = String.Join(",", user.DeviceTokens, dto.DeviceToken);
                 }
-                user.RefreshToken = GenerateRefreshToken();
+                var refreshToken = await tokenService.AddRefreshToken(user.Id);
                 await Context.SaveChangesAsync();
 
                 LoginResponseDto accountDto = new()
                 {
                     User = user,
-                    AccessToken = GenerateAccessToken(user, roles, ConstantValue.ExpireDateTime),
-                    RefreshToken = user.RefreshToken,
+                    AccessToken = tokenService.GenerateAccessToken(user, roles, ConstantValue.AccessExpireDateTime),
+                    RefreshToken = refreshToken,
                 };
                 return _Operation.SetSuccess(accountDto);
             }
@@ -104,60 +107,6 @@ namespace Passengers.Security.AccountService
         //    }
         //    return await emailService.SendEmail(message);
         //}
-
-        public string GenerateAccessToken(AppUser user, IList<string> roles, DateTime expierDate)
-        {
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.UserName.ToString()),
-                new Claim("Type", user.UserType.ToString()),
-            };
-
-            foreach (var role in roles)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, role));
-            }
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]));
-
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256Signature);
-
-            var token = new JwtSecurityToken(configuration["Jwt:Issuer"],
-                  configuration["Jwt:Issuer"],
-                  claims,
-                  expires: expierDate,
-                  signingCredentials: creds);
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
-        }
-
-        public ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
-        {
-            var tokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateAudience = false, //you might want to validate the audience and issuer depending on your use case
-                ValidateIssuer = false,
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"])),
-                ValidateLifetime = false //here we are saying that we don't care about the token's expiration date
-            };
-            var tokenHandler = new JwtSecurityTokenHandler();
-            SecurityToken securityToken;
-            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out securityToken);
-            var jwtSecurityToken = securityToken as JwtSecurityToken;
-            if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256Signature, StringComparison.InvariantCultureIgnoreCase))
-                throw new SecurityTokenException("Invalid token");
-            return principal;
-        }
-
-        public static string GenerateRefreshToken()
-        {
-            var randomNumber = new byte[32];
-            using var rng = RandomNumberGenerator.Create();
-            rng.GetBytes(randomNumber);
-            return Convert.ToBase64String(randomNumber);
-        }
         public async Task<bool> IsPhoneNumberUsed(string phoneNumber)
         {
             return await userManager.Users.AnyAsync(u => u.PhoneNumber == phoneNumber);
@@ -256,20 +205,20 @@ namespace Passengers.Security.AccountService
             
         public async Task<OperationResult<TokenDto>> RefreshToken(string accessToken, string refreshToken)
         {
-            var principal = GetPrincipalFromExpiredToken(accessToken);
+            var principal = tokenService.GetPrincipalFromExpiredToken(accessToken);
             var username = principal.Identity.Name; //this is mapped to the Name claim by default
 
             var user = Context.Users.SingleOrDefault(u => u.UserName == username);
             if (user == null)
                 return _Operation.SetContent<TokenDto>(OperationResultTypes.NotExist, "UserNotFound");
 
-            if (user.RefreshToken != refreshToken)
+            if (!(await tokenService.Get(user.Id)).Contains(refreshToken))
                 return _Operation.SetFailed<TokenDto>("RefreshTokenUnCorrect");
 
             var roles = await userManager.GetRolesAsync(user);
-            var newAccessToken = GenerateAccessToken(user, roles, ConstantValue.ExpireDateTime);
-            var newRefreshToken = GenerateRefreshToken();
-            user.RefreshToken = newRefreshToken;
+            var newAccessToken = tokenService.GenerateAccessToken(user, roles, ConstantValue.AccessExpireDateTime);
+
+            var newRefreshToken = await tokenService.UpdateRefreshToken(user.Id, refreshToken);
 
             await Context.SaveChangesAsync();
             return _Operation.SetSuccess(new TokenDto
@@ -341,5 +290,9 @@ namespace Passengers.Security.AccountService
 
             return _Operation.SetSuccess(data);
         }
+
+        public async Task<OperationResult<bool>> Logout(string refreshToken) 
+            => await tokenService.DeleteRefreshToken(refreshToken);
+
     }
 }

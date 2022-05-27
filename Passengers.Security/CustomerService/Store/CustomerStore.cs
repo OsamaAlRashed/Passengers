@@ -49,7 +49,7 @@ namespace Passengers.Security.CustomerService.Store
                 UserType = UserTypes.Customer
             };
 
-            public static Expression<Func<Product, GetProductDto>> GetSelectProduct => c => new GetProductDto
+            public static Expression<Func<Product, GetProductDto>> GetSelectProduct(Guid? customerId = null) => c => new GetProductDto
             {
                 Id = c.Id,
                 Name = c.Name,
@@ -62,7 +62,8 @@ namespace Passengers.Security.CustomerService.Store
                 HasDiscount = c.Discounts.Any(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate),
                 Discount = c.Discounts.Any(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate) ? c.Discounts.FirstOrDefault(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate).Price : null,
                 IsNew = DateTime.Now.Day - c.DateCreated.Day <= 2,
-                Rate = c.Reviews.Any() ? c.Reviews.Average(x => x.Rate) : 0
+                Rate = c.Reviews.Any() ? c.Reviews.Average(x => x.Rate) : 0,
+                IsFavorite = customerId.HasValue ? c.Favorites.Any(x => x.CustomerId == customerId) : false,
             };
 
             public static Expression<Func<AppUser, ShopCustomerDto>> ShopToShopCustomerDto => c => new ShopCustomerDto

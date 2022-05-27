@@ -37,8 +37,8 @@ namespace Passengers.Controllers
 
 
         [HttpGet]
-        [ApiGroup(ApiGroupNames.Dashboard, ApiGroupNames.Customer)]
-        [AppAuthorize(AppRoles.Admin, AppRoles.Customer)]
+        [ApiGroup(ApiGroupNames.Dashboard)]
+        [AppAuthorize(AppRoles.Admin)]
         public async Task<IActionResult> GetByShopId([Required]Guid shopId) => await repository.GetByShopId(shopId).ToJsonResultAsync();
 
 

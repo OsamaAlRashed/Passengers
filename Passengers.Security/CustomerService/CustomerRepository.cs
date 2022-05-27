@@ -107,7 +107,7 @@ namespace Passengers.Security.CustomerService
                 .Include(x => x.Documents).Include(x => x.OrderDetails).Include(x => x.Reviews).Include(x => x.Discounts)
                 .Where(x => (string.IsNullOrEmpty(search) || x.Name.Contains(search)) 
                     && x.Favorites.Select(x => x.CustomerId).Contains(Context.CurrentUserId.Value))
-                .Select(CustomerStore.Query.GetSelectProduct)
+                .Select(CustomerStore.Query.GetSelectProduct(Context.CurrentUserId))
                 .ToPagedListAsync(pageNumber, pageSize);
 
             return _Operation.SetSuccess(products);
@@ -166,7 +166,7 @@ namespace Passengers.Security.CustomerService
             var products = await Context.Products
                 .Include(x => x.Documents).Include(x => x.OrderDetails).Include(x => x.Reviews).Include(x => x.Discounts)
                 .Where(CustomerStore.Filter.WhereFilterProduct(filterDto))
-                .Select(CustomerStore.Query.GetSelectProduct)
+                .Select(CustomerStore.Query.GetSelectProduct(Context.CurrentUserId))
                 .ToPagedListAsync(pageNumber, pageSize);
 
             return _Operation.SetSuccess(products);
@@ -262,6 +262,113 @@ namespace Passengers.Security.CustomerService
                 return _Operation.SetSuccess<object>(response);
             }
             return _Operation.SetFailed<object>(result.Message, result.OperationResultType);
+        }
+
+        public async Task<OperationResult<object>> ProductDetails(Guid productId)
+        {
+            var product = await Context.Products
+                .Where(x => x.Id == productId)
+                .Include("Tag.Shop.ShopSchedules")
+                .Include("Tag.Shop.ShopFavorites")
+                .Include("Tag.Shop.Documents")
+                .Include("Tag.Shop.Category")
+                .Include(x => x.Discounts)
+                .Include(x => x.Reviews)
+                .ThenInclude(x => x.Customer)
+                .Include(x => x.Documents)
+                .SingleOrDefaultAsync();
+
+            if (product == null)
+                return _Operation.SetContent<object>(OperationResultTypes.NotExist, "ProductNotFound");
+
+            var result = new
+            {
+                product.Id,
+                ImagePath = product.Documents.Select(x => x.Path).FirstOrDefault(),
+                product.TagId,
+                TagName = product.Tag.Name,
+                product.Name,
+                product.Price,
+                HasDiscount = product.Discounts.Where(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate).FirstOrDefault() is null ? false : true,
+                DiscountPrice = product.Discounts.Where(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate).FirstOrDefault()?.Price,
+                product.Avilable,
+                product.PrepareTime,
+                RateDegree = product.Rate,
+                RateNumber = product.Reviews.Count,
+                product.Description,
+                Shop = new
+                {
+                    Id = product.Tag.ShopId,
+                    Name = product.Tag.Shop.Name,
+                    Online = product.Tag.Shop.ShopSchedules.Any(x => x.Days.Contains(DateTime.Now.Day.ToString()) && x.FromTime <= DateTime.Now.TimeOfDay && DateTime.Now.TimeOfDay <= x.ToTime),
+                    Follow = product.Tag.Shop.ShopFavorites.Any(x => x.CustomerId == Context.CurrentUserId),
+                    ImagePath = product.Tag.Shop.Documents.Select(x => x.Path).FirstOrDefault(),
+                    CategoryName = product.Tag.Shop.Category.Name
+                },
+                Reviews = product.Reviews.Select(r => new
+                {
+                    r.Id,
+                    r.Rate,
+                    r.Descreption,
+                    CustomerName = r.Customer.Name,
+                    r.CustomerId,
+                    Date = r.DateCreated
+                }).OrderByDescending(x => x.Date).Take(3).ToList(),
+            };
+            return _Operation.SetSuccess<object>(result);   
+        }
+
+        public async Task<OperationResult<object>> ShopDetails(Guid shopId)
+        {
+            var shop = await Context.Shops()
+                .Where(x => x.Id == shopId)
+                .Include(x => x.ShopSchedules)
+                .Include(x => x.ShopFavorites)
+                .Include(x => x.Documents)
+                .Include(x => x.Category)
+                .Include(x => x.ShopContacts)
+                .Include(x => x.Address)
+                .Include("Tags.Products.Reviews")
+                .SingleOrDefaultAsync();
+
+            if (shop == null)
+                return _Operation.SetContent<object>(OperationResultTypes.NotExist, "ShopNotFound");
+
+            var result = new
+            {
+                Id = shopId,
+                Name = shop.Name,
+                Online = shop.ShopSchedules.Any(x => x.Days.Contains(DateTime.Now.Day.ToString()) && x.FromTime <= DateTime.Now.TimeOfDay && DateTime.Now.TimeOfDay <= x.ToTime),
+                Follow = shop.ShopFavorites.Any(x => x.CustomerId == Context.CurrentUserId),
+                ImagePath = shop.Documents.Select(x => x.Path).FirstOrDefault(),
+                CategoryName = shop.Category.Name,
+                FromDay = shop.ShopSchedules.Any() ?
+                        (shop.ShopSchedules.FirstOrDefault().Days.IsNullOrEmpty() ?
+                            0 : (shop.ShopSchedules.FirstOrDefault().Days[0] - 49))
+                                : 0,
+                ToDay = shop.ShopSchedules.Any() ?
+                        (shop.ShopSchedules.FirstOrDefault().Days.IsNullOrEmpty() ?
+                            0 : (shop.ShopSchedules.FirstOrDefault().Days[shop.ShopSchedules.FirstOrDefault().Days.Length - 1] - 49))
+                                : 0,
+                FromTime = shop.ShopSchedules.FirstOrDefault().FromTime.ToString(@"hh\:mm"),
+                ToTime = shop.ShopSchedules.FirstOrDefault().ToTime.ToString(@"hh\:mm"),
+                Contacts = shop.ShopContacts.Select(xx => new
+                {
+                    xx.Type,
+                    xx.Text,
+                }).ToList(),
+                Address = new
+                {
+                    Lat = shop.Address.Lat,
+                    Long = shop.Address.Long,
+                    Text = shop.Address.Text
+                },
+                OrderStatus = shop.OrderStatus,
+                Rate = shop.Tags.SelectMany(x => x.Products.SelectMany(x => x.Reviews)).Any() ?
+                    shop.Tags.SelectMany(x => x.Products.SelectMany(x => x.Reviews)).Average(x => x.Rate) : 0
+            };
+
+            return _Operation.SetSuccess<object>(result);
         }
 
         public async Task<OperationResult<CreateAccountCustomerDto>> SignUp(CreateAccountCustomerDto dto)

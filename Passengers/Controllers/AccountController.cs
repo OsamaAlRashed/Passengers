@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Passengers.DataTransferObject.SecurityDtos;
 using Passengers.DataTransferObject.SecurityDtos.Login;
 using Passengers.Security.AccountService;
+using Passengers.SharedKernel.Attribute;
+using Passengers.SharedKernel.Constants.Security;
 using Passengers.SharedKernel.Enums;
 using Passengers.SharedKernel.OperationResult.Enums;
 using Passengers.SharedKernel.OperationResult.ExtensionMethods;
@@ -30,6 +32,15 @@ namespace Passengers.Controllers
 
         [HttpPost]
         public async Task<IActionResult> Login(BaseLoginDto dto) => await repository.Login(dto).ToJsonResultAsync();
+
+        [HttpPut]
+        public async Task<IActionResult> ChangePassword(Guid id, string newPassword) => await repository.ChangePassword(id, newPassword).ToJsonResultAsync();
+
+        [ApiGroup(ApiGroupNames.Shop, ApiGroupNames.Dashboard, ApiGroupNames.Customer, ApiGroupNames.Driver)]
+        [AppAuthorize(AppRoles.Shop, AppRoles.Admin, AppRoles.Customer)]
+        [HttpGet]
+        public async Task<IActionResult> Logout(string refreshToken) => await repository.Logout(refreshToken).ToJsonResultAsync();
+
 
         [HttpPost]
         [Authorize]

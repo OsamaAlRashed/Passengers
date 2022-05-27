@@ -21,5 +21,6 @@ namespace Passengers.DataTransferObject.ProductDtos
         public bool HasDiscount { get; set; }
         public decimal? Discount { get; set; }
         public double Rate { get; set; }
+        public bool IsFavorite { get; set; }
     }
 }

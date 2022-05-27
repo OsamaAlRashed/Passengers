@@ -27,6 +27,7 @@ using Passengers.Security.CustomerService;
 using Passengers.Security.DriveService;
 using Passengers.Security.Shared;
 using Passengers.Security.ShopService;
+using Passengers.Security.TokenService;
 using Passengers.Shared.CategoryService;
 using Passengers.Shared.DocumentService;
 using Passengers.Shared.SharedService;
@@ -111,6 +112,7 @@ namespace Passengers
             services.AddScoped<IPaymentRepository, PaymentRepository>();
             services.AddScoped<IDriverRepository, DriverRepository>();
             services.AddScoped<EmailService>();
+            services.AddScoped<ITokenService, TokenService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

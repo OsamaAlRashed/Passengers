@@ -41,7 +41,7 @@ namespace Passengers.Main.ProductService.Store
                 HasDiscount = c.Discounts.Any(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate),
                 Discount = c.Discounts.Any(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate) ? c.Discounts.FirstOrDefault(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate).Price : null,
                 IsNew = DateTime.Now.Day - c.DateCreated.Day <= 2,
-                Rate = c.Reviews.Any() ? c.Reviews.Average(x => x.Rate) : 0
+                Rate = c.Reviews.Any() ? c.Reviews.Average(x => x.Rate) : 0,
             };
 
             public static Expression<Func<Product, object>> Sort(SortProductTypes? sortType)

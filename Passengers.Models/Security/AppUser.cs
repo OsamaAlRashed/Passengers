@@ -26,6 +26,7 @@ namespace Passengers.Models.Security
             CustomerFavorites = new HashSet<Favorite>();
             ShopFavorites = new HashSet<Favorite>();
             Addresses = new HashSet<Address>();
+            RefreshTokens = new HashSet<RefreshToken>();
         }
 
         #region Base
@@ -45,7 +46,6 @@ namespace Passengers.Models.Security
         public AccountStatus AccountStatus { get; set; }
         public string FullName { get; set; }
         public DateTime? DOB { get; set; }
-        public string RefreshToken { get; set; }
         public string DeviceTokens { get; set; }
         public GenderTypes? GenderType { get; set; }
         public DateTime? DateBlocked { get; set; }
@@ -90,6 +90,8 @@ namespace Passengers.Models.Security
         public ICollection<Address> Addresses { get; set; }
 
         public ICollection<Payment> Payments { get; set; }
+
+        public ICollection<RefreshToken> RefreshTokens { get; set; }
 
     }
 }
