@@ -44,7 +44,7 @@ namespace Passengers.Security.DriveService
                 PhoneNumber = dto.PhoneNumber,
                 UserName = "Driver" + Helpers.GetUniqueKey(),
                 Type = SharedKernel.Enums.UserTypes.Driver,
-                Password = Helpers.GetUniqueKey(),
+                Password = "passengers",
             })).Result;
 
             if (user != null)

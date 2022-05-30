@@ -49,7 +49,7 @@ namespace Passengers.Security.AdminService
                 dto.UserName = UserTypes.Admin.ToString() + Helpers.GetUniqueKey(6);
 
             if (string.IsNullOrEmpty(dto.Password))
-                dto.Password = Helpers.GetUniqueKey(6);
+                dto.Password = "passengers";
 
             var user = (await accountRepository.Create(new CreateAccountDto
             {
