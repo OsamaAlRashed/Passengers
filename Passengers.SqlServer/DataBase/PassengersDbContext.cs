@@ -115,5 +115,6 @@ namespace Passengers.SqlServer.DataBase
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Tag> Tags { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<OrderStatusLog> OrderStatusLogs { get; set; }
     }
 }

@@ -67,6 +67,7 @@ namespace Passengers.Location.AddressSerive.Store
                 Note = c.Note,
                 PhoneNumber = c.PhoneNumber,
                 Title = c.Title,
+                IsActive = true
             };
 
             public static Expression<Func<ShopAddressDto, Address>> InverseSelectShopAddressDto => c => new Address

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Passengers.Base;
@@ -128,5 +129,61 @@ namespace Passengers.Security.DriveService
             await Context.SaveChangesAsync();
             return _Operation.SetSuccess(DriverStore.Query.DriverToDriverDto(entity));
         }
+
+        public async Task<OperationResult<bool>> ChangeAvilability(bool status)
+        {
+            var currentUser = await Context.Drivers().SingleOrDefaultAsync(x => x.Id == Context.CurrentUserId);
+            if (currentUser == null)
+                return _Operation.SetContent<bool>(OperationResultTypes.NotExist, "");
+
+            currentUser.DriverOnline = status;
+            await Context.SaveChangesAsync();
+            return _Operation.SetSuccess(true);
+        }
+
+        public async Task<OperationResult<object>> Login(LoginDriverDto dto)
+        {
+            var result = await accountRepository.Login(DriverStore.Query.DriverToBaseLoginDto(dto));
+            if (result.IsSuccess)
+            {
+                var user = result.Result.User;
+                var response = new
+                {
+                    user.Id,
+                    user.UserName,
+                    user.PhoneNumber,
+                    result.Result.AccessToken,
+                    result.Result.RefreshToken,
+                    user.AccountStatus,
+                    user.FullName,
+                    user.GenderType,
+                    user.DOB,
+                    user.BloodType,
+                    ImagePath = user.IdentifierImagePath
+                };
+                return _Operation.SetSuccess<object>(response);
+            }
+            return _Operation.SetFailed<object>(result.Message, result.OperationResultType);
+        }
+
+        public async Task<OperationResult<string>> UploadImage(IFormFile file)
+        {
+            var customer = await Context.Drivers().Where(x => x.Id == Context.CurrentUserId)
+                .SingleOrDefaultAsync();
+            if (customer == null)
+                return _Operation.SetContent<string>(OperationResultTypes.NotExist, "");
+
+            var imagePath = file.TryUploadImage("Drivers", webHostEnvironment.WebRootPath);
+            if (imagePath.IsNullOrEmpty())
+                return _Operation.SetFailed<string>("UploadImageFailed");
+
+            customer.IdentifierImagePath = imagePath;
+            await Context.SaveChangesAsync();
+
+            return imagePath;
+        }
+
+        public async Task<OperationResult<GetDriverDto>> GetMyInformations() 
+            => await GetById(Context.CurrentUserId.Value);
     }
 }

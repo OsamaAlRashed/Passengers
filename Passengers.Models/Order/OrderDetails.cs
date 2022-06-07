@@ -9,8 +9,6 @@ namespace Passengers.Models.Order
     public class OrderDetails : BaseEntity
     {
         public int Quantity { get; set; }
-        public string Note { get; set; }
-
 
         public Order Order { get; set; }
         public Guid OrderId { get; set; }
@@ -20,7 +18,6 @@ namespace Passengers.Models.Order
 
         public Guid? ProductId { get; set; }
         public Product Product { get; set; }
-
 
     }
 }

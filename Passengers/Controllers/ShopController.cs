@@ -85,5 +85,6 @@ namespace Passengers.Controllers
         [AppAuthorize(AppRoles.Shop)]
         [HttpGet]
         public async Task<IActionResult> GetWorkingDays() => await repository.GetWorkingDays().ToJsonResultAsync();
+
     }
 }

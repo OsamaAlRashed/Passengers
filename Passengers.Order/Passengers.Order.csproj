@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Passengers.Base\Passengers.Base.csproj" />
+    <ProjectReference Include="..\Passengers.DataTransferObject\Passengers.DataTransferObject.csproj" />
+    <ProjectReference Include="..\Passengers.Security\Passengers.Security.csproj" />
+  </ItemGroup>
+
+</Project>

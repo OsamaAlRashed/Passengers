@@ -16,10 +16,7 @@ namespace Passengers.Location.AddressSerive
 {
     public class AddressRepository : BaseRepository, IAddressRepository
     {
-        public AddressRepository(PassengersDbContext context):base(context)
-        {
-
-        }
+        public AddressRepository(PassengersDbContext context) : base(context) { }
 
         public async Task<OperationResult<CustomerAddressDto>> Add(CustomerAddressDto dto)
         {
@@ -35,7 +32,8 @@ namespace Passengers.Location.AddressSerive
         public async Task<OperationResult<List<CustomerAddressDto>>> GetByCustomerId(Guid? id)
         {
             var result = await Context.Addresses
-                .Where(x => id.HasValue ? x.CustomerId == id : x.CustomerId == Context.CurrentUserId).Select(AddressStore.Query.SelectCustomerAddressDto)
+                .Where(x => x.IsActive && (id.HasValue ? x.CustomerId == id : x.CustomerId == Context.CurrentUserId))
+                .Select(AddressStore.Query.SelectCustomerAddressDto)
                 .ToListAsync();
             return result;
         }
@@ -93,9 +91,9 @@ namespace Passengers.Location.AddressSerive
             var entity = await Context.Addresses.Where(x => x.Id == dto.Id).FirstOrDefaultAsync();
             if (entity == null)
                 return (OperationResultTypes.NotExist, "");
-            AddressStore.Query.AssignCustomerAddressDtoToAddress(entity, dto);
-            await Context.SaveChangesAsync();
-            return dto;
+            entity.IsActive = false;
+            dto.Id = Guid.Empty;
+            return await Add(dto);
         }
 
         public async Task<OperationResult<ShopAddressDto>> Add(ShopAddressDto dto)

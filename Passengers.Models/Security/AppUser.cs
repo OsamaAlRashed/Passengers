@@ -16,7 +16,6 @@ namespace Passengers.Models.Security
     {
         public AppUser()
         {
-            CustomerOrders = new HashSet<OrderSet>();
             DriverOrders = new HashSet<OrderSet>();
             Documents = new HashSet<Document>();
             ShopSchedules = new HashSet<ShopSchedule>();
@@ -57,9 +56,6 @@ namespace Passengers.Models.Security
         public string IdentifierImagePath { get; set; }
         public BloodTypes? BloodType { get; set; }
 
-        [InverseProperty("Customer")]
-        public ICollection<OrderSet> CustomerOrders { get; set; }
-        [InverseProperty("Driver")]
         public ICollection<OrderSet> DriverOrders { get; set; }
 
         #region Shop
@@ -70,6 +66,8 @@ namespace Passengers.Models.Security
         public bool? OrderStatus { get; set; }
         public Guid? CategoryId { get; set; }
         public Category Category { get; set; }
+        
+        public bool? DriverOnline { get; set; }
 
         public ICollection<Document> Documents { get; set; }
         public ICollection<ShopSchedule> ShopSchedules { get; set; }

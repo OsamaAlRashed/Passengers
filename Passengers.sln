@@ -31,6 +31,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Passengers.Security", "Pass
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Passengers.Main", "Passengers.Main\Passengers.Main.csproj", "{D18C313F-42F2-415F-9377-4E4F6C3B2B53}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Passengers.Order", "Passengers.Order\Passengers.Order.csproj", "{9B596BCB-2E41-489C-9C8B-949B01BFE02C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -77,6 +79,10 @@ Global
 		{D18C313F-42F2-415F-9377-4E4F6C3B2B53}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D18C313F-42F2-415F-9377-4E4F6C3B2B53}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D18C313F-42F2-415F-9377-4E4F6C3B2B53}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9B596BCB-2E41-489C-9C8B-949B01BFE02C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B596BCB-2E41-489C-9C8B-949B01BFE02C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B596BCB-2E41-489C-9C8B-949B01BFE02C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B596BCB-2E41-489C-9C8B-949B01BFE02C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -92,6 +98,7 @@ Global
 		{BC2DF519-79B5-4E85-94DF-69BD0E2AD277} = {BFFE3111-0120-4F39-BCEC-653177BE178D}
 		{7DBDD6D2-DA35-4BA6-B6A4-1359D344FBBC} = {BFFE3111-0120-4F39-BCEC-653177BE178D}
 		{D18C313F-42F2-415F-9377-4E4F6C3B2B53} = {BFFE3111-0120-4F39-BCEC-653177BE178D}
+		{9B596BCB-2E41-489C-9C8B-949B01BFE02C} = {BFFE3111-0120-4F39-BCEC-653177BE178D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F5A59759-D575-4306-B64D-23DA65877053}

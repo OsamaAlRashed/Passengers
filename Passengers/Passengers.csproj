@@ -17,6 +17,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Passengers.Location\Passengers.Location.csproj" />
     <ProjectReference Include="..\Passengers.Main\Passengers.Main.csproj" />
+    <ProjectReference Include="..\Passengers.Order\Passengers.Order.csproj" />
     <ProjectReference Include="..\Passengers.Security\Passengers.Security.csproj" />
     <ProjectReference Include="..\Passengers.SharedKernel\Passengers.SharedKernel.csproj" />
     <ProjectReference Include="..\Passengers.SqlServer\Passengers.SqlServer.csproj" />

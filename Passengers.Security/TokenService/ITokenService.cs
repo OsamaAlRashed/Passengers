@@ -19,5 +19,6 @@ namespace Passengers.Security.TokenService
         Task<bool> DeleteRefreshToken(string oldRefreshToken);
         Task<List<string>> Get(Guid? userId, bool isExpired = false);
         Task<bool> DeleteExpired(Guid? userId);
+        Task<bool> DeleteMulti(Guid userId);
     }
 }

@@ -147,5 +147,25 @@ namespace Passengers.Security.TokenService
                 return false;
             }
         }
+
+        public async Task<bool> DeleteMulti(Guid userId)
+        {
+            try
+            {
+                var tokens = await Context.RefreshTokens
+                .Where(x => x.UserId == userId)
+                .ToListAsync();
+
+                Context.RefreshTokens.RemoveRange(tokens);
+
+                await Context.SaveChangesAsync();
+                return true;
+                
+            }
+            catch (Exception)
+            {
+            }
+            return false;
+        }
     }
 }

@@ -21,6 +21,9 @@ using Passengers.Main.ProductService;
 using Passengers.Main.SalaryLogService;
 using Passengers.Main.TagService;
 using Passengers.Models.Security;
+using Passengers.Order.OrderService;
+using Passengers.Order.RealTime;
+using Passengers.Order.RealTime.Hubs;
 using Passengers.Security.AccountService;
 using Passengers.Security.AdminService;
 using Passengers.Security.CustomerService;
@@ -113,6 +116,10 @@ namespace Passengers
             services.AddScoped<IDriverRepository, DriverRepository>();
             services.AddScoped<EmailService>();
             services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<IOrderRepository, OrderRepository>();
+            services.AddScoped<IUserConnectionManager, UserConnectionManager>();
+
+            services.AddSignalR();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -135,6 +142,8 @@ namespace Passengers
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+
+                endpoints.MapHub<OrderHub>("/orderHub");
             });
 
 

@@ -1,4 +1,5 @@
 ﻿using Passengers.DataTransferObject.DriverDtos;
+using Passengers.DataTransferObject.SecurityDtos.Login;
 using Passengers.Models.Security;
 using Passengers.SharedKernel.Enums;
 using System;
@@ -32,8 +33,7 @@ namespace Passengers.Security.DriveService.Store
                 DOB = c.DOB,
                 FixedAmount = -1 * c.Payments.Where(payment => payment.Type.IsFixed())
                     .Sum(payment => payment.Amount * payment.Type.PaymentSign()),
-                ///ToDo
-                Online = true
+                Online = c.DriverOnline ?? false,
             };
 
             public static Func<SetDriverDto, AppUser> DriverDtoToDriver => c => new AppUser
@@ -72,11 +72,19 @@ namespace Passengers.Security.DriveService.Store
                 FixedAmount = -1 * c.Payments.Where(payment => payment.Type.IsFixed())
                     .Sum(payment => payment.Amount * payment.Type.PaymentSign()),
                 DeliveryAmount = c.DriverOrders.Where(x => !day.HasValue || x.DateCreated.Date == day)
-                    .Sum(x => x.DeliveryAmount.GetValueOrDefault()),
-                ///ToDo
-                Online = true,
+                    .Sum(x => x.DeliveryCost.GetValueOrDefault()),
+                Online = c.DriverOnline ?? false,
                 OnlineTime = 100,
                 OrderCount = c.DriverOrders.Where(x => !day.HasValue || x.DateCreated.Date == day).Count(),
+            };
+
+            public static Func<LoginDriverDto, BaseLoginDto> DriverToBaseLoginDto => c => new BaseLoginDto
+            {
+                UserName = c.UserName,
+                DeviceToken = c.DeviceToken,
+                Password = c.Password,
+                RemmberMe = false,
+                UserType = UserTypes.Driver
             };
         }
 

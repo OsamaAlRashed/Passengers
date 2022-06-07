@@ -73,7 +73,14 @@ namespace Passengers.Security.AccountService
                     user.DeviceTokens ??= "";
                     user.DeviceTokens = String.Join(",", user.DeviceTokens, dto.DeviceToken);
                 }
-                var refreshToken = await tokenService.AddRefreshToken(user.Id);
+
+                //Single login
+                if (user.UserType == UserTypes.Driver)
+                {
+                    await tokenService.DeleteMulti(user.Id);
+                }
+
+                string refreshToken = await tokenService.AddRefreshToken(user.Id);
                 await Context.SaveChangesAsync();
 
                 LoginResponseDto accountDto = new()
@@ -294,5 +301,7 @@ namespace Passengers.Security.AccountService
         public async Task<OperationResult<bool>> Logout(string refreshToken) 
             => await tokenService.DeleteRefreshToken(refreshToken);
 
+        public List<Guid> GetUserIds(UserTypes type) =>
+            Context.Users(type).Select(x => x.Id).ToList();
     }
 }

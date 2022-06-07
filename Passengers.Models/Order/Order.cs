@@ -1,4 +1,5 @@
 ﻿using Passengers.Models.Base;
+using Passengers.Models.Location;
 using Passengers.Models.Security;
 using Passengers.Models.Shared;
 using Passengers.SharedKernel.Enums;
@@ -13,22 +14,22 @@ namespace Passengers.Models.Order
     {
         public Order()
         {
-            Rates = new HashSet<Review>();
+            Reviews = new HashSet<Review>();
             OrderDetails = new HashSet<OrderDetails>();
         }
-        
-        public OrderStatus OrderStatus { get; set; }
-        public string Note { get; set; }
+
+        public string SerialNumber { get; set; }
+        public string ShopNote { get; set; }
+        public bool IsShopReady { get; set; }
+        public string DriverNote { get; set; }
         public OrderTypes OrderType { get; set; }
-        public DateTime? InShopDate { get; set; }
-        public DateTime? OnWay { get; set; }
-        public DateTime? CloseDate { get; set; }
-        public decimal? DeliveryAmount { get; set; }
+        public decimal? DeliveryCost { get; set; }
+        public decimal ExpectedCost { get; set; }
+        public int ExpectedTime { get; set; }
 
-
-        public Guid CustomerId { get; set; }
-        [ForeignKey(nameof(CustomerId))]
-        public AppUser Customer { get; set; }
+        public Guid AddressId { get; set; }
+        [ForeignKey(nameof(AddressId))]
+        public Address Address { get; set; }
 
         public Guid? DriverId { get; set; }
         [ForeignKey(nameof(DriverId))]
@@ -36,6 +37,7 @@ namespace Passengers.Models.Order
 
 
         public ICollection<OrderDetails> OrderDetails { get; set; }
-        public ICollection<Review> Rates { get; set; }
+        public ICollection<Review> Reviews { get; set; }
+        public ICollection<OrderStatusLog> OrderStatusLogs { get; set; }
     }
 }

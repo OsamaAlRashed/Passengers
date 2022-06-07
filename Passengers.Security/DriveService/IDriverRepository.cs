@@ -1,4 +1,5 @@
-﻿using Passengers.DataTransferObject.DriverDtos;
+﻿using Microsoft.AspNetCore.Http;
+using Passengers.DataTransferObject.DriverDtos;
 using Passengers.SharedKernel.OperationResult;
 using Passengers.SharedKernel.Pagnation;
 using System;
@@ -17,5 +18,10 @@ namespace Passengers.Security.DriveService
         Task<OperationResult<GetDriverDto>> Update(SetDriverDto dto);
         Task<OperationResult<bool>> Delete(Guid id);
         Task<OperationResult<DetailsDriverDto>> Details(Guid id, DateTime? day);
+        Task<OperationResult<bool>> ChangeAvilability(bool status);
+        Task<OperationResult<object>> Login(LoginDriverDto dto);
+        Task<OperationResult<string>> UploadImage(IFormFile file);
+        Task<OperationResult<GetDriverDto>> GetMyInformations();
+
     }
 }

@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Passengers.SqlServer.DataBase;
 
 namespace Passengers.SqlServer.Migrations
 {
     [DbContext(typeof(PassengersDbContext))]
-    partial class PassengersDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220531193316_Order")]
+    partial class Order
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -177,9 +179,6 @@ namespace Passengers.SqlServer.Migrations
 
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
 
                     b.Property<string>("Lat")
                         .HasColumnType("nvarchar(max)");
@@ -745,9 +744,6 @@ namespace Passengers.SqlServer.Migrations
 
                     b.Property<int>("ExpectedTime")
                         .HasColumnType("int");
-
-                    b.Property<bool>("IsShopReady")
-                        .HasColumnType("bit");
 
                     b.Property<int>("OrderType")
                         .HasColumnType("int");

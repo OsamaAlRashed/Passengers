@@ -88,12 +88,12 @@ namespace Passengers.SharedKernel.ExtensionMethods
              source is null ? new Guid ("00000000-0000-0000-0000-000000000000") : Guid.Parse(source);
 
         // Random
-        public static string GetFourNumberToken()
+        public static string GetNumberToken(int size = 4)
         {
             Random random = new();
             var token = "";
             int c = 0;
-            while (c < 4)
+            while (c < size)
             {
                 int x = random.Next(0, 9);
                 token += x.ToString();
