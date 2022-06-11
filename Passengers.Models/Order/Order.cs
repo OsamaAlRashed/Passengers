@@ -6,6 +6,7 @@ using Passengers.SharedKernel.Enums;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 using System.Text;
 
 namespace Passengers.Models.Order
@@ -16,6 +17,7 @@ namespace Passengers.Models.Order
         {
             Reviews = new HashSet<Review>();
             OrderDetails = new HashSet<OrderDetails>();
+            OrderStatusLogs = new HashSet<OrderStatusLog>();
         }
 
         public string SerialNumber { get; set; }
@@ -24,7 +26,7 @@ namespace Passengers.Models.Order
         public string DriverNote { get; set; }
         public OrderTypes OrderType { get; set; }
         public decimal? DeliveryCost { get; set; }
-        public decimal ExpectedCost { get; set; }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            public decimal ExpectedCost { get; set; }
         public int ExpectedTime { get; set; }
 
         public Guid AddressId { get; set; }
@@ -39,5 +41,8 @@ namespace Passengers.Models.Order
         public ICollection<OrderDetails> OrderDetails { get; set; }
         public ICollection<Review> Reviews { get; set; }
         public ICollection<OrderStatusLog> OrderStatusLogs { get; set; }
+
+        [NotMapped] 
+        public OrderStatus Status => OrderStatusLogs.OrderBy(x => x.DateCreated).Select(x => x.Status).LastOrDefault();
     }
 }

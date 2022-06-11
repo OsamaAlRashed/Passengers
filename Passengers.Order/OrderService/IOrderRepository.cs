@@ -16,10 +16,9 @@ namespace Passengers.Order.OrderService
         Task<OperationResult<List<ExpectedCostDto>>> GetExpectedCost(Guid addressId, List<Guid> shopIds);
         Task<OperationResult<bool>> ChangeStatus(Guid orderId, OrderStatus newStatus);
         Task<OperationResult<OrderDetailsDto>> GetOrderDetails(Guid orderId);
-        Task<OperationResult<OrderDetailsDto>> GetOrderById(Guid Id);
         Task<OperationResult<bool>> OrderReady(Guid orderId);
-        Task<OperationResult<object>> GetShopOrders(bool? isReady, string search);
+        Task<OperationResult<List<ShopOrderDto>>> GetShopOrders(bool? isReady, string search);
         Task<OperationResult<object>> GetCustomerOrders();
-        Task<OperationResult<object>> GetCustomerOrderById(Guid orderId);
+        Task<OperationResult<CustomerOrderDto>> GetCustomerOrderById(Guid orderId);
     }
 }

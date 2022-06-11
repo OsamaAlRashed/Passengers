@@ -44,9 +44,11 @@ namespace Passengers.Main.ProductService
                 Avilable = true,
                 Name = dto.Name,
                 PrepareTime = dto.PrepareTime,
-                Price = dto.Price,
                 TagId = dto.TagId,
-                Description = dto.Description
+                Description = dto.Description,
+                PriceLogs = new List<PriceLog>() {
+                    new PriceLog(){ Price = dto.Price } 
+                }
             };
 
             Context.Products.Add(product);
@@ -78,11 +80,19 @@ namespace Passengers.Main.ProductService
 
         public async Task<OperationResult<bool>> ChangePrice(Guid id, decimal newPrice)
         {
-            var product = await Context.Products.Where(x => x.Id == id)
+            var product = await Context.Products.Include(x => x.PriceLogs).Where(x => x.Id == id)
                 .SingleOrDefaultAsync();
             if (product == null)
                 return _Operation.SetContent<bool>(OperationResultTypes.NotExist, "ProductNotExist");
-            product.Price = newPrice;
+
+            var oldPrice = product.PriceLogs.Where(x => !x.EndDate.HasValue).FirstOrDefault();
+            if (oldPrice != null)
+                oldPrice.EndDate = DateTime.Now;
+            product.PriceLogs.Add(new PriceLog
+            {
+                Price = newPrice
+            });
+
             await Context.SaveChangesAsync();
             return _Operation.SetSuccess(true);
         }
@@ -95,6 +105,7 @@ namespace Passengers.Main.ProductService
                 .Include(x => x.Reviews)
                 .ThenInclude(x=> x.Customer)
                 .Include(x => x.Documents)
+                .Include(x => x.PriceLogs)
                 .Where(x => x.Id == id)
                 .SingleOrDefaultAsync();
 
@@ -146,17 +157,26 @@ namespace Passengers.Main.ProductService
 
         public async Task<OperationResult<GetProductDto>> Update(SetProductDto dto)
         {
-            var product = await Context.Products.Where(x => x.Id == dto.Id).SingleOrDefaultAsync();
+            var product = await Context.Products
+                .Include(x => x.PriceLogs)
+                .Where(x => x.Id == dto.Id).SingleOrDefaultAsync();
             if (product == null)
                 return _Operation.SetContent<GetProductDto>(OperationResultTypes.NotExist, "ProductNotExist");
 
             product.Avilable = dto.Avilable;
             product.Name = dto.Name;
             product.PrepareTime = dto.PrepareTime;
-            product.Price = dto.Price;
             product.TagId = dto.TagId;
             product.Description = dto.Description;
 
+            var oldPrice = product.PriceLogs.Where(x => !x.EndDate.HasValue).FirstOrDefault();
+            if (oldPrice != null)
+                oldPrice.EndDate = DateTime.Now;
+            product.PriceLogs.Add(new PriceLog
+            {
+                Price = dto.Price
+            });
+            
             await Context.SaveChangesAsync();
 
             if(dto.ImageFile != null)
@@ -184,6 +204,7 @@ namespace Passengers.Main.ProductService
         {
             var products = await Context.Products
                 .Include(x => x.Documents).Include(x => x.OrderDetails).Include(x => x.Reviews)
+                .Include(x => x.PriceLogs)
                 .Where(x => x.Tag.ShopId == Context.CurrentUserId)
                 .Where(ProductStore.Filter.WhereFilter(filterDto))
                 .SortBy(ProductStore.Query.Sort(sortType), isDes)
@@ -193,11 +214,5 @@ namespace Passengers.Main.ProductService
             return _Operation.SetSuccess(products);
         }
 
-        //public async Task<OperationResult<object>> FilterProduct(FilterFoodMenuDto dto)
-        //{
-        //    await Context.Products()
-        //        .Where(x => dto.Rates.Any(r => x.Rates.Select(r => r.Degree).Contains((int)Math.Round(x.Rates.Average(xx => xx.Degree)))))
-        //        .Where(x => dto.TagIds.Any(tagId => tagId == x.TagId))
-        //}
     }
 }

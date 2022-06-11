@@ -25,7 +25,6 @@ namespace Passengers.Models.Main
         }
 
         public string Name { get; set; }
-        public decimal Price { get; set; }
         public string Description { get; set; }
         public int PrepareTime { get; set; }
         public bool Avilable { get; set; }
@@ -49,6 +48,12 @@ namespace Passengers.Models.Main
 
         [NotMapped]
         public int Buyers => OrderDetails.Sum(x => x.Quantity);
+
+        [NotMapped]
+        public decimal Price => PriceLogs
+            .Where(x => x.DateCreated <= DateTime.Now && (!x.EndDate.HasValue || DateTime.Now <= x.EndDate))
+            .Select(x => x.Price)
+            .FirstOrDefault();
 
     }
 }

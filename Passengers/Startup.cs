@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using Newtonsoft.Json;
 using Passengers.Location.AddressSerive;
 using Passengers.Location.AreaService;
 using Passengers.Location.CityService;
@@ -64,7 +65,8 @@ namespace Passengers
 
             services.AddHttpClient();
 
-            services.AddMvcCore().AddNewtonsoftJson();
+            services.AddMvc()
+                .AddNewtonsoftJson(options => options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore);
 
             services.AddIdentity<AppUser, IdentityRole<Guid>>(options =>
             {

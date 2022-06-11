@@ -2,6 +2,7 @@
 using Passengers.SharedKernel.Enums;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Passengers.Order.RealTime
@@ -65,6 +66,31 @@ namespace Passengers.Order.RealTime
             var conn = new List<string>();
 
             var userIds = accountRepository.GetUserIds(type);
+
+            foreach (var userId in userIds)
+            {
+                conn.AddRange(GetConnections(userId));
+            }
+            return conn;
+        }
+
+        public List<string> GetConnections(List<Guid> userIds)
+        {
+            var conn = new List<string>();
+
+            foreach (var userId in userIds)
+            {
+                conn.AddRange(GetConnections(userId));
+            }
+            return conn;
+        }
+
+        public List<string> GetConnections(UserTypes type, List<Guid> exceptUserIds)
+        {
+            var conn = new List<string>();
+
+            var userIds = accountRepository.GetUserIds(type);
+            userIds = userIds.Except(exceptUserIds).ToList();
 
             foreach (var userId in userIds)
             {

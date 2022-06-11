@@ -43,7 +43,7 @@ namespace Passengers.Order.OrderService
             {
                 var order = new OrderSet
                 {
-                    SerialNumber = GenerateSerialNumber(),
+                    SerialNumber = GenerateSerialNumber(OrderTypes.Instant),
                     DriverNote = dto.DriverNote,
                     AddressId = dto.AddressId,
                     OrderStatusLogs = new List<OrderStatusLog>()
@@ -66,31 +66,37 @@ namespace Passengers.Order.OrderService
             var connections = userConnectionManager.GetConnections(UserTypes.Admin);
             foreach (var connection in connections)
             {
-                await orderHubContext.Clients.Client(connection).NewOrder(orders);
+                await orderHubContext.Clients.Client(connection).NewOrder(orders.First().SerialNumber);
             }
 
             return _Operation.SetSuccess(true);
         }
 
-        public async Task<OperationResult<bool>> ChangeStatus(Guid orderId, OrderStatus status)
+        public async Task<OperationResult<bool>> ChangeStatus(Guid orderId, OrderStatus newStatus)
         {
             var currentUser = await Context.Users.FindAsync(Context.CurrentUserId);
-            var order = await Context.Orders.FindAsync(orderId);
-            if (order == null)
-                return _Operation.SetContent<bool>(OperationResultTypes.NotExist, "OrderNotFound");
             if (currentUser == null)
                 return _Operation.SetContent<bool>(OperationResultTypes.NotExist, "UserNotFound");
 
-            if(ValidAction(order, currentUser, status))
+            var order = await Context.Orders.Include(x => x.OrderDetails).Include(x => x.OrderStatusLogs)
+                .Where(x => x.Id == orderId).SingleOrDefaultAsync();
+            if (order == null)
+                return _Operation.SetContent<bool>(OperationResultTypes.NotExist, "OrderNotFound");
+
+            if(ValidAction(order, currentUser, newStatus))
             {
                 Context.OrderStatusLogs.Add(new OrderStatusLog
                 {
-                    Status = status
+                    Status = newStatus
                 });
                 await Context.SaveChangesAsync();
+
+                //Notify(currentUser.UserType, newStatus, order.Address.CustomerId.Value, order.OrderDetails.Select(x => x.Product.Tag.ShopId.Value).FirstOrDefault(), order.DriverId);
+
                 return _Operation.SetSuccess(true);
             }
-            
+
+
             return _Operation.SetFailed<bool>("StatusNotValid");
         }
 
@@ -126,11 +132,6 @@ namespace Passengers.Order.OrderService
             return _Operation.SetSuccess(result);
         }
 
-        public async Task<OperationResult<OrderDetailsDto>> GetOrderById(Guid Id)
-        {
-            throw new NotImplementedException();
-        }
-
         public async Task<OperationResult<OrderDetailsDto>> GetOrderDetails(Guid orderId)
         {
             var order = await Context.Orders.Include(x => x.OrderDetails).ThenInclude(x => x.Product)
@@ -155,9 +156,6 @@ namespace Passengers.Order.OrderService
             return _Operation.SetSuccess(result);
         }
 
-        public static string GenerateSerialNumber()
-            => "A" + Helpers.GetNumberToken(5);
-
         public async Task<OperationResult<bool>> OrderReady(Guid orderId)
         {
             var order = await Context.Orders
@@ -169,18 +167,18 @@ namespace Passengers.Order.OrderService
             return _Operation.SetSuccess(true);
         }
 
-        public async Task<OperationResult<object>> GetShopOrders(bool? isReady, string search)
+        public async Task<OperationResult<List<ShopOrderDto>>> GetShopOrders(bool? isReady, string search)
         {
             var orders = await Context.Orders
                 .Where(x => x.OrderDetails.Select(x => x.Product.Tag.ShopId).Any(id => id == Context.CurrentUserId)
                     && (!isReady.HasValue || x.IsShopReady == isReady) 
                     && (string.IsNullOrEmpty(search) || x.SerialNumber.Contains(search) || x.OrderDetails.Sum(x => x.Quantity * x.Product.Price).ToString().Contains(search)))
-                .Select(x => new 
+                .Select(x => new ShopOrderDto
                 {
-                    x.Id,
-                    x.SerialNumber,
-                    x.DateCreated,
-                    products = x.OrderDetails.Select(x => new ProductCardDto
+                    Id = x.Id,
+                    SerialNumber = x.SerialNumber,
+                    DateCreated = x.DateCreated,
+                    Products = x.OrderDetails.Select(x => new ProductCardDto
                     {
                         Id = x.Product.Id,
                         Name = x.Product.Name,
@@ -190,50 +188,49 @@ namespace Passengers.Order.OrderService
                     TotalPrice = x.OrderDetails.Sum(x => x.Quantity * x.Product.Price)
                 }).ToListAsync();
 
-            return _Operation.SetSuccess<object>(orders);
+            return _Operation.SetSuccess(orders);
         }
 
         public async Task<OperationResult<object>> GetCustomerOrders()
         {
-            var customer = await Context.Customers().Include(x => x.Addresses)
+            var customer = await Context.Customers()
                 .Where(x => x.Id == Context.CurrentUserId).SingleOrDefaultAsync();
             if (customer == null)
                 return _Operation.SetContent<object>(OperationResultTypes.NotExist, "");
 
             var orders = await Context.Orders
-                    .Where(order => customer.Addresses.Any(x => x.Id == order.AddressId))
+                    //.Where(order => customer.Addresses.Any(x => x.Id == order.AddressId))
                     .Select(x => new
                     {
                         x.Id,
                         x.SerialNumber,
                         x.DateCreated,
-                        Status = x.OrderStatusLogs.Select(x => x.Status).LastOrDefault(),
-                    })
-                    .ToListAsync();
+                        Status = OrderStatusHelper.MapCustomer(x.Status),
+                    }).ToListAsync();
 
             return _Operation.SetSuccess<object>(orders);
         }
 
-        public async Task<OperationResult<object>> GetCustomerOrderById(Guid orderId)
+        public async Task<OperationResult<CustomerOrderDto>> GetCustomerOrderById(Guid orderId)
         {
             var customer = await Context.Customers().Include(x => x.Addresses)
                 .Where(x => x.Id == Context.CurrentUserId).SingleOrDefaultAsync();
             if (customer == null)
-                return _Operation.SetContent<object>(OperationResultTypes.NotExist, "");
+                return _Operation.SetContent<CustomerOrderDto>(OperationResultTypes.NotExist, "");
 
             var order = await Context.Orders
                     .Where(order => order.Id == orderId)
-                    .Select(x => new
+                    .Select(x => new CustomerOrderDto
                     {
-                        x.Id,
-                        x.SerialNumber,
-                        x.DateCreated,
-                        Status = x.OrderStatusLogs.Select(x => x.Status).LastOrDefault(),
-                        SubTotal = x.OrderDetails.Sum(x => x.Product.Price * x.Quantity),
-                        DeliveryCost = x.DeliveryCost,
-                        TotalCost = x.OrderDetails.Sum(x => x.Product.Price * x.Quantity) + x.DeliveryCost,
-                        DriverNote = x.DriverNote,
+                        Id = x.Id,
+                        SerialNumber = x.SerialNumber,
+                        DateCreated = x.DateCreated,
                         ShopName = x.OrderDetails.Select(x => x.Product.Tag.Shop.Name).FirstOrDefault(),
+                        Status = OrderStatusHelper.MapCustomer(x.Status),
+                        SubTotal = x.OrderDetails.Sum(x => x.Product.Price * x.Quantity),
+                        DeliveryCost = x.DeliveryCost.Value,
+                        TotalCost = x.OrderDetails.Sum(x => x.Product.Price * x.Quantity) + (x.DeliveryCost ?? 0),
+                        DriverNote = x.DriverNote,
                         AddressTitle = x.Address.Title,
                         ///TODO
                         Distance = 100,
@@ -241,30 +238,106 @@ namespace Passengers.Order.OrderService
                     })
                     .SingleOrDefaultAsync();
        
-            return _Operation.SetSuccess<object>(order);
+            return _Operation.SetSuccess(order);
         }
 
-        private bool ValidAction(OrderSet order, AppUser currentUser, OrderStatus newStatus)
+
+        #region Helpers
+        private static string GenerateSerialNumber(OrderTypes type)
+            => (type == OrderTypes.Instant ? "A" : "B") + Helpers.GetNumberToken(5);
+
+        private static bool ValidAction(OrderSet order, AppUser currentUser, OrderStatus newStatus)
             => CanCustomerCancel(order, currentUser, newStatus) || CanAdminAction(order, currentUser, newStatus)
             || CanDriverAction(order, currentUser, newStatus);
-        private bool CanCustomerCancel(OrderSet order, AppUser currentUser, OrderStatus newStatus)
+
+        // Cancel Order When Status is Draft
+        private static bool CanCustomerCancel(OrderSet order, AppUser currentUser, OrderStatus newStatus)
+            => currentUser.UserType == UserTypes.Customer && order.Status == OrderStatus.Sended && newStatus == OrderStatus.Canceled;
+
+        // Accepet or refuse order When Status is Draft
+        // Assign order when status is Accepted.
+        private static bool CanAdminAction(OrderSet order, AppUser currentUser, OrderStatus newStatus)
+            => currentUser.UserType == UserTypes.Admin 
+                && (
+                    ((order.Status == OrderStatus.Sended) && (newStatus == OrderStatus.Accepted || newStatus == OrderStatus.Refused))
+                  || (order.Status == OrderStatus.Accepted && newStatus == OrderStatus.Assigned)
+                );
+
+        // assign order if sttaus accepted
+        // collect order if sttaus accepted
+        // assign order if sttaus accepted
+        private static bool CanDriverAction(OrderSet order, AppUser currentUser, OrderStatus newStatus)
+            => currentUser.UserType == UserTypes.Driver
+                && (
+                    (order.Status == OrderStatus.Accepted && newStatus == OrderStatus.Assigned)
+                 || (order.Status == OrderStatus.Assigned && newStatus == OrderStatus.Collected)
+                 || (order.Status == OrderStatus.Collected && newStatus == OrderStatus.Completed)
+                );
+
+        private async Task GetConnections(Guid orderId, UserTypes userType, OrderStatus newStatus, Guid customerId, Guid shopId, Guid? driverId)
         {
-            return currentUser.UserType == UserTypes.Customer && newStatus == OrderStatus.Canceled 
-                && order.OrderStatusLogs.Select(x => x.Status).Last() == OrderStatus.Sended;
+            var connections = new List<string>();
+            
+            if(newStatus == OrderStatus.Canceled)
+            {
+                //Admins
+            }
+            else if(newStatus == OrderStatus.Accepted)
+            {
+                //Shop
+                connections.AddRange(userConnectionManager.GetConnections(shopId));
+                //Customer
+                connections.AddRange(userConnectionManager.GetConnections(customerId));
+                //Drivers
+                connections.AddRange(userConnectionManager.GetConnections(GetAvilableDriverIds()));
+            }
+            else if(newStatus == OrderStatus.Refused)
+            {
+                //Customer
+                connections.AddRange(userConnectionManager.GetConnections(customerId));
+                //Admins
+                connections.AddRange(userConnectionManager.GetConnections(UserTypes.Admin));
+            }
+            else if(newStatus == OrderStatus.Assigned)
+            {
+                //Driver
+                connections.AddRange(userConnectionManager.GetConnections(driverId.Value));
+                //Admins
+                connections.AddRange(userConnectionManager.GetConnections(UserTypes.Admin));
+            }
+            if (newStatus == OrderStatus.Assigned)
+            {
+                //Admins
+                connections.AddRange(userConnectionManager.GetConnections(UserTypes.Admin));
+            }
+            else if(newStatus == OrderStatus.Collected)
+            {
+                //Admins
+                connections.AddRange(userConnectionManager.GetConnections(UserTypes.Admin));
+                //Customer
+                connections.AddRange(userConnectionManager.GetConnections(customerId));
+            }
+            else if (newStatus == OrderStatus.Completed)
+            {
+                //Customer
+                connections.AddRange(userConnectionManager.GetConnections(customerId));
+                //Admins
+            }
+            
+            
+            connections.AddRange(userConnectionManager.GetConnections(UserTypes.Admin, new List<Guid> { }));
+
+            foreach (var connection in connections)
+            {
+                await orderHubContext.Clients.Client(connection).UpdateOrder(orderId, (int)newStatus);
+            }
         }
-        private bool CanAdminAction(OrderSet order, AppUser currentUser, OrderStatus newStatus)
+
+
+        public static List<Guid> GetAvilableDriverIds()
         {
-            return currentUser.UserType == UserTypes.Admin 
-                    && (((newStatus == OrderStatus.Accepted || newStatus == OrderStatus.Refused)
-                    && order.OrderStatusLogs.Select(x => x.Status).Last() == OrderStatus.Sended)
-                || (newStatus == OrderStatus.Assigned && order.OrderStatusLogs.Select(x => x.Status).Last() == OrderStatus.Accepted));
+            return new List<Guid>();
         }
-        private bool CanDriverAction(OrderSet order, AppUser currentUser, OrderStatus newStatus)
-        {
-            return currentUser.UserType == UserTypes.Driver
-                    && (
-                    (newStatus == OrderStatus.Collected && order.OrderStatusLogs.Select(x => x.Status).Last() == OrderStatus.Assigned)
-                 || (newStatus == OrderStatus.Completed && order.OrderStatusLogs.Select(x => x.Status).Last() == OrderStatus.Collected));
-        }
+        #endregion
     }
 }

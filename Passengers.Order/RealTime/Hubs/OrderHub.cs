@@ -13,7 +13,9 @@ namespace Passengers.Order.RealTime.Hubs
 {
     public interface IOrderHub
     {
-        public Task NewOrder(List<OrderSet> orders);
+        public Task NewOrder(string serialNumber);
+        public Task UpdateOrder(Guid id, int status);
+        public Task RemoveOrder(Guid id);
     }
 
     public class OrderHub : Hub<IOrderHub>

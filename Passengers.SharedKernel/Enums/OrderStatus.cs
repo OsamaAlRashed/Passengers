@@ -22,6 +22,7 @@ namespace Passengers.SharedKernel.Enums
                 return CustomerOrderStatus.Canceled;
             if (orderStatus == OrderStatus.Refused)
                 return CustomerOrderStatus.Refused;
+
             throw new Exception("Invalid type");
         }
 
@@ -36,16 +37,26 @@ namespace Passengers.SharedKernel.Enums
                 return DeliveryCompanyOrderStatus.Assigned;
             if (orderStatus == OrderStatus.Collected)
                 return DeliveryCompanyOrderStatus.Collected;
-            if (orderStatus == OrderStatus.Accepted)
-                return DeliveryCompanyOrderStatus.Unassigned;
-            if (orderStatus == OrderStatus.Accepted)
-                return DeliveryCompanyOrderStatus.Unassigned;
             if (orderStatus == OrderStatus.Completed)
                 return DeliveryCompanyOrderStatus.Completed;
             if (orderStatus == OrderStatus.Canceled)
                 return DeliveryCompanyOrderStatus.Canceled;
             if (orderStatus == OrderStatus.Refused)
                 return DeliveryCompanyOrderStatus.Refused;
+
+            throw new Exception("Invalid type");
+        }
+
+        public static DriverOrderStatus MapDriver(OrderStatus orderStatus)
+        {
+            if (orderStatus == OrderStatus.Accepted)
+                return DriverOrderStatus.Avilable;
+            if (orderStatus == OrderStatus.Assigned)
+                return DriverOrderStatus.Inprogress;
+            if (orderStatus == OrderStatus.Collected)
+                return DriverOrderStatus.Collected;
+            if (orderStatus == OrderStatus.Completed)
+                return DriverOrderStatus.Completed;
 
             throw new Exception("Invalid type");
         }
