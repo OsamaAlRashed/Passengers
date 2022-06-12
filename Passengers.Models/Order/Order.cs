@@ -44,5 +44,6 @@ namespace Passengers.Models.Order
 
         [NotMapped] 
         public OrderStatus Status => OrderStatusLogs.OrderBy(x => x.DateCreated).Select(x => x.Status).LastOrDefault();
+
     }
 }

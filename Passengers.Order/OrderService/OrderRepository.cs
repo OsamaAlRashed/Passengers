@@ -78,7 +78,9 @@ namespace Passengers.Order.OrderService
             if (currentUser == null)
                 return _Operation.SetContent<bool>(OperationResultTypes.NotExist, "UserNotFound");
 
-            var order = await Context.Orders.Include(x => x.OrderDetails).Include(x => x.OrderStatusLogs)
+            var order = await Context.Orders
+                .Include(x => x.OrderDetails).ThenInclude(x => x.Product).ThenInclude(x => x.Tag)
+                .Include(x => x.OrderStatusLogs).Include(x => x.Address)
                 .Where(x => x.Id == orderId).SingleOrDefaultAsync();
             if (order == null)
                 return _Operation.SetContent<bool>(OperationResultTypes.NotExist, "OrderNotFound");
@@ -87,12 +89,12 @@ namespace Passengers.Order.OrderService
             {
                 Context.OrderStatusLogs.Add(new OrderStatusLog
                 {
-                    Status = newStatus
+                    Status = newStatus,
+                    OrderId = order.Id
                 });
                 await Context.SaveChangesAsync();
 
-                //Notify(currentUser.UserType, newStatus, order.Address.CustomerId.Value, order.OrderDetails.Select(x => x.Product.Tag.ShopId.Value).FirstOrDefault(), order.DriverId);
-
+                await Notify(order, currentUser, newStatus, order.Address.CustomerId.Value, order.OrderDetails.Select(x => x.Product.Tag.ShopId).FirstOrDefault().Value, order.DriverId);
                 return _Operation.SetSuccess(true);
             }
 
@@ -194,12 +196,14 @@ namespace Passengers.Order.OrderService
         public async Task<OperationResult<object>> GetCustomerOrders()
         {
             var customer = await Context.Customers()
+                .Include(x => x.Addresses)
                 .Where(x => x.Id == Context.CurrentUserId).SingleOrDefaultAsync();
             if (customer == null)
                 return _Operation.SetContent<object>(OperationResultTypes.NotExist, "");
 
             var orders = await Context.Orders
-                    //.Where(order => customer.Addresses.Any(x => x.Id == order.AddressId))
+                    .Include(x => x.OrderStatusLogs)
+                    .Where(order => customer.Addresses.Select(x => x.Id).Contains(order.AddressId))
                     .Select(x => new
                     {
                         x.Id,
@@ -220,25 +224,35 @@ namespace Passengers.Order.OrderService
 
             var order = await Context.Orders
                     .Where(order => order.Id == orderId)
-                    .Select(x => new CustomerOrderDto
-                    {
-                        Id = x.Id,
-                        SerialNumber = x.SerialNumber,
-                        DateCreated = x.DateCreated,
-                        ShopName = x.OrderDetails.Select(x => x.Product.Tag.Shop.Name).FirstOrDefault(),
-                        Status = OrderStatusHelper.MapCustomer(x.Status),
-                        SubTotal = x.OrderDetails.Sum(x => x.Product.Price * x.Quantity),
-                        DeliveryCost = x.DeliveryCost.Value,
-                        TotalCost = x.OrderDetails.Sum(x => x.Product.Price * x.Quantity) + (x.DeliveryCost ?? 0),
-                        DriverNote = x.DriverNote,
-                        AddressTitle = x.Address.Title,
-                        ///TODO
-                        Distance = 100,
-                        Time = 10
-                    })
+                    .Include("OrderDetails.Product.Tag.Shop")
+                    .Include("OrderDetails.Product.PriceLogs")
+                    .Include(x => x.OrderStatusLogs)
+                    .Include(x => x.Address)
                     .SingleOrDefaultAsync();
-       
-            return _Operation.SetSuccess(order);
+
+            var result = new CustomerOrderDto
+            {
+                Id = order.Id,
+                SerialNumber = order.SerialNumber,
+                DateCreated = order.DateCreated,
+                ShopName = order.OrderDetails.Select(x => x.Product.Tag.Shop.Name).FirstOrDefault(),
+                Status = OrderStatusHelper.MapCustomer(order.Status),
+                SubTotal = order.OrderDetails.Select(x => new
+                {
+                    Price = x.Product.Price,
+                    Quantity = x.Quantity
+                }).Sum(x => x.Price * x.Quantity),
+                DeliveryCost = order.DeliveryCost ?? 0,
+                DriverNote = order.DriverNote,
+                AddressTitle = order.Address.Title,
+                ///TODO
+                Distance = 100,
+                Time = 10,
+            };
+
+            result.TotalCost = result.SubTotal + (result.DeliveryCost ?? 0);
+
+            return _Operation.SetSuccess(result);
         }
 
 
@@ -274,69 +288,138 @@ namespace Passengers.Order.OrderService
                  || (order.Status == OrderStatus.Collected && newStatus == OrderStatus.Completed)
                 );
 
-        private async Task GetConnections(Guid orderId, UserTypes userType, OrderStatus newStatus, Guid customerId, Guid shopId, Guid? driverId)
+        private async Task Notify(OrderSet order, AppUser currentUser, OrderStatus newStatus, Guid customerId, Guid shopId, Guid? driverId)
         {
-            var connections = new List<string>();
-            
             if(newStatus == OrderStatus.Canceled)
             {
                 //Admins
+                var adminsConnections = userConnectionManager.GetConnections(UserTypes.Admin);
+                foreach (var connection in adminsConnections)
+                {
+                    await orderHubContext.Clients.Client(connection).RemoveOrder(order.Id);
+                }
             }
             else if(newStatus == OrderStatus.Accepted)
             {
+                //Admins
+                var adminsConnections = userConnectionManager.GetConnections(UserTypes.Admin, new List<Guid>() { currentUser.Id });
+                foreach (var connection in adminsConnections)
+                {
+                    await orderHubContext.Clients.Client(connection).UpdateOrder((int)DeliveryCompanyOrderStatus.Unassigned);
+                }
+
                 //Shop
-                connections.AddRange(userConnectionManager.GetConnections(shopId));
+                var shopConnection = userConnectionManager.GetConnections(shopId).FirstOrDefault() ?? "";
+                await orderHubContext.Clients.Client(shopConnection).NewOrder(new { });
+
                 //Customer
-                connections.AddRange(userConnectionManager.GetConnections(customerId));
+                var customerConnection = userConnectionManager.GetConnections(customerId).FirstOrDefault() ?? "";
+                await orderHubContext.Clients.Client(customerConnection).UpdateOrder(new { });
+
                 //Drivers
-                connections.AddRange(userConnectionManager.GetConnections(GetAvilableDriverIds()));
+                var drivers = (await GetAvilableDriverIds(order.Address.Lat, order.Address.Long, order.DeliveryCost ?? 0)).Where(id => id != driverId.Value).ToList();
+                var driversConnections = userConnectionManager.GetConnections(drivers);
+                foreach (var connection in driversConnections)
+                {
+                    await orderHubContext.Clients.Client(connection).NewOrder(new { });
+                }
             }
             else if(newStatus == OrderStatus.Refused)
             {
                 //Customer
-                connections.AddRange(userConnectionManager.GetConnections(customerId));
+                var customerConnection = userConnectionManager.GetConnections(customerId).FirstOrDefault() ?? "";
+                await orderHubContext.Clients.Client(customerConnection).RemoveOrder(order.Id);
                 //Admins
-                connections.AddRange(userConnectionManager.GetConnections(UserTypes.Admin));
+                var adminsConnections = userConnectionManager.GetConnections(UserTypes.Admin, new List<Guid>() { currentUser.Id });
+                foreach (var connection in adminsConnections)
+                {
+                    await orderHubContext.Clients.Client(connection).UpdateOrder((int)DeliveryCompanyOrderStatus.Refused);
+                }
             }
             else if(newStatus == OrderStatus.Assigned)
             {
-                //Driver
-                connections.AddRange(userConnectionManager.GetConnections(driverId.Value));
                 //Admins
-                connections.AddRange(userConnectionManager.GetConnections(UserTypes.Admin));
-            }
-            if (newStatus == OrderStatus.Assigned)
-            {
-                //Admins
-                connections.AddRange(userConnectionManager.GetConnections(UserTypes.Admin));
+                var adminsConnections = userConnectionManager.GetConnections(UserTypes.Admin);
+                foreach (var connection in adminsConnections)
+                {
+                    await orderHubContext.Clients.Client(connection).UpdateOrder((int)DeliveryCompanyOrderStatus.Assigned);
+                }
+                //Unassigned Drivers
+                ///TODO
+                var drivers = (await GetAvilableDriverIds(order.Address.Lat, order.Address.Long, order.DeliveryCost ?? 0)).Where(id => id != driverId.Value).ToList();
+                var driversConnections = userConnectionManager.GetConnections(drivers);
+                foreach (var connection in driversConnections)
+                {
+                    await orderHubContext.Clients.Client(connection).RemoveOrder(order.Id);
+                }
+                // Driver
+                if(currentUser.UserType == UserTypes.Admin)
+                {
+                    var driverConnection = userConnectionManager.GetConnections(driverId.Value).FirstOrDefault() ?? "";
+                    await orderHubContext.Clients.Client(driverConnection).UpdateOrder(new { });
+                }
             }
             else if(newStatus == OrderStatus.Collected)
             {
-                //Admins
-                connections.AddRange(userConnectionManager.GetConnections(UserTypes.Admin));
+                // Admins
+                var adminsConnections = userConnectionManager.GetConnections(UserTypes.Admin);
+                foreach (var connection in adminsConnections)
+                {
+                    await orderHubContext.Clients.Client(connection).UpdateOrder((int)DeliveryCompanyOrderStatus.Collected);
+                }
                 //Customer
-                connections.AddRange(userConnectionManager.GetConnections(customerId));
+                var customerConnection = userConnectionManager.GetConnections(customerId).FirstOrDefault() ?? "";
+                await orderHubContext.Clients.Client(customerConnection).UpdateOrder(new { });
             }
             else if (newStatus == OrderStatus.Completed)
             {
+                // Admins
+                var adminsConnections = userConnectionManager.GetConnections(UserTypes.Admin);
+                foreach (var connection in adminsConnections)
+                {
+                    await orderHubContext.Clients.Client(connection).UpdateOrder((int)DeliveryCompanyOrderStatus.Completed);
+                }
                 //Customer
-                connections.AddRange(userConnectionManager.GetConnections(customerId));
-                //Admins
-            }
-            
-            
-            connections.AddRange(userConnectionManager.GetConnections(UserTypes.Admin, new List<Guid> { }));
-
-            foreach (var connection in connections)
-            {
-                await orderHubContext.Clients.Client(connection).UpdateOrder(orderId, (int)newStatus);
+                var customerConnection = userConnectionManager.GetConnections(customerId).FirstOrDefault() ?? "";
+                await orderHubContext.Clients.Client(customerConnection).UpdateOrder(new { });
             }
         }
 
-
-        public static List<Guid> GetAvilableDriverIds()
+        public async Task<List<Guid>> GetAvilableDriverIds(string latitude, string longitude, decimal total)
         {
-            return new List<Guid>();
+            //Nearby Drivers ;
+            //Avilable
+            //Online
+            //Fixed Amount
+
+            var notAvilableDrivers = await Context.Orders.Where(x => x.Status >= OrderStatus.Assigned && x.Status <= OrderStatus.Accepted)
+                .Select(x => x.DriverId).ToListAsync();
+
+            var drivers = await Context.Drivers()
+                .Where(x => x.DriverOnline.HasValue && x.DriverOnline.Value && !notAvilableDrivers.Contains(x.Id) 
+                    && x.Payments.Where(payment => payment.Type.IsFixed())
+                                 .Sum(payment => payment.Amount * payment.Type.PaymentSign()) >= total)
+                .OrderByDescending(x => CalculateDistance(new ValueTuple<string, string>(latitude, longitude), new ValueTuple<string, string>(x.Address.Lat, x.Address.Long)))
+                .Take(5).ToListAsync();
+            
+            return drivers.Select(x => x.Id).ToList();
+        }
+
+        public double CalculateDistance((string, string) point1, (string, string) point2)
+        {
+            var latitude1 = double.Parse(point1.Item1);
+            var longitude1 = double.Parse(point1.Item2);
+
+            var latitude2 = double.Parse(point2.Item1);
+            var longitude2 = double.Parse(point2.Item2);
+
+            var d1 = latitude1 * (Math.PI / 180.0);
+            var num1 = longitude1 * (Math.PI / 180.0);
+            var d2 = latitude2 * (Math.PI / 180.0);
+            var num2 = longitude2 * (Math.PI / 180.0) - num1;
+            var d3 = Math.Pow(Math.Sin((d2 - d1) / 2.0), 2.0) +
+                     Math.Cos(d1) * Math.Cos(d2) * Math.Pow(Math.Sin(num2 / 2.0), 2.0);
+            return 6376500.0 * (2.0 * Math.Atan2(Math.Sqrt(d3), Math.Sqrt(1.0 - d3)));
         }
         #endregion
     }

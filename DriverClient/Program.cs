@@ -17,10 +17,28 @@ namespace DriverClient
                              options.AccessTokenProvider = () => Task.FromResult(result.AccessToken);
                          }).Build();
 
-            hubConnection.On<string>("NewOrder",
+            hubConnection.On<object>("NewOrder",
                 order =>
                 {
-                    Console.WriteLine(order);
+                    Console.WriteLine("NewOrder");
+                });
+
+            hubConnection.On<object>("UpdateOrder",
+                order =>
+                {
+                    Console.WriteLine("UpdateOrder");
+                });
+
+            hubConnection.On<object>("ChangeStatus",
+                order =>
+                {
+                    Console.WriteLine("ChangeStatus");
+                });
+
+            hubConnection.On<Guid>("RemoveOrder",
+                order =>
+                {
+                    Console.WriteLine("RemoveOrder");
                 });
 
             try

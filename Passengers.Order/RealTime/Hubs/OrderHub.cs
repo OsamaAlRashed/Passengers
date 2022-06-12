@@ -13,8 +13,8 @@ namespace Passengers.Order.RealTime.Hubs
 {
     public interface IOrderHub
     {
-        public Task NewOrder(string serialNumber);
-        public Task UpdateOrder(Guid id, int status);
+        public Task NewOrder(object order);
+        public Task UpdateOrder(object order);
         public Task RemoveOrder(Guid id);
     }
 

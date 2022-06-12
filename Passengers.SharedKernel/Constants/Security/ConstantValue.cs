@@ -8,7 +8,7 @@ namespace Passengers.SharedKernel.Constants.Security
 {
     public static class ConstantValue
     {
-        public const int ExpireAccessTokenMinute = 10;
+        public const int ExpireAccessTokenMinute = 60;
         public static DateTime AccessExpireDateTime = DateTime.Now.AddMinutes(ExpireAccessTokenMinute);
 
         public const int ExpireRefreshTokenDay = 30;
