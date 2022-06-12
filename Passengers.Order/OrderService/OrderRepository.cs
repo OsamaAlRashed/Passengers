@@ -421,6 +421,13 @@ namespace Passengers.Order.OrderService
                      Math.Cos(d1) * Math.Cos(d2) * Math.Pow(Math.Sin(num2 / 2.0), 2.0);
             return 6376500.0 * (2.0 * Math.Atan2(Math.Sqrt(d3), Math.Sqrt(1.0 - d3)));
         }
+
+        public async Task<OperationResult<string>> Test()
+        {
+            await orderHubContext.Clients.All.Test("Hello from Test.");
+
+            return _Operation.SetSuccess<string>("Hello from Test.");
+        }
         #endregion
     }
 }

@@ -66,5 +66,8 @@ namespace Passengers.Controllers
         [HttpPatch]
         public async Task<IActionResult> Complete([Required] Guid orderId) => await repository.ChangeStatus(orderId, OrderStatus.Completed).ToJsonResultAsync();
 
+        [HttpGet]
+        public async Task<IActionResult> Test() => await repository.Test().ToJsonResultAsync();
+
     }
 }

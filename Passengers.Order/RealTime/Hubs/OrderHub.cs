@@ -16,6 +16,7 @@ namespace Passengers.Order.RealTime.Hubs
         public Task NewOrder(object order);
         public Task UpdateOrder(object order);
         public Task RemoveOrder(Guid id);
+        public Task Test(string text);
     }
 
     public class OrderHub : Hub<IOrderHub>

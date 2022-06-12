@@ -20,5 +20,6 @@ namespace Passengers.Order.OrderService
         Task<OperationResult<List<ShopOrderDto>>> GetShopOrders(bool? isReady, string search);
         Task<OperationResult<object>> GetCustomerOrders();
         Task<OperationResult<CustomerOrderDto>> GetCustomerOrderById(Guid orderId);
+        Task<OperationResult<string>> Test();
     }
 }
