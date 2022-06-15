@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Passengers.DataTransferObject.CustomerDtos;
-using Passengers.DataTransferObject.SecurityDtos.Login;
 using Passengers.Security.CustomerService;
 using Passengers.SharedKernel.Attribute;
 using Passengers.SharedKernel.Constants.Security;

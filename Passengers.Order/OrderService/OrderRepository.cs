@@ -255,6 +255,18 @@ namespace Passengers.Order.OrderService
             return _Operation.SetSuccess(result);
         }
 
+        public async Task<OperationResult<string>> Test()
+        {
+            await orderHubContext.Clients.All.Test("Hello from Test.");
+
+            return _Operation.SetSuccess<string>("Hello from Test.");
+        }
+        public async Task<OperationResult<string>> Test2()
+        {
+            await orderHubContext.Clients.All.Test2("Hello from Test", "2");
+
+            return _Operation.SetSuccess<string>("Hello from Test 2.");
+        }
 
         #region Helpers
         private static string GenerateSerialNumber(OrderTypes type)
@@ -264,12 +276,9 @@ namespace Passengers.Order.OrderService
             => CanCustomerCancel(order, currentUser, newStatus) || CanAdminAction(order, currentUser, newStatus)
             || CanDriverAction(order, currentUser, newStatus);
 
-        // Cancel Order When Status is Draft
         private static bool CanCustomerCancel(OrderSet order, AppUser currentUser, OrderStatus newStatus)
             => currentUser.UserType == UserTypes.Customer && order.Status == OrderStatus.Sended && newStatus == OrderStatus.Canceled;
 
-        // Accepet or refuse order When Status is Draft
-        // Assign order when status is Accepted.
         private static bool CanAdminAction(OrderSet order, AppUser currentUser, OrderStatus newStatus)
             => currentUser.UserType == UserTypes.Admin 
                 && (
@@ -277,9 +286,6 @@ namespace Passengers.Order.OrderService
                   || (order.Status == OrderStatus.Accepted && newStatus == OrderStatus.Assigned)
                 );
 
-        // assign order if sttaus accepted
-        // collect order if sttaus accepted
-        // assign order if sttaus accepted
         private static bool CanDriverAction(OrderSet order, AppUser currentUser, OrderStatus newStatus)
             => currentUser.UserType == UserTypes.Driver
                 && (
@@ -385,7 +391,7 @@ namespace Passengers.Order.OrderService
             }
         }
 
-        public async Task<List<Guid>> GetAvilableDriverIds(string latitude, string longitude, decimal total)
+        private async Task<List<Guid>> GetAvilableDriverIds(string latitude, string longitude, decimal total)
         {
             //Nearby Drivers ;
             //Avilable
@@ -405,7 +411,7 @@ namespace Passengers.Order.OrderService
             return drivers.Select(x => x.Id).ToList();
         }
 
-        public double CalculateDistance((string, string) point1, (string, string) point2)
+        private double CalculateDistance((string, string) point1, (string, string) point2)
         {
             var latitude1 = double.Parse(point1.Item1);
             var longitude1 = double.Parse(point1.Item2);
@@ -422,12 +428,7 @@ namespace Passengers.Order.OrderService
             return 6376500.0 * (2.0 * Math.Atan2(Math.Sqrt(d3), Math.Sqrt(1.0 - d3)));
         }
 
-        public async Task<OperationResult<string>> Test()
-        {
-            await orderHubContext.Clients.All.Test("Hello from Test.");
-
-            return _Operation.SetSuccess<string>("Hello from Test.");
-        }
+        
         #endregion
     }
 }

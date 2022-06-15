@@ -19,7 +19,8 @@ namespace Passengers.Security.CustomerService.Store
         public static class Filter
         {
             public static Expression<Func<Product, bool>> WhereFilterProduct(CustomerProductFilterDto filter) => product =>
-             (!filter.ShopId.HasValue || filter.ShopId == product.Tag.ShopId)
+                product.Tag.ShopId.HasValue
+             && (!filter.ShopId.HasValue || filter.ShopId == product.Tag.ShopId)
              && (!filter.TagId.HasValue || filter.TagId == product.TagId)
              && (string.IsNullOrEmpty(filter.Search) || product.Name.Contains(filter.Search))
              && (!filter.FromPrice.HasValue || filter.FromPrice <= product.Price)

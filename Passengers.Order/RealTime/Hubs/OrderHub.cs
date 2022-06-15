@@ -17,6 +17,8 @@ namespace Passengers.Order.RealTime.Hubs
         public Task UpdateOrder(object order);
         public Task RemoveOrder(Guid id);
         public Task Test(string text);
+        public Task Test2(string text1, string text2);
+        public Task ReceiveMessage(object text);
     }
 
     public class OrderHub : Hub<IOrderHub>
@@ -45,5 +47,9 @@ namespace Passengers.Order.RealTime.Hubs
             return base.OnDisconnectedAsync(exception);
         }
 
+        public async Task BroadcastMessage(string message)
+        {
+            await Clients.All.ReceiveMessage(message);
+        }
     }
 } 

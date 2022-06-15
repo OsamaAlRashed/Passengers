@@ -69,5 +69,8 @@ namespace Passengers.Controllers
         [HttpGet]
         public async Task<IActionResult> Test() => await repository.Test().ToJsonResultAsync();
 
+        [HttpGet]
+        public async Task<IActionResult> Test2() => await repository.Test2().ToJsonResultAsync();
+
     }
 }
