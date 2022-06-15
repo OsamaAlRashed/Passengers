@@ -296,6 +296,7 @@ namespace Passengers.Security.CustomerService
                 RateDegree = product.Rate,
                 RateNumber = product.Reviews.Count,
                 product.Description,
+                DeliveryAvilable = product.Tag.Shop.OrderStatus ?? true,
                 Shop = new
                 {
                     Id = product.Tag.ShopId,
@@ -363,7 +364,7 @@ namespace Passengers.Security.CustomerService
                     Long = shop.Address.Long,
                     Text = shop.Address.Text
                 },
-                OrderStatus = shop.OrderStatus,
+                OrderStatus = shop.OrderStatus ?? true,
                 Rate = shop.Tags.SelectMany(x => x.Products.SelectMany(x => x.Reviews)).Any() ?
                     shop.Tags.SelectMany(x => x.Products.SelectMany(x => x.Reviews)).Average(x => x.Rate) : 0
             };
