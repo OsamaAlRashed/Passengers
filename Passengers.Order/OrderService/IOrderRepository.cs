@@ -12,8 +12,8 @@ namespace Passengers.Order.OrderService
     public interface IOrderRepository
     {
         Task<OperationResult<List<ResponseCardDto>>> GetMyCart(RequestCardDto dto);
-        Task<OperationResult<bool>> AddOrder(SetOrderDto dto);
-        Task<OperationResult<List<ExpectedCostDto>>> GetExpectedCost(Guid addressId, List<Guid> shopIds);
+        Task<OperationResult<ResponseAddOrderDto>> AddOrder(SetOrderDto dto);
+        Task<OperationResult<ExpectedCostDto>> GetExpectedCost(Guid addressId);
         Task<OperationResult<bool>> ChangeStatus(Guid orderId, OrderStatus newStatus);
         Task<OperationResult<OrderDetailsDto>> GetOrderDetails(Guid orderId);
         Task<OperationResult<bool>> OrderReady(Guid orderId);

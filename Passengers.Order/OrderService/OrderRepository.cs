@@ -33,10 +33,10 @@ namespace Passengers.Order.OrderService
             this.userConnectionManager = userConnectionManager;
         }
 
-        public async Task<OperationResult<bool>> AddOrder(SetOrderDto dto)
+        public async Task<OperationResult<ResponseAddOrderDto>> AddOrder(SetOrderDto dto)
         {
             if (dto.Cart == null || !dto.Cart.Any())
-                return _Operation.SetFailed<bool>("CartNotContainsItems");
+                return _Operation.SetFailed<ResponseAddOrderDto>("CartNotContainsItems");
 
             var orders = new List<OrderSet>();
             foreach (var shop in dto.Cart)
@@ -69,7 +69,20 @@ namespace Passengers.Order.OrderService
                 await orderHubContext.Clients.Client(connection).NewOrder(orders.First().SerialNumber);
             }
 
-            return _Operation.SetSuccess(true);
+            var lodedOrders = await Context.Orders.Include(x => x.OrderDetails)
+                .ThenInclude(x => x.Product).ThenInclude(x => x.Tag).ThenInclude(x => x.Shop)
+                .Where(x => orders.Select(x => x.Id).Contains(x.Id)).ToListAsync();
+
+            var result = new ResponseAddOrderDto
+            {
+                Shops = lodedOrders.Select(x => new ShopCostDto
+                {
+                    ShopName = x.OrderDetails.Select(x => x.Product.Tag.Shop.Name).FirstOrDefault(),
+                    Cost = x.OrderDetails.Sum(x => x.Product.Price * x.Quantity)
+                }).ToList()
+            };
+            result.SubTotal = result.Shops.Sum(x => x.Cost);
+            return _Operation.SetSuccess(result);
         }
 
         public async Task<OperationResult<bool>> ChangeStatus(Guid orderId, OrderStatus newStatus)
@@ -102,9 +115,12 @@ namespace Passengers.Order.OrderService
             return _Operation.SetFailed<bool>("StatusNotValid");
         }
 
-        public async Task<OperationResult<List<ExpectedCostDto>>> GetExpectedCost(Guid addressId, List<Guid> shopIds)
+        public async Task<OperationResult<ExpectedCostDto>> GetExpectedCost(Guid addressId)
         {
-            throw new NotImplementedException();
+            Random random = new Random();
+            var cost = random.Next(20, 50) * 100;
+            var time = random.Next(10, 30);
+            return _Operation.SetSuccess(new ExpectedCostDto { Cost = cost, Time = time });
         }
 
         public async Task<OperationResult<List<ResponseCardDto>>> GetMyCart(RequestCardDto dto)
@@ -257,7 +273,7 @@ namespace Passengers.Order.OrderService
 
         public async Task<OperationResult<string>> Test()
         {
-            await orderHubContext.Clients.All.Test("Hello from Test.");
+            await orderHubContext.Clients.User("a2b0d8d0-4d71-4ea0-95ab-08da0c512705").Test("Hello from Test.");
 
             return _Operation.SetSuccess<string>("Hello from Test.");
         }
@@ -302,7 +318,7 @@ namespace Passengers.Order.OrderService
                 var adminsConnections = userConnectionManager.GetConnections(UserTypes.Admin);
                 foreach (var connection in adminsConnections)
                 {
-                    await orderHubContext.Clients.Client(connection).RemoveOrder(order.Id);
+                    await orderHubContext.Clients.User(connection).RemoveOrder(order.Id);
                 }
             }
             else if(newStatus == OrderStatus.Accepted)

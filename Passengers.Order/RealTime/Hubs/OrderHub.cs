@@ -46,19 +46,19 @@ namespace Passengers.Order.RealTime.Hubs
         
         public override Task OnConnectedAsync()
         {
-            var user = Context.User?.Identity?.Name;
-            //if(userId == null)
-            //{
-            //    userId = GetUserId();
-            //}
-            //_userConnectionManager.KeepUserConnection(userId.Value, Context.ConnectionId);
+            var userId = dbContext.CurrentUserId;
+            if(userId == null)
+            {
+                userId = GetUserId();
+            }
+            _userConnectionManager.KeepUserConnection(userId.Value, Context.ConnectionId);
             return base.OnConnectedAsync();
         }
         
         public override Task OnDisconnectedAsync(Exception exception)
         {
-            //var connectionId = Context.ConnectionId;
-            //_userConnectionManager.RemoveUserConnection(connectionId);
+            var connectionId = Context.ConnectionId;
+            _userConnectionManager.RemoveUserConnection(connectionId);
             
             return base.OnDisconnectedAsync(exception);
         }

@@ -10,7 +10,5 @@ namespace Passengers.DataTransferObject.OrderDtos
     {
         public int Time { get; set; }
         public int Cost { get; set; }
-        public string ShopName { get; set; }
-        public string SubTotal { get; set; }
     }
 }
