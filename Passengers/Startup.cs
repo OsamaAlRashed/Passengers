@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -122,6 +123,8 @@ namespace Passengers
             services.AddScoped<IUserConnectionManager, UserConnectionManager>();
 
             services.AddSignalR();
+
+            services.AddSingleton<IUserIdProvider, NameUserIdProvider>();
 
         }
 
