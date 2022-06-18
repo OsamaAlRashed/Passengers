@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Passengers.Order.OrderService;
@@ -25,6 +27,7 @@ namespace Passengers.Order.RealTime.Hubs
         public Task ReceiveMessage(object text);
     }
 
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class OrderHub : Hub<IOrderHub>
     {
         private readonly PassengersDbContext dbContext;
@@ -44,10 +47,10 @@ namespace Passengers.Order.RealTime.Hubs
         public override Task OnConnectedAsync()
         {
             var userId = dbContext.CurrentUserId;
-            if(userId == null)
-            {
-                userId = GetUserId();
-            }
+            //if(userId == null)
+            //{
+            //    userId = GetUserId();
+            //}
             _userConnectionManager.KeepUserConnection(userId.Value, Context.ConnectionId);
             return base.OnConnectedAsync();
         }
