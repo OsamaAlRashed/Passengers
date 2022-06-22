@@ -165,6 +165,7 @@ namespace Passengers.Security.CustomerService
         {
             var products = await Context.Products
                 .Include(x => x.Documents).Include(x => x.OrderDetails).Include(x => x.Reviews).Include(x => x.Discounts)
+                .Include(x => x.PriceLogs)
                 .Where(CustomerStore.Filter.WhereFilterProduct(filterDto))
                 .Select(CustomerStore.Query.GetSelectProduct(Context.CurrentUserId))
                 .ToPagedListAsync(pageNumber, pageSize);

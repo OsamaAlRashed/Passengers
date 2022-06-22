@@ -7,6 +7,7 @@ using Passengers.Models.Security;
 using Passengers.Order.RealTime;
 using Passengers.Order.RealTime.Hubs;
 using Passengers.Repository.Base;
+using Passengers.Security.AccountService;
 using Passengers.SharedKernel.Enums;
 using Passengers.SharedKernel.ExtensionMethods;
 using Passengers.SharedKernel.OperationResult;
@@ -26,11 +27,13 @@ namespace Passengers.Order.OrderService
     {
         private readonly IHubContext<OrderHub, IOrderHub> orderHubContext;
         private readonly IUserConnectionManager userConnectionManager;
+        private readonly IAccountRepository accountRepository;
 
-        public OrderRepository(PassengersDbContext context, IHubContext<OrderHub, IOrderHub> orderHubContext, IUserConnectionManager userConnectionManager) : base(context)
+        public OrderRepository(PassengersDbContext context, IHubContext<OrderHub, IOrderHub> orderHubContext, IUserConnectionManager userConnectionManager, IAccountRepository accountRepository) : base(context)
         {
             this.orderHubContext = orderHubContext;
             this.userConnectionManager = userConnectionManager;
+            this.accountRepository = accountRepository;
         }
 
         public async Task<OperationResult<ResponseAddOrderDto>> AddOrder(SetOrderDto dto)
@@ -63,15 +66,14 @@ namespace Passengers.Order.OrderService
             Context.Orders.AddRange(orders);
             await Context.SaveChangesAsync();
 
-            var connections = userConnectionManager.GetConnections(UserTypes.Admin);
-            foreach (var connection in connections)
-            {
-                await orderHubContext.Clients.Client(connection).NewOrder(orders.First().SerialNumber);
-            }
+            await _UpdateOrdersListCustomer(Context.CurrentUserId.Value);
+            await _UpdateOrdersListDashboard();
 
-            var lodedOrders = await Context.Orders.Include(x => x.OrderDetails)
-                .ThenInclude(x => x.Product).ThenInclude(x => x.Tag).ThenInclude(x => x.Shop)
-                .Where(x => orders.Select(x => x.Id).Contains(x.Id)).ToListAsync();
+            var lodedOrders = await Context.Orders
+                .Include("OrderDetails.Product.Tag.Shop")
+                .Include("OrderDetails.Product.PriceLogs")
+                .Where(x => orders.Select(x => x.Id).Contains(x.Id))
+                .ToListAsync();
 
             var result = new ResponseAddOrderDto
             {
@@ -84,6 +86,8 @@ namespace Passengers.Order.OrderService
             result.SubTotal = result.Shops.Sum(x => x.Cost);
             return _Operation.SetSuccess(result);
         }
+
+       
 
         public async Task<OperationResult<bool>> ChangeStatus(Guid orderId, OrderStatus newStatus)
         {
@@ -107,7 +111,7 @@ namespace Passengers.Order.OrderService
                 });
                 await Context.SaveChangesAsync();
 
-                await Notify(order, currentUser, newStatus, order.Address.CustomerId.Value, order.OrderDetails.Select(x => x.Product.Tag.ShopId).FirstOrDefault().Value, order.DriverId);
+                await Invoke(order, newStatus, order.Address.CustomerId.Value, order.OrderDetails.Select(x => x.Product.Tag.ShopId).FirstOrDefault().Value, order.DriverId);
                 return _Operation.SetSuccess(true);
             }
 
@@ -129,7 +133,7 @@ namespace Passengers.Order.OrderService
                 return _Operation.SetFailed<List<ResponseCardDto>>("");
 
             var result = (await Context.Products
-                .Include(x => x.Tag).ThenInclude(x => x.Shop)
+                .Include(x => x.Tag).ThenInclude(x => x.Shop).Include(x => x.PriceLogs)
                .Where(x => dto.Products.Select(x => x.Id).Contains(x.Id) && x.Tag.ShopId.HasValue)
                .ToListAsync())
                .GroupBy(x => x.Tag.Shop)
@@ -187,9 +191,16 @@ namespace Passengers.Order.OrderService
 
         public async Task<OperationResult<List<ShopOrderDto>>> GetShopOrders(bool? isReady, string search)
         {
+            var orders = await _GetShopOrders(isReady, search);
+
+            return _Operation.SetSuccess(orders);
+        }
+
+        private async Task<List<ShopOrderDto>> _GetShopOrders(bool? isReady = null, string search = "")
+        {
             var orders = await Context.Orders
                 .Where(x => x.OrderDetails.Select(x => x.Product.Tag.ShopId).Any(id => id == Context.CurrentUserId)
-                    && (!isReady.HasValue || x.IsShopReady == isReady) 
+                    && (!isReady.HasValue || x.IsShopReady == isReady)
                     && (string.IsNullOrEmpty(search) || x.SerialNumber.Contains(search) || x.OrderDetails.Sum(x => x.Quantity * x.Product.Price).ToString().Contains(search)))
                 .Select(x => new ShopOrderDto
                 {
@@ -206,29 +217,40 @@ namespace Passengers.Order.OrderService
                     TotalPrice = x.OrderDetails.Sum(x => x.Quantity * x.Product.Price)
                 }).ToListAsync();
 
+            return orders;
+        }
+
+        public async Task<OperationResult<List<CustomerOrderDto>>> GetCustomerOrders()
+        {
+            var orders = await _GetCustomerOrders();
+            if(orders == null)
+                _Operation.SetContent<CustomerOrderDto>(OperationResultTypes.NotExist, "");
+
             return _Operation.SetSuccess(orders);
         }
 
-        public async Task<OperationResult<object>> GetCustomerOrders()
+        private async Task<List<CustomerOrderDto>> _GetCustomerOrders(Guid? id = null)
         {
+            id = id.HasValue ? id.Value : Context.CurrentUserId;
             var customer = await Context.Customers()
                 .Include(x => x.Addresses)
-                .Where(x => x.Id == Context.CurrentUserId).SingleOrDefaultAsync();
+                .Where(x => x.Id == id).SingleOrDefaultAsync();
             if (customer == null)
-                return _Operation.SetContent<object>(OperationResultTypes.NotExist, "");
+                return null;
 
             var orders = await Context.Orders
                     .Include(x => x.OrderStatusLogs)
                     .Where(order => customer.Addresses.Select(x => x.Id).Contains(order.AddressId))
-                    .Select(x => new
+                    .Select(x => new CustomerOrderDto
                     {
-                        x.Id,
-                        x.SerialNumber,
-                        x.DateCreated,
+                        Id = x.Id,
+                        SerialNumber = x.SerialNumber,
+                        DateCreated = x.DateCreated,
                         Status = OrderStatusHelper.MapCustomer(x.Status),
                     }).ToListAsync();
 
-            return _Operation.SetSuccess<object>(orders);
+            orders = orders.Where(x => x.Status <= CustomerOrderStatus.Completed).ToList();
+            return orders;
         }
 
         public async Task<OperationResult<CustomerOrderDto>> GetCustomerOrderById(Guid orderId)
@@ -277,6 +299,7 @@ namespace Passengers.Order.OrderService
 
             return _Operation.SetSuccess<string>("Hello from Test.");
         }
+
         public async Task<OperationResult<string>> Test2()
         {
             await orderHubContext.Clients.All.Test2("Hello from Test", "2");
@@ -285,6 +308,30 @@ namespace Passengers.Order.OrderService
         }
 
         #region Helpers
+        private async Task<bool> _UpdateOrdersListCustomer(Guid id)
+        {
+            var result = await _GetCustomerOrders(id);
+            if (result == null)
+                return false;
+            await orderHubContext.Clients.User(id.ToString()).UpdateCustomerOrders(result);
+            return true;
+        }
+
+        private async Task<bool> _UpdateOrdersListShop(Guid id)
+        {
+            var result = await _GetShopOrders();
+            await orderHubContext.Clients.User(id.ToString()).UpdateShopOrders(result);
+            return true;
+        }
+
+        private async Task<bool> _UpdateOrdersListDashboard()
+        {
+            ///ToDo
+            var admins = accountRepository.GetUserIds(UserTypes.Admin);
+            await orderHubContext.Clients.Users(admins.Select(x => x.ToString())).UpdateAdminOrders(new List<DashboardOrderDto>());
+            return true;
+        }
+
         private static string GenerateSerialNumber(OrderTypes type)
             => (type == OrderTypes.Instant ? "A" : "B") + Helpers.GetNumberToken(5);
 
@@ -310,112 +357,53 @@ namespace Passengers.Order.OrderService
                  || (order.Status == OrderStatus.Collected && newStatus == OrderStatus.Completed)
                 );
 
-        private async Task Notify(OrderSet order, AppUser currentUser, OrderStatus newStatus, Guid customerId, Guid shopId, Guid? driverId)
+        private async Task Invoke(OrderSet order, OrderStatus newStatus, Guid customerId, Guid shopId, Guid? driverId)
         {
-            if(newStatus == OrderStatus.Canceled)
+            await _UpdateOrdersListDashboard();
+
+            if (newStatus == OrderStatus.Canceled)
             {
-                //Admins
-                var adminsConnections = userConnectionManager.GetConnections(UserTypes.Admin);
-                foreach (var connection in adminsConnections)
-                {
-                    await orderHubContext.Clients.User(connection).RemoveOrder(order.Id);
-                }
+                await _UpdateOrdersListCustomer(customerId);
             }
             else if(newStatus == OrderStatus.Accepted)
             {
-                //Admins
-                var adminsConnections = userConnectionManager.GetConnections(UserTypes.Admin, new List<Guid>() { currentUser.Id });
-                foreach (var connection in adminsConnections)
-                {
-                    await orderHubContext.Clients.Client(connection).UpdateOrder((int)DeliveryCompanyOrderStatus.Unassigned);
-                }
-
-                //Shop
-                var shopConnection = userConnectionManager.GetConnections(shopId).FirstOrDefault() ?? "";
-                await orderHubContext.Clients.Client(shopConnection).NewOrder(new { });
-
-                //Customer
-                var customerConnection = userConnectionManager.GetConnections(customerId).FirstOrDefault() ?? "";
-                await orderHubContext.Clients.Client(customerConnection).UpdateOrder(new { });
+                await _UpdateOrdersListShop(shopId);
+                await _UpdateOrdersListCustomer(customerId);
 
                 //Drivers
                 var drivers = (await GetAvilableDriverIds(order.Address.Lat, order.Address.Long, order.DeliveryCost ?? 0)).Where(id => id != driverId.Value).ToList();
-                var driversConnections = userConnectionManager.GetConnections(drivers);
-                foreach (var connection in driversConnections)
-                {
-                    await orderHubContext.Clients.Client(connection).NewOrder(new { });
-                }
             }
             else if(newStatus == OrderStatus.Refused)
             {
-                //Customer
-                var customerConnection = userConnectionManager.GetConnections(customerId).FirstOrDefault() ?? "";
-                await orderHubContext.Clients.Client(customerConnection).RemoveOrder(order.Id);
-                //Admins
-                var adminsConnections = userConnectionManager.GetConnections(UserTypes.Admin, new List<Guid>() { currentUser.Id });
-                foreach (var connection in adminsConnections)
-                {
-                    await orderHubContext.Clients.Client(connection).UpdateOrder((int)DeliveryCompanyOrderStatus.Refused);
-                }
+                await _UpdateOrdersListCustomer(customerId);
             }
             else if(newStatus == OrderStatus.Assigned)
             {
-                //Admins
-                var adminsConnections = userConnectionManager.GetConnections(UserTypes.Admin);
-                foreach (var connection in adminsConnections)
-                {
-                    await orderHubContext.Clients.Client(connection).UpdateOrder((int)DeliveryCompanyOrderStatus.Assigned);
-                }
-                //Unassigned Drivers
+
                 ///TODO
                 var drivers = (await GetAvilableDriverIds(order.Address.Lat, order.Address.Long, order.DeliveryCost ?? 0)).Where(id => id != driverId.Value).ToList();
                 var driversConnections = userConnectionManager.GetConnections(drivers);
-                foreach (var connection in driversConnections)
-                {
-                    await orderHubContext.Clients.Client(connection).RemoveOrder(order.Id);
-                }
-                // Driver
-                if(currentUser.UserType == UserTypes.Admin)
-                {
-                    var driverConnection = userConnectionManager.GetConnections(driverId.Value).FirstOrDefault() ?? "";
-                    await orderHubContext.Clients.Client(driverConnection).UpdateOrder(new { });
-                }
             }
             else if(newStatus == OrderStatus.Collected)
             {
-                // Admins
-                var adminsConnections = userConnectionManager.GetConnections(UserTypes.Admin);
-                foreach (var connection in adminsConnections)
-                {
-                    await orderHubContext.Clients.Client(connection).UpdateOrder((int)DeliveryCompanyOrderStatus.Collected);
-                }
-                //Customer
-                var customerConnection = userConnectionManager.GetConnections(customerId).FirstOrDefault() ?? "";
-                await orderHubContext.Clients.Client(customerConnection).UpdateOrder(new { });
+                await _UpdateOrdersListCustomer(customerId);
             }
             else if (newStatus == OrderStatus.Completed)
             {
-                // Admins
-                var adminsConnections = userConnectionManager.GetConnections(UserTypes.Admin);
-                foreach (var connection in adminsConnections)
-                {
-                    await orderHubContext.Clients.Client(connection).UpdateOrder((int)DeliveryCompanyOrderStatus.Completed);
-                }
-                //Customer
-                var customerConnection = userConnectionManager.GetConnections(customerId).FirstOrDefault() ?? "";
-                await orderHubContext.Clients.Client(customerConnection).UpdateOrder(new { });
+                await _UpdateOrdersListCustomer(customerId);
             }
         }
 
         private async Task<List<Guid>> GetAvilableDriverIds(string latitude, string longitude, decimal total)
         {
+
             //Nearby Drivers ;
             //Avilable
             //Online
             //Fixed Amount
 
-            var notAvilableDrivers = await Context.Orders.Where(x => x.Status >= OrderStatus.Assigned && x.Status <= OrderStatus.Accepted)
-                .Select(x => x.DriverId).ToListAsync();
+            var notAvilableDrivers = (await Context.Orders.ToListAsync()).Where(x => x.Status >= OrderStatus.Assigned && x.Status <= OrderStatus.Accepted)
+                .Select(x => x.DriverId).ToList();
 
             var drivers = await Context.Drivers()
                 .Where(x => x.DriverOnline.HasValue && x.DriverOnline.Value && !notAvilableDrivers.Contains(x.Id) 
@@ -427,7 +415,7 @@ namespace Passengers.Order.OrderService
             return drivers.Select(x => x.Id).ToList();
         }
 
-        private double CalculateDistance((string, string) point1, (string, string) point2)
+        private static double CalculateDistance((string, string) point1, (string, string) point2)
         {
             var latitude1 = double.Parse(point1.Item1);
             var longitude1 = double.Parse(point1.Item2);
@@ -443,7 +431,6 @@ namespace Passengers.Order.OrderService
                      Math.Cos(d1) * Math.Cos(d2) * Math.Pow(Math.Sin(num2 / 2.0), 2.0);
             return 6376500.0 * (2.0 * Math.Atan2(Math.Sqrt(d3), Math.Sqrt(1.0 - d3)));
         }
-
         
         #endregion
     }

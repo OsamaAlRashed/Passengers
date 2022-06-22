@@ -46,7 +46,7 @@ namespace Passengers.Controllers
         public async Task<IActionResult> GetOrderDetails([Required] Guid orderId) => await repository.GetOrderDetails(orderId).ToJsonResultAsync();
 
         [AppAuthorize(AppRoles.Shop)]
-        [ApiGroup(ApiGroupNames.Shop)]
+        [ApiGroup(ApiGroupNames.Shop)] 
         [HttpGet]
         public async Task<IActionResult> GetShopOrders(bool? isReady, string search) => await repository.GetShopOrders(isReady, search).ToJsonResultAsync();
 

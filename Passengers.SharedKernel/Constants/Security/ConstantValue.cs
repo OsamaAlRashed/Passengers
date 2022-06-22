@@ -11,7 +11,7 @@ namespace Passengers.SharedKernel.Constants.Security
         public const int ExpireAccessTokenMinute = 60;
         public static DateTime AccessExpireDateTime = DateTime.Now.AddMinutes(ExpireAccessTokenMinute);
 
-        public const int ExpireRefreshTokenDay = 30;
+        public const int ExpireRefreshTokenDay = 60;
         public static DateTime RefreshExpireDateTime = DateTime.Now.AddDays(ExpireRefreshTokenDay);
     }
 

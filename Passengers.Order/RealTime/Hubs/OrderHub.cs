@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Passengers.DataTransferObject.OrderDtos;
 using Passengers.Order.OrderService;
 using Passengers.SharedKernel.ExtensionMethods;
 using Passengers.SqlServer.DataBase;
@@ -19,9 +20,12 @@ namespace Passengers.Order.RealTime.Hubs
 {
     public interface IOrderHub
     {
-        public Task NewOrder(object order);
-        public Task UpdateOrder(object order);
-        public Task RemoveOrder(Guid id);
+        public Task UpdateCustomerOrders(List<CustomerOrderDto> orders);
+        public Task UpdateShopOrders(List<ShopOrderDto> orders);
+        public Task UpdateDriverOrders(List<DriverOrderDto> orders);
+        public Task UpdateAdminOrders(List<DashboardOrderDto> orders);
+
+        //
         public Task Test(string text);
         public Task Test2(string text1, string text2);
         public Task ReceiveMessage(object text);
@@ -46,19 +50,19 @@ namespace Passengers.Order.RealTime.Hubs
         
         public override Task OnConnectedAsync()
         {
-            var userId = dbContext.CurrentUserId;
-            if(userId == null)
-            {
-                userId = GetUserId();
-            }
-            _userConnectionManager.KeepUserConnection(userId.Value, Context.ConnectionId);
+            //var userId = dbContext.CurrentUserId;
+            //if(userId == null)
+            //{
+            //    userId = GetUserId();
+            //}
+            //_userConnectionManager.KeepUserConnection(userId.Value, Context.ConnectionId);
             return base.OnConnectedAsync();
         }
         
         public override Task OnDisconnectedAsync(Exception exception)
         {
-            var connectionId = Context.ConnectionId;
-            _userConnectionManager.RemoveUserConnection(connectionId);
+            //var connectionId = Context.ConnectionId;
+            //_userConnectionManager.RemoveUserConnection(connectionId);
             
             return base.OnDisconnectedAsync(exception);
         }
