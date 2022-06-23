@@ -24,6 +24,7 @@ namespace Passengers.Models.Location
         public string Lat { get; set; }
         public string Long { get; set; }
         public bool IsActive { get; set; }
+        public bool IsCurrentLocation { get; set; }
 
         public Guid AreaId { get; set; }
         public Area Area { get; set; }

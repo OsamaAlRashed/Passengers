@@ -16,5 +16,6 @@ namespace Passengers.DataTransferObject.LocationDtos
         public string Long { get; set; }
         public string PhoneNumber { get; set; }
         public string Note { get; set; }
+        public bool IsCurrentLocation { get; set; }
     }
 }

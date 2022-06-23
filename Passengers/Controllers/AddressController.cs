@@ -34,6 +34,17 @@ namespace Passengers.Controllers
         [HttpGet]
         public async Task<IActionResult> GetCustomerAddresses() => await repository.GetByCustomerId(null).ToJsonResultAsync();
 
+        [ApiGroup(ApiGroupNames.Customer)]
+        [AppAuthorize(AppRoles.Customer)]
+        [HttpGet]
+        public async Task<IActionResult> GetCurrentAddress() => await repository.GetCurrentAddress().ToJsonResultAsync();
+
+        [ApiGroup(ApiGroupNames.Customer)]
+        [AppAuthorize(AppRoles.Customer)]
+        [HttpPatch]
+        public async Task<IActionResult> SetCurrentAddress([Required]Guid id) => await repository.SetCurrentAddress(id).ToJsonResultAsync();
+
+
         [ApiGroup(ApiGroupNames.Shop)]
         [AppAuthorize(AppRoles.Shop)]
         [HttpGet]

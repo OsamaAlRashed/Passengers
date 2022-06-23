@@ -5,6 +5,7 @@ using Passengers.Location.AddressSerive.Store;
 using Passengers.Repository.Base;
 using Passengers.SharedKernel.OperationResult;
 using Passengers.SharedKernel.OperationResult.Enums;
+using Passengers.SharedKernel.OperationResult.ExtensionMethods;
 using Passengers.SqlServer.DataBase;
 using System;
 using System.Collections.Generic;
@@ -26,6 +27,7 @@ namespace Passengers.Location.AddressSerive
             Context.Addresses.Add(entity);
             await Context.SaveChangesAsync();
             dto.Id = entity.Id;
+            dto.IsCurrentLocation = false;
             return dto;
         }
 
@@ -105,6 +107,38 @@ namespace Passengers.Location.AddressSerive
             await Context.SaveChangesAsync();
             dto.Id = entity.Id;
             return dto;
+        }
+
+        public async Task<OperationResult<CustomerAddressDto>> GetCurrentAddress()
+        {
+            var addresses = await Context.Addresses.Where(x => x.CustomerId == Context.CurrentUserId).ToListAsync();
+            var currentAddress = addresses.Where(x => x.IsCurrentLocation).FirstOrDefault();
+            if(currentAddress == null)
+            {
+                if (addresses.Any())
+                {
+                    currentAddress = addresses.FirstOrDefault();
+                    currentAddress.IsCurrentLocation = true;
+                    await Context.SaveChangesAsync();
+                }
+            }
+            return _Operation.SetSuccess(currentAddress == null ? null : AddressStore.Query.SelectCustomerAddressDto.Compile()(currentAddress));
+        }
+
+        public async Task<OperationResult<bool>> SetCurrentAddress(Guid id)
+        {
+            var address = await Context.Addresses.Where(x => x.Id == id).SingleOrDefaultAsync();
+            if (address == null)
+                return _Operation.SetContent<bool>(OperationResultTypes.NotExist, "");
+
+            var customerAddress = await Context.Addresses.Where(x => x.CustomerId == address.CustomerId && x.IsCurrentLocation).FirstOrDefaultAsync();
+            if (customerAddress != null)
+                customerAddress.IsCurrentLocation = false;
+
+            address.IsCurrentLocation = true;
+            await Context.SaveChangesAsync();
+
+            return _Operation.SetSuccess(true);
         }
     }
 }

@@ -55,7 +55,8 @@ namespace Passengers.Location.AddressSerive.Store
                 Note = c.Note,
                 PhoneNumber = c.PhoneNumber,
                 Title = c.Title,
-                Id = c.Id
+                Id = c.Id,
+                IsCurrentLocation = c.IsCurrentLocation
             };
 
             public static Expression<Func<CustomerAddressDto, Address>> InverseSelectCustomerAddressDto => c => new Address
@@ -67,7 +68,8 @@ namespace Passengers.Location.AddressSerive.Store
                 Note = c.Note,
                 PhoneNumber = c.PhoneNumber,
                 Title = c.Title,
-                IsActive = true
+                IsActive = true,
+                IsCurrentLocation = false
             };
 
             public static Expression<Func<ShopAddressDto, Address>> InverseSelectShopAddressDto => c => new Address
@@ -86,6 +88,7 @@ namespace Passengers.Location.AddressSerive.Store
                 entity.Title = dto.Title;
                 entity.Building = dto.Title;
                 entity.Text = dto.Text;
+                entity.IsCurrentLocation = false;
             };
 
             public static Action<Address, ShopAddressDto> AssignShopAddressDtoToAddress => (entity, dto) =>

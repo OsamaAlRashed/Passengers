@@ -12,6 +12,8 @@ namespace Passengers.Location.AddressSerive
     public interface IAddressRepository
     {
         Task<OperationResult<CustomerAddressDto>> Add(CustomerAddressDto dto);
+        Task<OperationResult<CustomerAddressDto>> GetCurrentAddress();
+        Task<OperationResult<bool>> SetCurrentAddress(Guid id);
         Task<OperationResult<ShopAddressDto>> Add(ShopAddressDto dto);
         Task<OperationResult<ShopAddressDto>> Update(ShopAddressDto dto);
         Task<OperationResult<CustomerAddressDto>> Update(CustomerAddressDto dto);
