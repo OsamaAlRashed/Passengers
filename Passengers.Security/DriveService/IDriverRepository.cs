@@ -18,7 +18,7 @@ namespace Passengers.Security.DriveService
         Task<OperationResult<GetDriverDto>> Update(SetDriverDto dto);
         Task<OperationResult<bool>> Delete(Guid id);
         Task<OperationResult<DetailsDriverDto>> Details(Guid id, DateTime? day);
-        Task<OperationResult<bool>> ChangeAvilability(bool status);
+        Task<OperationResult<bool>> ChangeAvilability(bool status, string lat, string lng);
         Task<OperationResult<object>> Login(LoginDriverDto dto);
         Task<OperationResult<string>> UploadImage(IFormFile file);
         Task<OperationResult<GetDriverDto>> GetMyInformations();

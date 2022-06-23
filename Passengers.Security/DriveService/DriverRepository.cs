@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Passengers.Base;
 using Passengers.DataTransferObject.DriverDtos;
 using Passengers.DataTransferObject.SecurityDtos;
+using Passengers.Models.Location;
 using Passengers.Models.Security;
 using Passengers.Repository.Base;
 using Passengers.Security.AccountService;
@@ -50,7 +51,7 @@ namespace Passengers.Security.DriveService
 
             if (user != null)
             {
-                var entity = await Context.Drivers().Include(x => x.Payments).Where(x => x.Id == user.Id).SingleOrDefaultAsync();
+                var entity = await Context.Drivers().Include(x => x.Address).Include(x => x.Payments).Where(x => x.Id == user.Id).SingleOrDefaultAsync();
 
                 DriverStore.Query.AssignDtoToDriver(entity, dto);
 
@@ -62,6 +63,13 @@ namespace Passengers.Security.DriveService
                         entity.IdentifierImagePath = path;
                     }
                 }
+
+                entity.Address = new Address()
+                {
+                    Text = dto.AddressText,
+                    AreaId = Context.Areas.FirstOrDefault().Id
+                };
+                Context.Addresses.Add(entity.Address);
 
                 await Context.SaveChangesAsync();
                 return _Operation.SetSuccess(DriverStore.Query.DriverToDriverDto(entity));
@@ -77,7 +85,7 @@ namespace Passengers.Security.DriveService
 
         public async Task<OperationResult<DetailsDriverDto>> Details(Guid id, DateTime? day)
         {
-            var entity = await Context.Drivers().Include(x => x.DriverOrders).Include(x => x.Payments)
+            var entity = await Context.Drivers().Include(x => x.Address).Include(x => x.DriverOrders).Include(x => x.Payments)
                 .Where(x => x.Id == id).SingleOrDefaultAsync();
             if (entity == null)
                 return _Operation.SetContent<DetailsDriverDto>(OperationResultTypes.NotExist, "");
@@ -91,6 +99,7 @@ namespace Passengers.Security.DriveService
             ///ToDO
             pageSize = 100000;
             var users = await Context.Drivers()
+                .Include(x => x.Address)
                 .Include(x => x.DriverOrders).Include(x => x.Payments)
                 .Where(x => string.IsNullOrEmpty(search) || x.FullName.Contains(search))
                 .OrderByDescending(x => x.DateCreated)
@@ -101,7 +110,7 @@ namespace Passengers.Security.DriveService
 
         public async Task<OperationResult<GetDriverDto>> GetById(Guid id)
         {
-            var entity = await Context.Drivers().Include(x => x.Payments).Where(x => x.Id == id).SingleOrDefaultAsync();
+            var entity = await Context.Drivers().Include(x => x.Address).Include(x => x.Payments).Where(x => x.Id == id).SingleOrDefaultAsync();
             if (entity == null)
                 return _Operation.SetContent<GetDriverDto>(OperationResultTypes.NotExist, "");
 
@@ -110,7 +119,7 @@ namespace Passengers.Security.DriveService
 
         public async Task<OperationResult<GetDriverDto>> Update(SetDriverDto dto)
         {
-            var entity = await Context.Drivers().Include(x => x.Payments).Where(x => x.Id == dto.Id).SingleOrDefaultAsync();
+            var entity = await Context.Drivers().Include(x => x.Address).Include(x => x.Payments).Where(x => x.Id == dto.Id).SingleOrDefaultAsync();
             if (entity == null)
                 return _Operation.SetContent<GetDriverDto>(OperationResultTypes.NotExist, "");
 
@@ -125,18 +134,45 @@ namespace Passengers.Security.DriveService
                 }
             }
 
+            if(entity.Address == null)
+            {
+                entity.Address = new Address()
+                {
+                    Text = dto.AddressText,
+                    AreaId = Context.Areas.FirstOrDefault().Id
+                };
+                Context.Addresses.Add(entity.Address);
+            }
+            else
+            {
+                entity.Address.Text = dto.AddressText;
+            }
+
             await userManager.UpdateAsync(entity);
             await Context.SaveChangesAsync();
             return _Operation.SetSuccess(DriverStore.Query.DriverToDriverDto(entity));
         }
 
-        public async Task<OperationResult<bool>> ChangeAvilability(bool status)
+        public async Task<OperationResult<bool>> ChangeAvilability(bool status, string lat , string lng)
         {
-            var currentUser = await Context.Drivers().SingleOrDefaultAsync(x => x.Id == Context.CurrentUserId);
+            var currentUser = await Context.Drivers()
+                .Include(x => x.Address).SingleOrDefaultAsync(x => x.Id == Context.CurrentUserId);
             if (currentUser == null)
                 return _Operation.SetContent<bool>(OperationResultTypes.NotExist, "");
 
             currentUser.DriverOnline = status;
+            if (status)
+            {
+                if(currentUser.Address == null)
+                {
+                    currentUser.Address = new Address();
+                    currentUser.Address.AreaId = Context.Areas.FirstOrDefault().Id;
+                    Context.Addresses.Add(currentUser.Address);
+                }
+                currentUser.Address.Lat = lat;
+                currentUser.Address.Long = lng;
+            }
+
             await Context.SaveChangesAsync();
             return _Operation.SetSuccess(true);
         }

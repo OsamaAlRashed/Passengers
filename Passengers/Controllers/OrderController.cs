@@ -103,5 +103,10 @@ namespace Passengers.Controllers
         [HttpGet]
         public async Task<IActionResult> Test2() => await repository.Test2().ToJsonResultAsync();
 
+        [ApiGroup(ApiGroupNames.Test)]
+        [HttpGet]
+        public async Task<IActionResult> NextStep(Guid? orderId, Guid? shopId, Guid? customerId, Guid? driverId) 
+            => await repository.NextStep(orderId, shopId, customerId, driverId).ToJsonResultAsync();
+
     }
 }

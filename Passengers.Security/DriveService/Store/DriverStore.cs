@@ -27,7 +27,7 @@ namespace Passengers.Security.DriveService.Store
                 GenderType = c.GenderType,
                 IdentifierImagePath = c.IdentifierImagePath,
                 PhoneNumber = c.PhoneNumber,
-                AddressText = c.AddressText,
+                AddressText = c.Address?.Text ?? "",
                 IsBlocked = c.DateBlocked.HasValue,
                 BloodType = c.BloodType,
                 DOB = c.DOB,
@@ -36,23 +36,12 @@ namespace Passengers.Security.DriveService.Store
                 Online = c.DriverOnline ?? false,
             };
 
-            public static Func<SetDriverDto, AppUser> DriverDtoToDriver => c => new AppUser
-            {
-                FullName = c.FullName,
-                PhoneNumber = c.PhoneNumber,
-                AddressText = c.AddressText,
-                DOB = c.DOB,
-                GenderType = c.GenderType,
-                BloodType = c.BloodType,
-            };
-
             public static Action<AppUser, SetDriverDto> AssignDtoToDriver => (entity, dto) =>
             {
                 entity.FullName = dto.FullName;
                 entity.PhoneNumber = dto.PhoneNumber;
                 entity.DOB = dto.DOB;
                 entity.GenderType = dto.GenderType;
-                entity.AddressText = dto.AddressText;
                 entity.BloodType = dto.BloodType;
             };
 
@@ -65,7 +54,7 @@ namespace Passengers.Security.DriveService.Store
                 GenderType = c.GenderType,
                 IdentifierImagePath = c.IdentifierImagePath,
                 PhoneNumber = c.PhoneNumber,
-                AddressText = c.AddressText,
+                AddressText = c.Address?.Text ?? "",
                 IsBlocked = c.DateBlocked.HasValue,
                 BloodType = c.BloodType,
                 DOB = c.DOB,

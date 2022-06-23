@@ -75,7 +75,7 @@ namespace Passengers.Controllers
         [AppAuthorize(AppRoles.Driver)]
         [ApiGroup(ApiGroupNames.Driver)]
         [HttpPatch]
-        public async Task<IActionResult> ChangeAvilability(bool status) => await repository.ChangeAvilability(status).ToJsonResultAsync();
+        public async Task<IActionResult> ChangeAvilability(bool status, string lat, string lng) => await repository.ChangeAvilability(status, lat, lng).ToJsonResultAsync();
 
         [AppAuthorize(AppRoles.Driver)]
         [ApiGroup(ApiGroupNames.Driver)]
