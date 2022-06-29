@@ -6,15 +6,17 @@ using Passengers.SharedKernel.Attribute;
 using Passengers.SharedKernel.Constants.Security;
 using Passengers.SharedKernel.Enums;
 using Passengers.SharedKernel.OperationResult.ExtensionMethods;
+using Passengers.SharedKernel.Swagger.ApiGroup;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 
 namespace Passengers.Controllers
 {
-    [AppAuthorize(AppRoles.Shop)]
     [Route("api/[controller]/[action]")]
     [ApiController]
+    [ApiGroup(ApiGroupNames.Test)]
+    [AppAuthorize(AppRoles.Shop)]
     public class OfferController : ControllerBase
     {
         private readonly IOfferRepository repository;

@@ -32,7 +32,7 @@ namespace Passengers.Main.SalaryLogService
         {
             Expression<Func<Payment, PaymentDto>> selector = Selector.GetSelector<Payment, PaymentDto>();
             IEnumerable<PaymentDto> entities = await Context.Set<Payment>()
-                .Where(PaymentStore.Filter.WhereDateFilter(year, month))
+                .Where(PaymentStore.Filter.WhereDateFilter(year, month, ""))
                 .Select(selector).OrderByDescending(x => x.Date)
                 .ToListAsync();
 
@@ -87,33 +87,36 @@ namespace Passengers.Main.SalaryLogService
             throw new NotImplementedException();
         }
 
-        public async Task<OperationResult<List<SalaryPaymentDto>>> GetSalaries(int? year, int? month)
+        public async Task<OperationResult<List<SalaryPaymentDto>>> GetSalaries(int? year, int? month, string search)
         {
             var data = await Context.Payments
+                .Include(x => x.User)
                 .Where(x => x.Type == PaymentType.Salary)
-                .Where(PaymentStore.Filter.WhereDateFilter(year, month))
+                .Where(PaymentStore.Filter.WhereDateFilter(year, month, search))
                 .Select(PaymentStore.Query.PaymentToSalaryDto)
                 .ToListAsync();
 
             return _Operation.SetSuccess(data);
         }
 
-        public async Task<OperationResult<List<ImportPaymentDto>>> GetImports(int? year, int? month)
+        public async Task<OperationResult<List<ImportPaymentDto>>> GetImports(int? year, int? month, string search)
         {
             var data = await Context.Payments
+                .Include(x => x.User)
                 .Where(x => x.Type == PaymentType.Delivery || x.Type == PaymentType.FixedImport || x.Type == PaymentType.OtherImport)
-                .Where(PaymentStore.Filter.WhereDateFilter(year, month))
+                .Where(PaymentStore.Filter.WhereDateFilter(year, month, search))
                 .Select(PaymentStore.Query.PaymentToImportDto)
                 .ToListAsync();
 
             return _Operation.SetSuccess(data);
         }
 
-        public async Task<OperationResult<List<ExportPaymentDto>>> GetExports(int? year, int? month)
+        public async Task<OperationResult<List<ExportPaymentDto>>> GetExports(int? year, int? month, string search)
         {
             var data = await Context.Payments
+                .Include(x => x.User)
                 .Where(x => x.Type == PaymentType.FixedExport || x.Type == PaymentType.OtherExport)
-                .Where(PaymentStore.Filter.WhereDateFilter(year, month))
+                .Where(PaymentStore.Filter.WhereDateFilter(year, month, search))
                 .Select(PaymentStore.Query.PaymentToExportDto)
                 .ToListAsync();
 

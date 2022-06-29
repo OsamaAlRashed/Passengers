@@ -3,7 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using Passengers.DataTransferObject.PaymentDtos;
 using Passengers.Main.PaymentService;
 using Passengers.Main.SalaryLogService;
+using Passengers.SharedKernel.Attribute;
+using Passengers.SharedKernel.Constants.Security;
 using Passengers.SharedKernel.OperationResult.ExtensionMethods;
+using Passengers.SharedKernel.Swagger.ApiGroup;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
@@ -12,6 +15,8 @@ namespace Passengers.Controllers
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
+    [ApiGroup(ApiGroupNames.Dashboard)]
+    [AppAuthorize(AppRoles.Admin)]
     public class PaymentController : ControllerBase
     {
         private readonly IPaymentRepository repository;
@@ -25,13 +30,13 @@ namespace Passengers.Controllers
         public async Task<IActionResult> Get(int? year, int? month) => await repository.Get(year, month).ToJsonResultAsync();
 
         [HttpGet]
-        public async Task<IActionResult> GetSalaries(int? year, int? month) => await repository.GetSalaries(year, month).ToJsonResultAsync();
+        public async Task<IActionResult> GetSalaries(int? year, int? month, string search) => await repository.GetSalaries(year, month,search).ToJsonResultAsync();
 
         [HttpGet]
-        public async Task<IActionResult> GetImports(int? year, int? month) => await repository.GetImports(year, month).ToJsonResultAsync();
+        public async Task<IActionResult> GetImports(int? year, int? month, string search) => await repository.GetImports(year, month,search).ToJsonResultAsync();
 
         [HttpGet]
-        public async Task<IActionResult> GetExports(int? year, int? month) => await repository.GetExports(year, month).ToJsonResultAsync();
+        public async Task<IActionResult> GetExports(int? year, int? month, string search) => await repository.GetExports(year, month,search).ToJsonResultAsync();
 
         [HttpGet]
         public async Task<IActionResult> GetById([Required] Guid id) => await repository.GetById(id).ToJsonResultAsync();

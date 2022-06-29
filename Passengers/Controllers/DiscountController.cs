@@ -15,6 +15,8 @@ namespace Passengers.Controllers
     [AppAuthorize(AppRoles.Shop)]
     [Route("api/[controller]/[action]")]
     [ApiController]
+    [ApiGroup(ApiGroupNames.Test)]
+    [AppAuthorize(AppRoles.Shop)]
     public class DiscountController : ControllerBase
     {
         private readonly IDiscountRepository repository;

@@ -17,8 +17,9 @@ namespace Passengers.Main.PaymentService.Store
 
         public static class Filter
         {
-            public static Expression<Func<Payment, bool>> WhereDateFilter(int? year, int? month) => x =>
+            public static Expression<Func<Payment, bool>> WhereDateFilter(int? year, int? month, string search) => x =>
                 (!year.HasValue || x.Date.Year == year)
+                && (string.IsNullOrEmpty(search) || x.User.FullName.Contains(search))
                 && (!month.HasValue || x.Date.Month == month)
                 && ((!year.HasValue && month.HasValue) ? x.Date.Year == DateTime.Now.Year : true);
         }

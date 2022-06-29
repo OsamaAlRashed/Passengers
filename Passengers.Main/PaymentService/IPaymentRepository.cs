@@ -13,9 +13,9 @@ namespace Passengers.Main.PaymentService
     {
         Task<OperationResult<PaymentDto>> GetById(Guid id);
         Task<OperationResult<IEnumerable<PaymentDto>>> Get(int? year, int? month);
-        Task<OperationResult<List<SalaryPaymentDto>>> GetSalaries(int? year, int? month);
-        Task<OperationResult<List<ImportPaymentDto>>> GetImports(int? year, int? month);
-        Task<OperationResult<List<ExportPaymentDto>>> GetExports(int? year, int? month);
+        Task<OperationResult<List<SalaryPaymentDto>>> GetSalaries(int? year, int? month, string search);
+        Task<OperationResult<List<ImportPaymentDto>>> GetImports(int? year, int? month, string search);
+        Task<OperationResult<List<ExportPaymentDto>>> GetExports(int? year, int? month, string search);
         Task<OperationResult<PaymentDto>> Add(PaymentDto dto);
         Task<OperationResult<ImportPaymentDto>> Import(ImportPaymentDto dto);
         Task<OperationResult<ExportPaymentDto>> Export(ExportPaymentDto dto);

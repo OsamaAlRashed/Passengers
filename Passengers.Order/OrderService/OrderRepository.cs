@@ -131,7 +131,7 @@ namespace Passengers.Order.OrderService
             return _Operation.SetSuccess(result);
         }
 
-        public async Task<OperationResult<bool>> ChangeStatus(Guid orderId, OrderStatus newStatus, AppUser? mockCurrentUser = null)
+        public async Task<OperationResult<bool>> ChangeStatus(Guid orderId, OrderStatus newStatus, AppUser? mockCurrentUser = null, decimal deliveryCost = 0, int expectedTime = 0, string reasonRefuse = "")
         {
             var currentUser = await Context.Users.FindAsync(Context.CurrentUserId);
             if(mockCurrentUser != null)
@@ -153,8 +153,15 @@ namespace Passengers.Order.OrderService
                 Context.OrderStatusLogs.Add(new OrderStatusLog
                 {
                     Status = newStatus,
+                    Note = newStatus == OrderStatus.Refused ? reasonRefuse : null,
                     OrderId = order.Id
                 });
+
+                if(newStatus == OrderStatus.Accepted)
+                {
+                    order.DeliveryCost = deliveryCost;
+                    order.ExpectedTime = expectedTime;
+                }
                 await Context.SaveChangesAsync();
 
                 await Invoke(order, newStatus, order.Address.CustomerId.Value, order.OrderDetails.Select(x => x.Product.Tag.ShopId).FirstOrDefault().Value, order.DriverId);
@@ -547,5 +554,30 @@ namespace Passengers.Order.OrderService
             }
         }
 
+        public async Task<OperationResult<List<DashboardOrderDto>>> GetOrdersBoard()
+        {
+            var orders = await Context.Orders
+                .Select(x => new DashboardOrderDto
+                {
+                    Id = x.Id,
+                    DateCreated = x.DateCreated,
+                    SerialNumber = x.SerialNumber,
+                    Status = OrderStatusHelper.MapCompany(x.Status),
+                    ImagePath = x.Status == OrderStatus.Sended ? x.Address.Customer.IdentifierImagePath
+                        : (x.Status == OrderStatus.Accepted ? null : x.Driver.IdentifierImagePath),
+                    PhoneNumber = x.Status == OrderStatus.Sended ? x.Address.Customer.PhoneNumber
+                        : (x.Status == OrderStatus.Accepted ? "" : x.Driver.PhoneNumber),
+                    FullName = x.Status == OrderStatus.Sended ? x.Address.Customer.FullName
+                        : (x.Status == OrderStatus.Accepted ? "Unassigned" : x.Driver.FullName),
+                    Time = DateTime.Now.Subtract(x.DateCreated).Minutes,
+                }).ToListAsync();
+
+            return _Operation.SetSuccess(orders);
+        }
+
+        public async Task<OperationResult<OrderDashboardDetails>> GetOrderDashboardDetails(Guid orderId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

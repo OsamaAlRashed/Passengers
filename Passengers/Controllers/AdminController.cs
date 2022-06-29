@@ -12,10 +12,10 @@ using System.Threading.Tasks;
 
 namespace Passengers.Controllers
 {
-    [ApiGroup(ApiGroupNames.Dashboard)]
     [Route("api/[controller]/[action]")]
     [ApiController]
-    //[AppAuthorize(AppRoles.Shop)]
+    [ApiGroup(ApiGroupNames.Dashboard)]
+    [AppAuthorize(AppRoles.Admin)]
     public class AdminController : ControllerBase
     {
         private readonly IAdminRepository repository;

@@ -15,7 +15,7 @@ namespace Passengers.Order.OrderService
         Task<OperationResult<List<ResponseCardDto>>> GetMyCart(RequestCardDto dto);
         Task<OperationResult<ResponseAddOrderDto>> AddOrder(SetOrderDto dto, Guid? currentUserId = null);
         Task<OperationResult<ExpectedCostDto>> GetExpectedCost(Guid addressId);
-        Task<OperationResult<bool>> ChangeStatus(Guid orderId, OrderStatus newStatus, AppUser? appUser = null);
+        Task<OperationResult<bool>> ChangeStatus(Guid orderId, OrderStatus newStatus, AppUser? appUser = null, decimal deliveryCost = 0, int expectedTime = 0, string reasonRefuse = "");
         Task<OperationResult<OrderDetailsDto>> GetOrderDetails(Guid orderId);
         Task<OperationResult<bool>> OrderReady(Guid orderId);
         Task<OperationResult<List<ShopOrderDto>>> GetShopOrders(bool? isReady, string search);
@@ -24,5 +24,8 @@ namespace Passengers.Order.OrderService
         Task<OperationResult<string>> Test();
         Task<OperationResult<string>> Test2();
         Task<OperationResult<object>> NextStep(Guid? orderId, Guid? shopId, Guid? customerId, Guid? driverId);
+
+        Task<OperationResult<List<DashboardOrderDto>>> GetOrdersBoard();
+        Task<OperationResult<OrderDashboardDetails>> GetOrderDashboardDetails(Guid orderId);
     }
 }

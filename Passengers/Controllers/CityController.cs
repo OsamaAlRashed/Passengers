@@ -2,7 +2,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Passengers.DataTransferObject.LocationDtos;
 using Passengers.Location.CityService;
+using Passengers.SharedKernel.Attribute;
+using Passengers.SharedKernel.Constants.Security;
 using Passengers.SharedKernel.OperationResult.ExtensionMethods;
+using Passengers.SharedKernel.Swagger.ApiGroup;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
@@ -11,6 +14,8 @@ namespace Passengers.Controllers
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
+    [ApiGroup(ApiGroupNames.Test)]
+    [AppAuthorize(AppRoles.Admin)]
     public class CityController : ControllerBase
     {
         private readonly ICityRepository repository;

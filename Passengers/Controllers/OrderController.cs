@@ -73,12 +73,12 @@ namespace Passengers.Controllers
         [AppAuthorize(AppRoles.Admin)]
         [ApiGroup(ApiGroupNames.Dashboard)]
         [HttpPatch]
-        public async Task<IActionResult> Refuse([Required] Guid orderId) => await repository.ChangeStatus(orderId, OrderStatus.Refused).ToJsonResultAsync();
+        public async Task<IActionResult> Refuse([Required] Guid orderId, string reasonRefuse) => await repository.ChangeStatus(orderId, OrderStatus.Refused, null, 0,0, reasonRefuse).ToJsonResultAsync();
 
         [AppAuthorize(AppRoles.Admin)]
         [ApiGroup(ApiGroupNames.Dashboard)]
         [HttpPatch]
-        public async Task<IActionResult> Accept([Required] Guid orderId) => await repository.ChangeStatus(orderId, OrderStatus.Accepted).ToJsonResultAsync();
+        public async Task<IActionResult> Accept([Required] Guid orderId, decimal deliveryCost, int expectedTime) => await repository.ChangeStatus(orderId, OrderStatus.Accepted, null, deliveryCost, expectedTime).ToJsonResultAsync();
 
         [AppAuthorize(AppRoles.Driver, AppRoles.Admin)]
         [ApiGroup(ApiGroupNames.Driver, ApiGroupNames.Dashboard)]

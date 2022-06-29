@@ -27,32 +27,31 @@ namespace Passengers.Controllers
             this.repository = repository;
         }
 
+        [ApiGroup(ApiGroupNames.Test)]
+        [AppAuthorize(AppRoles.Admin)]
         [HttpPost]
         public async Task<IActionResult> SignUp(CreateAccountDto dto) => await repository.Create(dto).ToJsonResultAsync();
 
+        [ApiGroup(ApiGroupNames.Dashboard)]
+        [AllowAnonymous]
         [HttpPost]
         public async Task<IActionResult> Login(BaseLoginDto dto) => await repository.Login(dto).ToJsonResultAsync();
 
+        [ApiGroup(ApiGroupNames.Test)]
+        [AppAuthorize(AppRoles.Admin)]
         [HttpPut]
         public async Task<IActionResult> ChangePassword(Guid id, string newPassword) => await repository.ChangePassword(id, newPassword).ToJsonResultAsync();
 
         [ApiGroup(ApiGroupNames.Shop, ApiGroupNames.Dashboard, ApiGroupNames.Customer, ApiGroupNames.Driver)]
-        [AppAuthorize(AppRoles.Shop, AppRoles.Admin, AppRoles.Customer)]
+        [AppAuthorize(AppRoles.Shop, AppRoles.Admin, AppRoles.Customer, AppRoles.Driver)]
         [HttpGet]
         public async Task<IActionResult> Logout(string refreshToken) => await repository.Logout(refreshToken).ToJsonResultAsync();
 
 
         [HttpPost]
-        [Authorize]
+        [ApiGroup(ApiGroupNames.Test)]
+        [AppAuthorize(AppRoles.Admin)]
         public async Task<IActionResult> ChangeStatus([Required]Guid id, [Required]AccountStatus accountStatus) => await repository.ChangeStatus(id, accountStatus).ToJsonResultAsync();
-
-        //[HttpGet]
-        //[AllowAnonymous]
-        //public async Task<IActionResult> ForgetPassword([Required] string email) => await repository.ForgetPassword(email).ToJsonResultAsync();
-
-        //[HttpPost]
-        //[AllowAnonymous]
-        //public async Task<IActionResult> ResetPassword(ResetPasswordDto dto) => await repository.ResetPassword(dto).ToJsonResultAsync();
 
         [HttpPost]
         [AllowAnonymous]
