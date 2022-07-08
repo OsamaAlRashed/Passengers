@@ -1,3 +1,4 @@
+using EasyRefreshToken.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -32,10 +33,11 @@ using Passengers.Security.CustomerService;
 using Passengers.Security.DriveService;
 using Passengers.Security.Shared;
 using Passengers.Security.ShopService;
-using Passengers.Security.TokenService;
 using Passengers.Shared.CategoryService;
 using Passengers.Shared.DocumentService;
 using Passengers.Shared.SharedService;
+using Passengers.SharedKernel.Constants.Security;
+using Passengers.SharedKernel.Enums;
 using Passengers.SharedKernel.Filter;
 using Passengers.SharedKernel.Jwt;
 using Passengers.SharedKernel.Services.ConfigureServices;
@@ -118,13 +120,19 @@ namespace Passengers
             services.AddScoped<IPaymentRepository, PaymentRepository>();
             services.AddScoped<IDriverRepository, DriverRepository>();
             services.AddScoped<EmailService>();
-            services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IOrderRepository, OrderRepository>();
             services.AddScoped<IUserConnectionManager, UserConnectionManager>();
 
             services.AddSignalR();
 
             services.AddSingleton<IUserIdProvider, NameUserIdProvider>();
+
+            services.AddRefreshToken<PassengersDbContext, RefreshToken, AppUser, Guid>(op =>
+            {
+                op.TokenExpiredDays = ConstantValue.ExpireRefreshTokenDay;
+                op.MaxNumberOfActiveDevices = MaxNumberOfActiveDevices.Config("UserType", (UserTypes.Driver, 1));
+                op.PreventingLoginWhenAccessToMaxNumberOfActiveDevices = false;
+            });
 
         }
 

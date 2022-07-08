@@ -9,6 +9,6 @@ namespace Passengers.DataTransferObject.OrderDtos
     public class ExpectedCostDto
     {
         public int Time { get; set; }
-        public int Cost { get; set; }
+        public decimal Cost { get; set; }
     }
 }

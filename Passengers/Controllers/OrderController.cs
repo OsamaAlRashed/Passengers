@@ -72,12 +72,12 @@ namespace Passengers.Controllers
 
         [AppAuthorize(AppRoles.Admin)]
         [ApiGroup(ApiGroupNames.Dashboard)]
-        [HttpPatch]
+        [HttpPut]
         public async Task<IActionResult> Refuse([Required] Guid orderId, string reasonRefuse) => await repository.ChangeStatus(orderId, OrderStatus.Refused, null, 0,0, reasonRefuse).ToJsonResultAsync();
 
         [AppAuthorize(AppRoles.Admin)]
         [ApiGroup(ApiGroupNames.Dashboard)]
-        [HttpPatch]
+        [HttpPut]
         public async Task<IActionResult> Accept([Required] Guid orderId, decimal deliveryCost, int expectedTime) => await repository.ChangeStatus(orderId, OrderStatus.Accepted, null, deliveryCost, expectedTime).ToJsonResultAsync();
 
         [AppAuthorize(AppRoles.Driver, AppRoles.Admin)]
@@ -107,6 +107,17 @@ namespace Passengers.Controllers
         [HttpGet]
         public async Task<IActionResult> NextStep(Guid? orderId, Guid? shopId, Guid? customerId, Guid? driverId) 
             => await repository.NextStep(orderId, shopId, customerId, driverId).ToJsonResultAsync();
+
+        [ApiGroup(ApiGroupNames.Dashboard)]
+        [AppAuthorize(AppRoles.Admin)]
+        [HttpGet]
+        public async Task<IActionResult> GetOrdersBoard() => await repository.GetOrdersBoard().ToJsonResultAsync();
+
+        [ApiGroup(ApiGroupNames.Dashboard)]
+        [AppAuthorize(AppRoles.Admin)]
+        [HttpGet]
+        public async Task<IActionResult> GetOrderDashboardDetails([Required] Guid id) => await repository.GetOrderDashboardDetails(id).ToJsonResultAsync();
+
 
     }
 }
