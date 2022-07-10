@@ -45,16 +45,5 @@ namespace Passengers.Base
         public static IQueryable<TSource> SortBy<TSource, TKey>(this IQueryable<TSource> source, Expression<Func<TSource, TKey>> by, bool? isDes) where TSource : IBaseEntity
             => (!isDes.HasValue || isDes.Value) ? source.OrderByDescending(by)
                                                 : source.OrderBy(by);
-
-        public static string Test(this string s1, string s2)
-        {
-            string s = "";
-            foreach (var item1 in s1)
-            {
-                if (s2.Contains(item1))
-                    s += item1;
-            }
-            return s;
-        }
     }
 }

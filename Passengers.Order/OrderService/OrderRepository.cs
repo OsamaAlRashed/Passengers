@@ -40,7 +40,7 @@ namespace Passengers.Order.OrderService
 
         #endregion
 
-        #region Public Function
+        #region Public Method
 
         public async Task<OperationResult<List<ResponseCardDto>>> GetMyCart(RequestCardDto dto)
         {
@@ -240,6 +240,179 @@ namespace Passengers.Order.OrderService
             return _Operation.SetSuccess(result);
         }
 
+
+        public async Task<OperationResult<object>> NextStep(Guid? orderId, Guid? shopId, Guid? customerId, Guid? driverId)
+        {
+            var customer = await Context.Customers().Include(x => x.Addresses).Where(x => (customerId.HasValue && x.Id == customerId.Value) || true).FirstOrDefaultAsync();
+            var shop = await Context.Shops().Include(x => x.Tags).ThenInclude(x => x.Products).Where(x => (shopId.HasValue && x.Id == shopId.Value) || x.Tags.Select(x => x.Products.Any()).Any()).FirstOrDefaultAsync();
+            var driver = await Context.Drivers().Where(x => (driverId.HasValue && x.Id == driverId.Value) || true).FirstOrDefaultAsync();
+            var admin = await Context.Admins().FirstOrDefaultAsync();
+            if (orderId == null)
+            {
+                await AddOrder(new SetOrderDto
+                {
+                    AddressId = customer.Addresses.FirstOrDefault().Id,
+                    DriverNote = "DriverNote",
+                    Cart = new List<ResponseCardDto>()
+                    {
+                        new ResponseCardDto()
+                        {
+                            Id = shop.Id,
+                            Note = "ShopNote",
+                            Products = new List<ProductCardDto>()
+                            {
+                                new ProductCardDto()
+                                {
+                                    Id = Context.Products.Where(x => x.Tag.ShopId == shop.Id).Select(x => x.Id).FirstOrDefault(),
+                                    Count = 2,
+                                }
+                            }
+
+                        }
+                    }
+                }, customer.Id);
+                var order = await Context.Orders.Include(x => x.Address).Include("OrderDetails.Product.Tag").OrderByDescending(x => x.DateCreated).FirstOrDefaultAsync();
+                return _Operation.SetSuccess<object>(new
+                {
+                    orderId = order.Id,
+                    shopId = order.OrderDetails.Select(x => x.Product.Tag.ShopId).FirstOrDefault(),
+                    customerId = order.Address.CustomerId,
+                    DriverId = order.DriverId,
+                    AdminId = admin.Id
+                });
+            }
+            else
+            {
+                var currentStatus = await Context.OrderStatusLogs.Where(x => x.OrderId == orderId).OrderByDescending(x => x.DateCreated).Select(x => x.Status).FirstOrDefaultAsync();
+                AppUser currentUser = null;
+                switch (currentStatus)
+                {
+                    case OrderStatus.Sended:
+                        currentStatus = OrderStatus.Accepted;
+                        currentUser = admin;
+                        break;
+                    case OrderStatus.Accepted:
+                        currentStatus = OrderStatus.Assigned;
+                        currentUser = driver;
+                        break;
+                    case OrderStatus.Assigned:
+                        currentStatus = OrderStatus.Collected;
+                        currentUser = driver;
+                        break;
+                    case OrderStatus.Collected:
+                        currentStatus = OrderStatus.Completed;
+                        currentUser = driver;
+                        break;
+                    default:
+                        return _Operation.SetSuccess<object>(false);
+                }
+                var order = await ChangeStatus(orderId.Value, currentStatus, currentUser);
+                return _Operation.SetSuccess<object>(currentUser.Id);
+            }
+        }
+
+        public async Task<OperationResult<List<DashboardOrderDto>>> GetOrdersBoard()
+        {
+            var orders = await Context.Orders
+                .Select(x => new DashboardOrderDto
+                {
+                    Id = x.Id,
+                    DateCreated = x.DateCreated,
+                    SerialNumber = x.SerialNumber,
+                    Status = OrderStatusHelper.MapCompany(x.OrderStatusLogs.OrderBy(x => x.DateCreated).Select(x => x.Status).LastOrDefault()),
+                    ImagePath = x.OrderStatusLogs.OrderBy(x => x.DateCreated).Select(x => x.Status).LastOrDefault() == OrderStatus.Sended ? x.Address.Customer.IdentifierImagePath
+                        : (x.OrderStatusLogs.OrderBy(x => x.DateCreated).Select(x => x.Status).LastOrDefault() == OrderStatus.Accepted ? null : x.Driver.IdentifierImagePath),
+                    PhoneNumber = x.OrderStatusLogs.OrderBy(x => x.DateCreated).Select(x => x.Status).LastOrDefault() == OrderStatus.Sended ? x.Address.Customer.PhoneNumber
+                        : (x.Status == OrderStatus.Accepted ? "" : x.Driver.PhoneNumber),
+                    FullName = x.OrderStatusLogs.OrderBy(x => x.DateCreated).Select(x => x.Status).LastOrDefault() == OrderStatus.Sended ? x.Address.Customer.FullName
+                        : (x.Status == OrderStatus.Accepted ? "Unassigned" : x.Driver.FullName),
+                    Time = DateTime.Now.Subtract(x.OrderStatusLogs.OrderBy(x => x.DateCreated).Select(x => x.DateCreated).LastOrDefault()).Minutes,
+                }).ToListAsync();
+
+            return _Operation.SetSuccess(orders);
+        }
+
+        public async Task<OperationResult<OrderDashboardDetails>> GetOrderDashboardDetails(Guid orderId)
+        {
+            var order = await Context.Orders
+                .Where(x => x.Id == orderId)
+                .Include(x => x.OrderStatusLogs)
+                .Include(x => x.Address).ThenInclude(x => x.Customer)
+                .Include("OrderDetails.Product.Tag.Shop.Address")
+                .Include("OrderDetails.Product.Tag.Shop.Documents")
+                .Include(x => x.Driver)
+                .SingleOrDefaultAsync();
+            if (order == null)
+                return _Operation.SetContent<OrderDashboardDetails>(OperationResultTypes.NotExist, "");
+
+            OrderDashboardDetails orderDashboardDetails = new OrderDashboardDetails();
+            orderDashboardDetails.Id = order.Id;
+            orderDashboardDetails.SerialNumber = order.SerialNumber;
+            orderDashboardDetails.DateCreated = order.DateCreated;
+            orderDashboardDetails.Status = OrderStatusHelper.MapCompany(order.Status);
+
+            if (order.Status == OrderStatus.Completed)
+            {
+                orderDashboardDetails.CompletedOn = order.OrderStatusLogs.OrderByDescending(x => x.DateCreated).Select(x => x.DateCreated).FirstOrDefault();
+            }
+            orderDashboardDetails.Details = (await GetOrderDetails(orderId)).Result;
+            orderDashboardDetails.Customer = new UserInfoDto()
+            {
+                Id = order.Address.CustomerId.Value,
+                ImagePath = order.Address.Customer.IdentifierImagePath,
+                Address = order.Address.Text + " - " + order.Address.Building,
+                Lat = order.Address.Lat,
+                Lng = order.Address.Long,
+                Name = order.Address.Customer.FullName,
+                Note = order.DriverNote,
+                PhoneNumber = order.Address.Customer.PhoneNumber
+            };
+
+            var shop = order.OrderDetails.Select(x => x.Product.Tag.Shop).FirstOrDefault();
+            if (shop != null)
+            {
+                orderDashboardDetails.Shop = new UserInfoDto()
+                {
+                    Id = shop.Id,
+                    ImagePath = shop.Documents.Select(x => x.Path).FirstOrDefault(),
+                    Address = shop.Address?.Text,
+                    Lat = shop.Address?.Lat,
+                    Lng = shop.Address?.Long,
+                    Name = shop.Name,
+                    Note = order.ShopNote,
+                    PhoneNumber = shop.PhoneNumber
+                };
+            }
+
+            if (order.DriverId != null)
+            {
+                orderDashboardDetails.Driver = new UserInfoDto()
+                {
+                    Id = order.Driver.Id,
+                    ImagePath = order.Driver.IdentifierImagePath,
+                    Name = order.Driver.FullName,
+                    Note = order.DriverNote,
+                    PhoneNumber = order.Driver.PhoneNumber
+                };
+            }
+
+            if (order.Status == OrderStatus.Sended)
+            {
+                orderDashboardDetails.ExpectedCost = (await GetExpectedCost(order.AddressId)).Result;
+            }
+            else
+            {
+                orderDashboardDetails.ExpectedCost = new ExpectedCostDto
+                {
+                    Cost = order.ExpectedCost,
+                    Time = order.ExpectedTime
+                };
+            }
+
+            return _Operation.SetSuccess(orderDashboardDetails);
+
+        }
+
         public async Task<OperationResult<string>> Test()
         {
             await orderHubContext.Clients.User("a2b0d8d0-4d71-4ea0-95ab-08da0c512705").Test("Hello from Test.");
@@ -323,7 +496,7 @@ namespace Passengers.Order.OrderService
 
             return result;
         }
-
+        
         private async Task<List<CustomerOrderDto>> _GetCustomerOrders(Guid? id = null)
         {
             id = id.HasValue ? id.Value : Context.CurrentUserId;
@@ -500,171 +673,5 @@ namespace Passengers.Order.OrderService
         }
         
         #endregion
-
-        public async Task<OperationResult<object>> NextStep(Guid? orderId, Guid? shopId, Guid? customerId, Guid? driverId)
-        {
-            var customer = await Context.Customers().Include(x => x.Addresses).Where(x => (customerId.HasValue && x.Id == customerId.Value) || true).FirstOrDefaultAsync();
-            var shop = await Context.Shops().Include(x => x.Tags).ThenInclude(x => x.Products).Where(x => (shopId.HasValue && x.Id == shopId.Value) || x.Tags.Select(x => x.Products.Any()).Any()).FirstOrDefaultAsync();
-            var driver = await Context.Drivers().Where(x => (driverId.HasValue && x.Id == driverId.Value) || true).FirstOrDefaultAsync();
-            var admin = await Context.Admins().FirstOrDefaultAsync();
-            if (orderId == null)
-            {
-                await AddOrder(new SetOrderDto
-                {
-                    AddressId = customer.Addresses.FirstOrDefault().Id,
-                    DriverNote = "DriverNote",
-                    Cart = new List<ResponseCardDto>()
-                    {
-                        new ResponseCardDto()
-                        {
-                            Id = shop.Id,
-                            Note = "ShopNote",
-                            Products = new List<ProductCardDto>()
-                            {
-                                new ProductCardDto()
-                                {
-                                    Id = Context.Products.Where(x => x.Tag.ShopId == shop.Id).Select(x => x.Id).FirstOrDefault(),
-                                    Count = 2,
-                                } 
-                            }
-                            
-                        }
-                    }
-                }, customer.Id);
-                var order = await Context.Orders.Include(x => x.Address).Include("OrderDetails.Product.Tag").OrderByDescending(x => x.DateCreated).FirstOrDefaultAsync();
-                return _Operation.SetSuccess<object>(new { orderId = order.Id , shopId = order.OrderDetails.Select(x => x.Product.Tag.ShopId).FirstOrDefault(),
-                    customerId = order.Address.CustomerId, DriverId = order.DriverId, AdminId = admin.Id});
-            }
-            else
-            {
-                var currentStatus = await Context.OrderStatusLogs.Where(x => x.OrderId == orderId).OrderByDescending(x => x.DateCreated).Select(x => x.Status).FirstOrDefaultAsync();
-                AppUser currentUser = null;
-                switch (currentStatus)
-                {
-                    case OrderStatus.Sended:
-                        currentStatus = OrderStatus.Accepted;
-                        currentUser = admin;
-                        break;
-                    case OrderStatus.Accepted:
-                        currentStatus = OrderStatus.Assigned;
-                        currentUser = driver;
-                        break;
-                    case OrderStatus.Assigned:
-                        currentStatus = OrderStatus.Collected;
-                        currentUser = driver;
-                        break;
-                    case OrderStatus.Collected:
-                        currentStatus = OrderStatus.Completed;
-                        currentUser = driver;
-                        break;
-                    default:
-                        return _Operation.SetSuccess<object>(false);
-                }
-                var order = await ChangeStatus(orderId.Value, currentStatus, currentUser);
-                return _Operation.SetSuccess<object>(currentUser.Id);
-            }
-        }
-
-        public async Task<OperationResult<List<DashboardOrderDto>>> GetOrdersBoard()
-        {
-            var orders = await Context.Orders
-                .Select(x => new DashboardOrderDto
-                {
-                    Id = x.Id,
-                    DateCreated = x.DateCreated,
-                    SerialNumber = x.SerialNumber,
-                    Status = OrderStatusHelper.MapCompany(x.OrderStatusLogs.OrderBy(x => x.DateCreated).Select(x => x.Status).LastOrDefault()),
-                    ImagePath = x.OrderStatusLogs.OrderBy(x => x.DateCreated).Select(x => x.Status).LastOrDefault() == OrderStatus.Sended ? x.Address.Customer.IdentifierImagePath
-                        : (x.OrderStatusLogs.OrderBy(x => x.DateCreated).Select(x => x.Status).LastOrDefault() == OrderStatus.Accepted ? null : x.Driver.IdentifierImagePath),
-                    PhoneNumber = x.OrderStatusLogs.OrderBy(x => x.DateCreated).Select(x => x.Status).LastOrDefault() == OrderStatus.Sended ? x.Address.Customer.PhoneNumber
-                        : (x.Status == OrderStatus.Accepted ? "" : x.Driver.PhoneNumber),
-                    FullName = x.OrderStatusLogs.OrderBy(x => x.DateCreated).Select(x => x.Status).LastOrDefault() == OrderStatus.Sended ? x.Address.Customer.FullName
-                        : (x.Status == OrderStatus.Accepted ? "Unassigned" : x.Driver.FullName),
-                    Time = DateTime.Now.Subtract(x.OrderStatusLogs.OrderBy(x => x.DateCreated).Select(x => x.DateCreated).LastOrDefault()).Minutes,
-                }).ToListAsync();
-
-            return _Operation.SetSuccess(orders);
-        }
-
-        public async Task<OperationResult<OrderDashboardDetails>> GetOrderDashboardDetails(Guid orderId)
-        {
-            var order = await Context.Orders
-                .Where(x => x.Id == orderId)
-                .Include(x => x.OrderStatusLogs)
-                .Include(x => x.Address).ThenInclude(x => x.Customer)
-                .Include("OrderDetails.Product.Tag.Shop.Address")
-                .Include("OrderDetails.Product.Tag.Shop.Documents")
-                .Include(x => x.Driver)
-                .SingleOrDefaultAsync();
-            if (order == null)
-                return _Operation.SetContent<OrderDashboardDetails>(OperationResultTypes.NotExist, "");
-
-            OrderDashboardDetails orderDashboardDetails = new OrderDashboardDetails();
-            orderDashboardDetails.Id = order.Id;
-            orderDashboardDetails.SerialNumber = order.SerialNumber;
-            orderDashboardDetails.DateCreated = order.DateCreated;
-            orderDashboardDetails.Status = OrderStatusHelper.MapCompany(order.Status);
-                    
-            if (order.Status == OrderStatus.Completed)
-            {
-                orderDashboardDetails.CompletedOn = order.OrderStatusLogs.OrderByDescending(x => x.DateCreated).Select(x => x.DateCreated).FirstOrDefault();
-            }
-            orderDashboardDetails.Details = (await GetOrderDetails(orderId)).Result;
-            orderDashboardDetails.Customer = new UserInfoDto()
-            {
-                Id = order.Address.CustomerId.Value,
-                ImagePath = order.Address.Customer.IdentifierImagePath,
-                Address = order.Address.Text + " - " + order.Address.Building,
-                Lat = order.Address.Lat,
-                Lng = order.Address.Long,
-                Name = order.Address.Customer.FullName,
-                Note = order.DriverNote,
-                PhoneNumber = order.Address.Customer.PhoneNumber
-            };
-
-            var shop = order.OrderDetails.Select(x => x.Product.Tag.Shop).FirstOrDefault();
-            if(shop != null)
-            {
-                orderDashboardDetails.Shop = new UserInfoDto()
-                {
-                    Id = shop.Id,
-                    ImagePath = shop.Documents.Select(x => x.Path).FirstOrDefault(),
-                    Address = shop.Address?.Text,
-                    Lat = shop.Address?.Lat,
-                    Lng = shop.Address?.Long,
-                    Name = shop.Name,
-                    Note = order.ShopNote,
-                    PhoneNumber = shop.PhoneNumber
-                };
-            }
-
-            if (order.DriverId != null)
-            {
-                orderDashboardDetails.Driver = new UserInfoDto()
-                {
-                    Id = order.Driver.Id,
-                    ImagePath = order.Driver.IdentifierImagePath,
-                    Name = order.Driver.FullName,
-                    Note = order.DriverNote,
-                    PhoneNumber = order.Driver.PhoneNumber
-                };
-            }
-
-            if(order.Status == OrderStatus.Sended)
-            {
-                orderDashboardDetails.ExpectedCost = (await GetExpectedCost(order.AddressId)).Result;
-            }
-            else
-            {
-                orderDashboardDetails.ExpectedCost = new ExpectedCostDto
-                {
-                    Cost = order.ExpectedCost,
-                    Time = order.ExpectedTime
-                };
-            }
-
-            return _Operation.SetSuccess(orderDashboardDetails);
-
-        }
     }
 }

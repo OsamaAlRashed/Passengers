@@ -62,5 +62,6 @@ namespace Passengers.Order.RealTime.Hubs
         //    return base.OnDisconnectedAsync(exception);
         //}
         #endregion
+
     }
 } 
