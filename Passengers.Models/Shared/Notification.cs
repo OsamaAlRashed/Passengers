@@ -9,6 +9,7 @@ namespace Passengers.Models.Shared
 {
     public class Notification : BaseEntity
     {
-        ///Todo
+        public string Title { get; set; }
+        public string Body { get; set; }
     }
 }

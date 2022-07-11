@@ -243,7 +243,7 @@ namespace Passengers.Order.OrderService
 
         public async Task<OperationResult<object>> NextStep(Guid? orderId, Guid? shopId, Guid? customerId, Guid? driverId)
         {
-            var customer = await Context.Customers().Include(x => x.Addresses).Where(x => (customerId.HasValue && x.Id == customerId.Value) || true).FirstOrDefaultAsync();
+            var customer = await Context.Customers().Include(x => x.Addresses).Where(x => x.Addresses.Any() && (customerId.HasValue && x.Id == customerId.Value) || true).FirstOrDefaultAsync();
             var shop = await Context.Shops().Include(x => x.Tags).ThenInclude(x => x.Products).Where(x => (shopId.HasValue && x.Id == shopId.Value) || x.Tags.Select(x => x.Products.Any()).Any()).FirstOrDefaultAsync();
             var driver = await Context.Drivers().Where(x => (driverId.HasValue && x.Id == driverId.Value) || true).FirstOrDefaultAsync();
             var admin = await Context.Admins().FirstOrDefaultAsync();
