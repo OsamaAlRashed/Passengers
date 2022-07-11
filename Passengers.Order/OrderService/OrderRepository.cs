@@ -455,10 +455,10 @@ namespace Passengers.Order.OrderService
 
         private async Task<CustomerOrderDto> _GetCustomerOrderById(Guid orderId)
         {
-            var customer = await Context.Customers().Include(x => x.Addresses)
-                .Where(x => x.Id == Context.CurrentUserId).SingleOrDefaultAsync();
-            if (customer == null)
-                return null;
+            //var customer = await Context.Customers().Include(x => x.Addresses)
+            //    .Where(x => x.Id == Context.CurrentUserId).SingleOrDefaultAsync();
+            //if (customer == null)
+            //    return null;
 
             var order = await Context.Orders
                     .Where(order => order.Id == orderId)
