@@ -26,6 +26,7 @@ namespace Passengers.Models.Security
             ShopFavorites = new HashSet<Favorite>();
             Addresses = new HashSet<Address>();
             RefreshTokens = new HashSet<RefreshToken>();
+            NotificationUsers = new HashSet<NotificationUser>();
         }
 
         #region Base
@@ -90,6 +91,8 @@ namespace Passengers.Models.Security
         public ICollection<Payment> Payments { get; set; }
 
         public ICollection<RefreshToken> RefreshTokens { get; set; }
+
+        public ICollection<NotificationUser> NotificationUsers { get; set; }
 
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Passengers.Base;
+using Passengers.DataTransferObject.NotificationDtos;
 using Passengers.DataTransferObject.OrderDtos;
 using Passengers.Models.Order;
 using Passengers.Models.Security;
@@ -8,6 +9,7 @@ using Passengers.Order.RealTime;
 using Passengers.Order.RealTime.Hubs;
 using Passengers.Repository.Base;
 using Passengers.Security.AccountService;
+using Passengers.Shared.NotificationService;
 using Passengers.SharedKernel.Enums;
 using Passengers.SharedKernel.ExtensionMethods;
 using Passengers.SharedKernel.OperationResult;
@@ -30,12 +32,15 @@ namespace Passengers.Order.OrderService
         private readonly IHubContext<OrderHub, IOrderHub> orderHubContext;
         private readonly IUserConnectionManager userConnectionManager;
         private readonly IAccountRepository accountRepository;
+        private readonly INotificationRepository notificationRepository;
 
-        public OrderRepository(PassengersDbContext context, IHubContext<OrderHub, IOrderHub> orderHubContext, IUserConnectionManager userConnectionManager, IAccountRepository accountRepository) : base(context)
+        public OrderRepository(PassengersDbContext context, IHubContext<OrderHub, IOrderHub> orderHubContext, IUserConnectionManager userConnectionManager,
+            IAccountRepository accountRepository, INotificationRepository notificationRepository) : base(context)
         {
             this.orderHubContext = orderHubContext;
             this.userConnectionManager = userConnectionManager;
             this.accountRepository = accountRepository;
+            this.notificationRepository = notificationRepository;
         }
 
         #endregion
@@ -112,6 +117,8 @@ namespace Passengers.Order.OrderService
                 currentUserId = Context.CurrentUserId;
             await _UpdateOrdersListCustomer(currentUserId.Value);
             await _UpdateOrdersListDashboard();
+            var admins = accountRepository.GetUserIds(UserTypes.Admin);
+            //await SendNotification(admins, UserTypes.Admin, OrderStatus.Sended);
 
             var lodedOrders = await Context.Orders
                 .Include("OrderDetails.Product.Tag.Shop")
@@ -243,10 +250,38 @@ namespace Passengers.Order.OrderService
 
         public async Task<OperationResult<object>> NextStep(Guid? orderId, Guid? shopId, Guid? customerId, Guid? driverId)
         {
-            var customer = await Context.Customers().Include(x => x.Addresses).Where(x => x.Addresses.Any() && (customerId.HasValue && x.Id == customerId.Value) || true).FirstOrDefaultAsync();
+            var customer = await Context.Customers()
+                .Include(x => x.Addresses).Where(x => x.Addresses.Any() 
+             && (customerId.HasValue && x.Id == customerId.Value) || true).FirstOrDefaultAsync();
             var shop = await Context.Shops().Include(x => x.Tags).ThenInclude(x => x.Products).Where(x => (shopId.HasValue && x.Id == shopId.Value) || x.Tags.Select(x => x.Products.Any()).Any()).FirstOrDefaultAsync();
             var driver = await Context.Drivers().Where(x => (driverId.HasValue && x.Id == driverId.Value) || true).FirstOrDefaultAsync();
             var admin = await Context.Admins().FirstOrDefaultAsync();
+
+            var currentUser1 = Context.Users.Where(x => x.Id == Context.CurrentUserId).Include(x => x.Tags).ThenInclude(x => x.Products).Include(x => x.Addresses).FirstOrDefault();
+            if(currentUser1 != null)
+            {
+                switch (currentUser1.UserType)
+                {
+                    case UserTypes.Admin:
+                        admin = currentUser1;
+                        break;
+                    case UserTypes.Shop:
+                        shop = currentUser1;
+                        break;
+                    case UserTypes.Customer:
+                        customer = currentUser1;
+                        break;
+                    case UserTypes.Driver:
+                        driver = currentUser1;
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            if (customer is null || shop is null || driver == null || admin == null)
+                return _Operation.SetFailed<object>("");
+
             if (orderId == null)
             {
                 await AddOrder(new SetOrderDto
@@ -574,9 +609,9 @@ namespace Passengers.Order.OrderService
             return true;
         }
 
-        private async Task<bool> _UpdateOrdersListShop(Guid id)
+        private async Task<bool> _UpdateOrdersListShop(Guid id, bool? isReady = false)
         {
-            var result = await _GetShopOrders();
+            var result = await _GetShopOrders(isReady);
             await orderHubContext.Clients.User(id.ToString()).UpdateShopOrders(result);
             return true;
         }
@@ -616,18 +651,25 @@ namespace Passengers.Order.OrderService
 
         private async Task Invoke(OrderSet order, OrderStatus newStatus, Guid customerId, Guid shopId, Guid? driverId)
         {
+            //Admins
             await _UpdateOrdersListDashboard();
+            var admins = accountRepository.GetUserIds(UserTypes.Admin);
+            //await SendNotification(admins, UserTypes.Admin, newStatus);
 
             if (newStatus == OrderStatus.Canceled)
             {
                 await _UpdateOrdersListCustomer(customerId);
                 await _UpdateOrderCustomer(order.Id);
+                //await SendNotification(new List<Guid>() { customerId }, UserTypes.Customer, newStatus);
             }
             else if(newStatus == OrderStatus.Accepted)
             {
                 await _UpdateOrdersListShop(shopId);
+                //await SendNotification(new List<Guid>() { shopId }, UserTypes.Shop, newStatus);
+
                 await _UpdateOrdersListCustomer(customerId);
                 await _UpdateOrderCustomer(order.Id);
+                //await SendNotification(new List<Guid>() { customerId }, UserTypes.Customer, newStatus);
 
                 //Drivers
                 var drivers = (await GetAvilableDriverIds(order.Address.Lat, order.Address.Long, order.DeliveryCost ?? 0)).Where(id => id != driverId.Value).ToList();
@@ -636,22 +678,24 @@ namespace Passengers.Order.OrderService
             {
                 await _UpdateOrdersListCustomer(customerId);
                 await _UpdateOrderCustomer(order.Id);
+                //await SendNotification(new List<Guid>() { customerId }, UserTypes.Customer, newStatus);
             }
             else if(newStatus == OrderStatus.Assigned)
             {
                 ///TODO
                 var drivers = (await GetAvilableDriverIds(order.Address.Lat, order.Address.Long, order.DeliveryCost ?? 0)).Where(id => id != driverId.Value).ToList();
-                var driversConnections = userConnectionManager.GetConnections(drivers);
             }
             else if(newStatus == OrderStatus.Collected)
             {
                 await _UpdateOrdersListCustomer(customerId);
                 await _UpdateOrderCustomer(order.Id);
+                //await SendNotification(new List<Guid>() { customerId }, UserTypes.Customer, newStatus);
             }
             else if (newStatus == OrderStatus.Completed)
             {
                 await _UpdateOrdersListCustomer(customerId);
                 await _UpdateOrderCustomer(order.Id);
+                //await SendNotification(new List<Guid>() { customerId }, UserTypes.Customer, newStatus);
             }
         }
 
@@ -671,7 +715,72 @@ namespace Passengers.Order.OrderService
                      Math.Cos(d1) * Math.Cos(d2) * Math.Pow(Math.Sin(num2 / 2.0), 2.0);
             return 6376500.0 * (2.0 * Math.Atan2(Math.Sqrt(d3), Math.Sqrt(1.0 - d3)));
         }
-        
+
+        //async Task<NotificationDto> SendNotification(List<Guid> userId, UserTypes userType, OrderStatus status)
+        //{
+        //    var notification = new NotificationDto()
+        //    {
+        //        UserIds = userId
+        //    };
+        //    switch (userType)
+        //    {
+        //        case UserTypes.Admin:
+        //            if(status == OrderStatus.Sended)
+        //            {
+        //                notification.Title = $"You have a new order {Order Id} look at it.";
+        //            }
+        //            else if (status == OrderStatus.Canceled)
+        //            {
+        //                notification.Title = $"The customer {Customer name} canceled his order {Order Id}.";
+        //            }
+        //            else if (status == OrderStatus.Assigned)
+        //            {
+        //                notification.Title = $"The driver {Driver name} accepted order {Order ID}";
+        //            }
+        //            else if (status == OrderStatus.Completed)
+        //            {
+        //                notification.Title = $"The driver {Driver name} Deliver order {Order ID}";
+        //            }
+        //            break;
+        //        case UserTypes.Driver:
+        //            if (status == OrderStatus.Accepted)
+        //            {
+        //                notification.Title = "You have a new order "Order Id" look at it";
+        //            }
+        //            break;
+        //        case UserTypes.Customer:
+        //            if (status == OrderStatus.Accepted)
+        //            {
+        //                notification.Title = "Title";
+        //                notification.Body = "Body";
+        //            }
+        //            else if (status == OrderStatus.Refused)
+        //            {
+        //                notification.Title = "Title";
+        //                notification.Body = "Body";
+        //            }
+        //            else if (status == OrderStatus.Collected)
+        //            {
+        //                notification.Title = "Title";
+        //                notification.Body = "Body";
+        //            }
+        //            else if (status == OrderStatus.Completed)
+        //            {
+        //                notification.Title = "Title";
+        //                notification.Body = "Body";
+        //            }
+        //            break;
+        //        case UserTypes.Shop:
+        //            if (status == OrderStatus.Accepted)
+        //            {
+        //                notification.Title = "New order";
+        //                notification.Body = "Body";
+        //            }
+        //            break;
+        //    }
+
+        //    return (await notificationRepository.Add(notification)).Result;
+        //}
         #endregion
     }
 }

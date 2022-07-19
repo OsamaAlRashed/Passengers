@@ -120,6 +120,7 @@ namespace Passengers.Security.CustomerService
                 .Include(x => x.Discounts)
                 .Include(x => x.Reviews)
                 .ThenInclude(x => x.Customer)
+                .Include(x => x.PriceLogs)
                 .Where(x => x.Id == id)
                 .SingleOrDefaultAsync();
 

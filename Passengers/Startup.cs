@@ -1,4 +1,6 @@
 using EasyRefreshToken.DependencyInjection;
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -35,6 +37,7 @@ using Passengers.Security.Shared;
 using Passengers.Security.ShopService;
 using Passengers.Shared.CategoryService;
 using Passengers.Shared.DocumentService;
+using Passengers.Shared.NotificationService;
 using Passengers.Shared.SharedService;
 using Passengers.SharedKernel.Constants.Security;
 using Passengers.SharedKernel.Enums;
@@ -44,11 +47,13 @@ using Passengers.SharedKernel.Services.ConfigureServices;
 using Passengers.SharedKernel.Services.CurrentUserService;
 using Passengers.SharedKernel.Services.EmailService;
 using Passengers.SharedKernel.Services.LangService;
+using Passengers.SharedKernel.Services.NotificationService;
 using Passengers.SharedKernel.Swagger;
 using Passengers.SqlServer.DataBase;
 using Passengers.SqlServer.DataBase.Seed;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -56,9 +61,12 @@ namespace Passengers
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        private readonly IWebHostEnvironment webHost;
+
+        public Startup(IConfiguration configuration, IWebHostEnvironment webHost)
         {
             Configuration = configuration;
+            this.webHost = webHost;
         }
         public IConfiguration Configuration { get; }
 
@@ -122,6 +130,8 @@ namespace Passengers
             services.AddScoped<EmailService>();
             services.AddScoped<IOrderRepository, OrderRepository>();
             services.AddScoped<IUserConnectionManager, UserConnectionManager>();
+            services.AddScoped<INotificationService, NotificationService>();
+            services.AddScoped<INotificationRepository, NotificationRepository>();
 
             services.AddSignalR();
 
@@ -134,6 +144,14 @@ namespace Passengers
                 op.PreventingLoginWhenAccessToMaxNumberOfActiveDevices = false;
             });
 
+            //var credential_path = webHost.WebRootPath;
+            //var filePath = Configuration.GetSection("GoogleFirebase")["fileName"];
+            //credential_path = Path.Combine(credential_path, filePath);
+            //var credential = GoogleCredential.FromFile(credential_path);
+            //FirebaseApp.Create(new AppOptions()
+            //{
+            //    Credential = credential
+            //});
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

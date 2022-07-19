@@ -105,6 +105,7 @@ namespace Passengers.SqlServer.DataBase
         public DbSet<Review> Reviews { get; set; }
         public DbSet<ContactUs> ContactUs { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<NotificationUser> NotificationUsers { get; set; }
         public DbSet<Favorite> Favorites { get; set; }
         public DbSet<Discount> Discounts { get; set; }
         public DbSet<PriceLog> PriceLogs { get; set; }
