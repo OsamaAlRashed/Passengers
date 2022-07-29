@@ -12,7 +12,10 @@ namespace Passengers.DataTransferObject.OrderDtos
         public CustomerOrderStatus Status { get; set; }
         public decimal SubTotal { get; set; }
         public decimal? DeliveryCost { get; set; }
-        public decimal TotalCost { get; set; }
+        public decimal TotalCost 
+        {
+            get => SubTotal + (DeliveryCost ?? 0);
+        }
         public string DriverNote { get; set; }
         public string AddressTitle { get; set; }
         public int Distance { get; set; }

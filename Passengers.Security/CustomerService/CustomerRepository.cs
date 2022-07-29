@@ -13,6 +13,7 @@ using Passengers.Security.AccountService;
 using Passengers.Security.CustomerService.Store;
 using Passengers.Security.Shared.Store;
 using Passengers.Shared.DocumentService;
+using Passengers.Shared.SharedService;
 using Passengers.SharedKernel.Enums;
 using Passengers.SharedKernel.ExtensionMethods;
 using Passengers.SharedKernel.Files;
@@ -136,11 +137,11 @@ namespace Passengers.Security.CustomerService
                 product.TagId,
                 TagName = product.Tag.Name,
                 product.Name,
-                product.Price,
+                Price = product.Price(),
                 //DiscountPrice = discount?.Price,
                 product.Avilable,
                 product.PrepareTime,
-                Rate = product.Rate,
+                Rate = product.Rate(),
                 RateNumber = product.Reviews.Count,
                 product.Description,
                 product.Tag.Shop.OrderStatus,
@@ -212,8 +213,8 @@ namespace Passengers.Security.CustomerService
 
         public async Task<OperationResult<CustomerHomeDto>> Home()
         {
-            var products = await Context.Products
-                .Include(x => x.Reviews).Include(x => x.Documents).Include(x => x.OrderDetails).Include(x => x.OrderDetails)
+            var products = await Context.Products.Where(x => !x.DateDeleted.HasValue && !x.Tag.IsHidden && !x.Tag.DateDeleted.HasValue && !x.Tag.Shop.DateDeleted.HasValue)
+                .Include(x => x.Reviews).Include(x => x.Documents).Include(x => x.OrderDetails)
                 .Include(x => x.Tag).ThenInclude(x => x.Shop).ThenInclude(x => x.ShopSchedules)
                 .Include(x => x.Tag).ThenInclude(x => x.Shop).ThenInclude(x => x.Documents)
                 .ToListAsync();
@@ -278,6 +279,7 @@ namespace Passengers.Security.CustomerService
                 .Include(x => x.Reviews)
                 .ThenInclude(x => x.Customer)
                 .Include(x => x.Documents)
+                .Include(x => x.PriceLogs)
                 .SingleOrDefaultAsync();
 
             if (product == null)
@@ -288,32 +290,32 @@ namespace Passengers.Security.CustomerService
                 product.Id,
                 ImagePath = product.Documents.Select(x => x.Path).FirstOrDefault(),
                 product.TagId,
-                TagName = product.Tag.Name,
+                TagName = product.Tag?.Name,
                 product.Name,
-                product.Price,
+                Price = product.Price(),
                 HasDiscount = product.Discounts.Where(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate).FirstOrDefault() is null ? false : true,
                 DiscountPrice = product.Discounts.Where(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate).FirstOrDefault()?.Price,
                 product.Avilable,
                 product.PrepareTime,
-                RateDegree = product.Rate,
+                RateDegree = product.Rate(),
                 RateNumber = product.Reviews.Count,
                 product.Description,
-                DeliveryAvilable = product.Tag.Shop.OrderStatus ?? true,
+                DeliveryAvilable = product.Tag?.Shop?.OrderStatus ?? true,
                 Shop = new
                 {
-                    Id = product.Tag.ShopId,
-                    Name = product.Tag.Shop.Name,
-                    Online = product.Tag.Shop.ShopSchedules.Any(x => x.Days.Contains(DateTime.Now.Day.ToString()) && x.FromTime <= DateTime.Now.TimeOfDay && DateTime.Now.TimeOfDay <= x.ToTime),
-                    Follow = product.Tag.Shop.ShopFavorites.Any(x => x.CustomerId == Context.CurrentUserId),
-                    ImagePath = product.Tag.Shop.Documents.Select(x => x.Path).FirstOrDefault(),
-                    CategoryName = product.Tag.Shop.Category.Name
+                    Id = product.Tag?.ShopId,
+                    Name = product.Tag?.Shop?.Name,
+                    Online = product.Tag?.Shop?.ShopSchedules.Any(x => x.Days.Contains(DateTime.Now.Day.ToString()) && x.FromTime <= DateTime.Now.TimeOfDay && DateTime.Now.TimeOfDay <= x.ToTime),
+                    Follow = product.Tag?.Shop?.ShopFavorites.Any(x => x.CustomerId == Context.CurrentUserId),
+                    ImagePath = product.Tag?.Shop?.Documents.Select(x => x.Path).FirstOrDefault(),
+                    CategoryName = product.Tag?.Shop?.Category?.Name
                 },
                 Reviews = product.Reviews.Select(r => new
                 {
                     r.Id,
                     r.Rate,
                     r.Descreption,
-                    CustomerName = r.Customer.Name,
+                    CustomerName = r.Customer?.Name,
                     r.CustomerId,
                     Date = r.DateCreated
                 }).OrderByDescending(x => x.Date).Take(3).ToList(),

@@ -53,8 +53,8 @@ namespace Passengers.SqlServer.DataBase
                 builder.Entity(entity).HasQueryFilter(Expression.Lambda(newbody, newParam));
             }
 
-            builder.Entity<Tag>().HasQueryFilter(x => !x.DateDeleted.HasValue && !x.IsHidden);
-            builder.Entity<Product>().HasQueryFilter(x => !x.DateDeleted.HasValue && !x.Tag.IsHidden);
+            builder.Entity<Tag>().HasQueryFilter(x => !x.DateDeleted.HasValue && !x.IsHidden && !x.Shop.DateDeleted.HasValue);
+            builder.Entity<Product>().HasQueryFilter(x => !x.DateDeleted.HasValue && !x.Tag.IsHidden && !x.Tag.DateDeleted.HasValue && !x.Tag.Shop.DateDeleted.HasValue);
 
             base.OnModelCreating(builder);
         }

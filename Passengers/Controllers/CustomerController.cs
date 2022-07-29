@@ -27,6 +27,7 @@ namespace Passengers.Controllers
             this.repository = repository;
         }
 
+        //[ProducesResponseType(typeof(List<GetAllCustomerDto>), StatusCodes.Status200OK)]
         [AllowAnonymous]
         [HttpPost]
         public async Task<IActionResult> Login(LoginCustomerDto dto) => await repository.Login(dto).ToJsonResultAsync();

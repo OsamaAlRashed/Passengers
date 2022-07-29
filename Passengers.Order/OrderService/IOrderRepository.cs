@@ -27,5 +27,8 @@ namespace Passengers.Order.OrderService
 
         Task<OperationResult<List<DashboardOrderDto>>> GetOrdersBoard();
         Task<OperationResult<OrderDashboardDetails>> GetOrderDashboardDetails(Guid orderId);
+
+        Task<OperationResult<List<DriverOrderDto>>> GetAvilableOrders();
+        Task<OperationResult<DriverOrderDetailsDto>> GetCurrentOrder();
     }
 }

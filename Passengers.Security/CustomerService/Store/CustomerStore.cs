@@ -4,6 +4,7 @@ using Passengers.DataTransferObject.ProductDtos;
 using Passengers.DataTransferObject.SecurityDtos.Login;
 using Passengers.Models.Main;
 using Passengers.Models.Security;
+using Passengers.Shared.SharedService;
 using Passengers.SharedKernel.Enums;
 using System;
 using System.Collections.Generic;
@@ -23,8 +24,8 @@ namespace Passengers.Security.CustomerService.Store
              && (!filter.ShopId.HasValue || filter.ShopId == product.Tag.ShopId)
              && (!filter.TagId.HasValue || filter.TagId == product.TagId)
              && (string.IsNullOrEmpty(filter.Search) || product.Name.Contains(filter.Search))
-             && (!filter.FromPrice.HasValue || filter.FromPrice <= product.Price)
-             && (!filter.ToPrice.HasValue || filter.ToPrice >= product.Price)
+             && (!filter.FromPrice.HasValue || filter.FromPrice <= product.Price())
+             && (!filter.ToPrice.HasValue || filter.ToPrice >= product.Price())
              && (!filter.Rate.HasValue || ((int)(product.Reviews.Any() ? Math.Ceiling(product.Reviews.Average(x => x.Rate)) : 1) == filter.Rate))
              && ((!filter.WithDiscount.HasValue) ||
                 (filter.WithDiscount.Value ? product.Discounts.Where(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate).Any()
@@ -56,9 +57,9 @@ namespace Passengers.Security.CustomerService.Store
                 Name = c.Name,
                 Avilable = c.Avilable,
                 Description = c.Description,
-                ImagePath = c.ImagePath,
+                ImagePath = c.ImagePath(),
                 PrepareTime = c.PrepareTime,
-                Price = c.Price,
+                Price = c.Price(),
                 TagId = c.TagId,
                 HasDiscount = c.Discounts.Any(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate),
                 Discount = c.Discounts.Any(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate) ? c.Discounts.FirstOrDefault(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate).Price : null,
@@ -98,8 +99,8 @@ namespace Passengers.Security.CustomerService.Store
                 Id = c.Id,
                 Name = c.Name,
                 Avilable = c.Avilable,
-                ImagePath = c.ImagePath,
-                Price = c.Price,
+                ImagePath = c.ImagePath(),
+                Price = c.Price(),
                 Rate = c.Reviews.Any() ? c.Reviews.Average(x => x.Rate) : 0,
                 ShopId = c.Tag.ShopId.Value,
                 ShopOnline = c.Tag.Shop.ShopSchedules.Any(x => x.Days.Contains(DateTime.Now.Day.ToString()) && x.FromTime <= DateTime.Now.TimeOfDay && DateTime.Now.TimeOfDay <= x.ToTime),

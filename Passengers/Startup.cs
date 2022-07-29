@@ -3,16 +3,12 @@ using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
 using Passengers.Location.AddressSerive;
 using Passengers.Location.AreaService;
@@ -33,7 +29,6 @@ using Passengers.Security.AccountService;
 using Passengers.Security.AdminService;
 using Passengers.Security.CustomerService;
 using Passengers.Security.DriveService;
-using Passengers.Security.Shared;
 using Passengers.Security.ShopService;
 using Passengers.Shared.CategoryService;
 using Passengers.Shared.DocumentService;
@@ -52,17 +47,13 @@ using Passengers.SharedKernel.Swagger;
 using Passengers.SqlServer.DataBase;
 using Passengers.SqlServer.DataBase.Seed;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Passengers
 {
     public class Startup
     {
         private readonly IWebHostEnvironment webHost;
-
         public Startup(IConfiguration configuration, IWebHostEnvironment webHost)
         {
             Configuration = configuration;
@@ -144,14 +135,10 @@ namespace Passengers
                 op.PreventingLoginWhenAccessToMaxNumberOfActiveDevices = false;
             });
 
-            //var credential_path = webHost.WebRootPath;
-            //var filePath = Configuration.GetSection("GoogleFirebase")["fileName"];
-            //credential_path = Path.Combine(credential_path, filePath);
-            //var credential = GoogleCredential.FromFile(credential_path);
-            //FirebaseApp.Create(new AppOptions()
-            //{
-            //    Credential = credential
-            //});
+            FirebaseApp.Create(new AppOptions()
+            {
+                Credential = GoogleCredential.FromFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "firebasekey.json"))
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

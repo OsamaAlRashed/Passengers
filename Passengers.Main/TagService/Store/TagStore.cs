@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Passengers.Main.TagService.Store
 {
-    public class TagStore
+    public static class TagStore
     {
         public static class Filter
         {

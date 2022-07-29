@@ -6,7 +6,7 @@ namespace Passengers.SharedKernel.Enums
 {
     public static class OrderStatusHelper
     {
-        public static CustomerOrderStatus MapCustomer(OrderStatus orderStatus)
+        public static CustomerOrderStatus MapCustomer(this OrderStatus orderStatus)
         {
             if (orderStatus == OrderStatus.Sended)
                 return CustomerOrderStatus.Pending;
@@ -27,7 +27,7 @@ namespace Passengers.SharedKernel.Enums
         }
 
 
-        public static DeliveryCompanyOrderStatus MapCompany(OrderStatus orderStatus)
+        public static DeliveryCompanyOrderStatus MapCompany(this OrderStatus orderStatus)
         {
             if (orderStatus == OrderStatus.Sended)
                 return DeliveryCompanyOrderStatus.Received;
@@ -47,7 +47,7 @@ namespace Passengers.SharedKernel.Enums
             throw new Exception("Invalid type");
         }
 
-        public static DriverOrderStatus MapDriver(OrderStatus orderStatus)
+        public static DriverOrderStatus MapDriver(this OrderStatus orderStatus)
         {
             if (orderStatus == OrderStatus.Accepted)
                 return DriverOrderStatus.Avilable;

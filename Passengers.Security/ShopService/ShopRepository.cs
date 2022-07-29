@@ -19,6 +19,7 @@ using Passengers.Security.AccountService;
 using Passengers.Security.Shared.Store;
 using Passengers.Shared.CategoryService;
 using Passengers.Shared.DocumentService;
+using Passengers.Shared.SharedService;
 using Passengers.SharedKernel.Enums;
 using Passengers.SharedKernel.ExtensionMethods;
 using Passengers.SharedKernel.OperationResult;
@@ -363,17 +364,17 @@ namespace Passengers.Security.ShopService
                 {
                     Id = x.Id,
                     Name = x.Name,
-                    ImagePath = x.ImagePath,
-                    Buyers = x.Buyers,
-                    Rate = x.Rate,
+                    ImagePath = x.ImagePath(),
+                    Buyers = x.Buyers(),
+                    Rate = x.Rate(),
                 }).ToList(),
                 PopularProducts = popularProducts.Select(x => new ItemDto
                 {
                     Id = x.Id,
                     Name = x.Name,
-                    ImagePath = x.ImagePath,
-                    Buyers = x.Buyers,
-                    Rate = x.Rate,
+                    ImagePath = x.ImagePath(),
+                    Buyers = x.Buyers(),
+                    Rate = x.Rate(),
                 }).ToList(),
             });
         }

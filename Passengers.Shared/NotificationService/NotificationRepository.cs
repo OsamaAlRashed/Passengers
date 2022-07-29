@@ -47,7 +47,7 @@ namespace Passengers.Shared.NotificationService
 
             var tokens = users.SelectMany(x => x.DeviceTokens.Split(",").ToList()).ToList();
 
-            await notificationService.SendNotification(tokens, dto.Title, dto.Body);
+            await notificationService.SendNotification(tokens, dto.Title, dto.Body ?? "");
 
             dto.Id = notification.Id;
             return _Operation.SetSuccess(dto);

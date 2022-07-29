@@ -74,7 +74,6 @@ namespace Passengers.Security.AccountService
                     user.DeviceTokens = String.Join(",", user.DeviceTokens, dto.DeviceToken);
                 }
 
-
                 var tokenResult = await tokenService.OnLogin(user.Id);
 
                 if (!tokenResult.IsSucceded)

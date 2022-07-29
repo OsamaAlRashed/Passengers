@@ -1,5 +1,6 @@
 ﻿using Passengers.DataTransferObject.ProductDtos;
 using Passengers.Models.Main;
+using Passengers.Shared.SharedService;
 using Passengers.SharedKernel.Enums;
 using Passengers.SharedKernel.ExtensionMethods;
 using System;
@@ -17,8 +18,8 @@ namespace Passengers.Main.ProductService.Store
         {
             public static Expression<Func<Product, bool>> WhereFilter(ProductFilterDto filter) => product =>
                 (!filter.Rate.HasValue || (int)(product.Reviews.Any() ? product.Reviews.Average(x => x.Rate) : 0) == filter.Rate)
-             && (!filter.FromPrice.HasValue || filter.FromPrice <= product.Price)
-             && (!filter.ToPrice.HasValue || filter.ToPrice >= product.Price)
+             && (!filter.FromPrice.HasValue || filter.FromPrice <= product.Price())
+             && (!filter.ToPrice.HasValue || filter.ToPrice >= product.Price())
              && ((!filter.Discount.HasValue) ||
                 (filter.Discount.Value ? product.Discounts.Where(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate).Any()
                                        : !product.Discounts.Where(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate).Any()))
@@ -34,9 +35,9 @@ namespace Passengers.Main.ProductService.Store
                 Name = c.Name,
                 Avilable = c.Avilable,
                 Description = c.Description,
-                ImagePath = c.ImagePath,
+                ImagePath = c.ImagePath(),
                 PrepareTime = c.PrepareTime,
-                Price = c.Price,
+                Price = c.Price(),
                 TagId = c.TagId,
                 HasDiscount = c.Discounts.Any(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate),
                 Discount = c.Discounts.Any(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate) ? c.Discounts.FirstOrDefault(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate).Price : null,
@@ -54,7 +55,7 @@ namespace Passengers.Main.ProductService.Store
                     SortProductTypes.Rate => x => x.Reviews.Any() ? x.Reviews.Average(x => x.Rate) : 0,
                     SortProductTypes.PrepareTime => x => x.PrepareTime,
                     SortProductTypes.Avilable => x => x.Avilable,
-                    SortProductTypes.Price => x => x.Price,
+                    SortProductTypes.Price => x => x.Price(),
                     _ => x => x.DateCreated,
                 };
             }

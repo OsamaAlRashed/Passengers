@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using Passengers.SharedKernel.Swagger.ApiGroup;
+using Swashbuckle.AspNetCore.Filters;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using System;
@@ -80,6 +81,8 @@ namespace Passengers.SharedKernel.Swagger
                 {
                     { securitySchema, new[] { "Bearer" } }
                 });
+
+                options.OperationFilter<AppendAuthorizeToSummaryOperationFilter>();
             });
 
             return services;

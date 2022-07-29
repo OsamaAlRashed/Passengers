@@ -6,6 +6,7 @@ using Passengers.Main.ProductService.Store;
 using Passengers.Models.Main;
 using Passengers.Repository.Base;
 using Passengers.Shared.DocumentService;
+using Passengers.Shared.SharedService;
 using Passengers.SharedKernel.Enums;
 using Passengers.SharedKernel.ExtensionMethods;
 using Passengers.SharedKernel.OperationResult;
@@ -62,7 +63,7 @@ namespace Passengers.Main.ProductService
                 ImagePath = product.Documents.Select(x => x.Path).FirstOrDefault(),
                 PrepareTime = product.PrepareTime,
                 Name = product.Name,
-                Price = product.Price,
+                Price = product.Price(),
                 TagId = product.TagId
             });
         }
@@ -121,12 +122,12 @@ namespace Passengers.Main.ProductService
                 product.TagId,
                 TagName = product.Tag.Name,
                 product.Name,
-                product.Price,
+                Price = product.Price(),
                 HasDiscount = discount != null,
                 DiscountPrice = discount?.Price,
                 product.Avilable,
                 product.PrepareTime,
-                RateDegree = product.Rate,
+                RateDegree = product.Rate(),
                 RateNumber = product.Reviews.Count,
                 DiscountStartDate = discount?.StartDate,
                 DiscountEndDate = discount?.EndDate,
@@ -187,10 +188,10 @@ namespace Passengers.Main.ProductService
                 Id = product.Id,
                 Avilable = product.Avilable,
                 Description = product.Description,
-                ImagePath = product.Documents.Select(x => x.Path).FirstOrDefault(),
+                ImagePath = product.ImagePath(),
                 PrepareTime = product.PrepareTime,
                 Name = product.Name,
-                Price = product.Price,
+                Price = product.Price(),
                 TagId = product.TagId
             });
         }

@@ -42,8 +42,8 @@ namespace Passengers.Models.Order
         public ICollection<Review> Reviews { get; set; }
         public ICollection<OrderStatusLog> OrderStatusLogs { get; set; }
 
-        [NotMapped] 
-        public OrderStatus Status => OrderStatusLogs.OrderBy(x => x.DateCreated).Select(x => x.Status).LastOrDefault();
+        //[NotMapped] 
+        //public OrderStatus Status => OrderStatusLogs.OrderBy(x => x.DateCreated).Select(x => x.Status).LastOrDefault();
 
     }
 }

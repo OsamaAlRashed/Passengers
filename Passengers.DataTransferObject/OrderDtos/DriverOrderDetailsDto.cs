@@ -6,9 +6,7 @@ using System.Threading.Tasks;
 
 namespace Passengers.DataTransferObject.OrderDtos
 {
-    public class ShopOrderDto : OrderDto
+    public class DriverOrderDetailsDto : DriverOrderDto
     {
-        public List<ProductCardDto> Products { get; set; }
-        public decimal TotalPrice { get => Products.Sum(x => x.Count * x.Price); }
     }
 }

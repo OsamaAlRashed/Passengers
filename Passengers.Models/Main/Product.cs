@@ -40,20 +40,5 @@ namespace Passengers.Models.Main
         public ICollection<Favorite> Favorites { get; set; }
         public ICollection<OrderDetails> OrderDetails { get; set; }
 
-        [NotMapped]
-        public string ImagePath => Documents.Select(x => x.Path).FirstOrDefault();
-
-        [NotMapped]
-        public double Rate => Reviews.Any() ? Reviews.Average(x => x.Rate) : 0;
-
-        [NotMapped]
-        public int Buyers => OrderDetails.Sum(x => x.Quantity);
-
-        [NotMapped]
-        public decimal Price => PriceLogs
-            .Where(x => x.DateCreated <= DateTime.Now && (!x.EndDate.HasValue || DateTime.Now <= x.EndDate))
-            .Select(x => x.Price)
-            .FirstOrDefault();
-
     }
 }

@@ -25,10 +25,11 @@ namespace Passengers.Order.RealTime.Hubs
 
 
         public Task UpdateShopOrders(List<ShopOrderDto> orders);
+
         public Task UpdateDriverOrders(List<DriverOrderDto> orders);
+
         public Task UpdateAdminOrders(List<DashboardOrderDto> orders);
 
-        //
         public Task Test(string text);
         public Task Test2(string text1, string text2);
         public Task ReceiveMessage(object text);
