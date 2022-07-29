@@ -22,9 +22,10 @@ namespace Passengers.Shared.NotificationService
         private readonly IHttpClientFactory httpClient;
         private readonly INotificationService notificationService;
 
-        public NotificationRepository(PassengersDbContext context, IHttpClientFactory httpClient): base(context)
+        public NotificationRepository(PassengersDbContext context, IHttpClientFactory httpClient, INotificationService notificationService) : base(context)
         {
             this.httpClient = httpClient;
+            this.notificationService = notificationService;
         }
 
         public async Task<OperationResult<NotificationDto>> Add(NotificationDto dto)
@@ -45,9 +46,10 @@ namespace Passengers.Shared.NotificationService
             Context.Notifications.Add(notification);
             await Context.SaveChangesAsync();
 
-            var tokens = users.SelectMany(x => x.DeviceTokens.Split(",").ToList()).ToList();
+            var tokens = users.SelectMany(x => x.DeviceTokens.Split(",").ToList()).Where(x => !string.IsNullOrEmpty(x)).ToList();
 
-            await notificationService.SendNotification(tokens, dto.Title, dto.Body ?? "");
+            if(tokens.Any())
+                await notificationService.SendNotification(tokens, dto.Title, dto.Body);
 
             dto.Id = notification.Id;
             return _Operation.SetSuccess(dto);

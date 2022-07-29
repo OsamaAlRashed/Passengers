@@ -119,5 +119,16 @@ namespace Passengers.Controllers
         public async Task<IActionResult> GetOrderDashboardDetails([Required] Guid id) => await repository.GetOrderDashboardDetails(id).ToJsonResultAsync();
 
 
+        [ApiGroup(ApiGroupNames.Driver)]
+        [AppAuthorize(AppRoles.Driver)]
+        [HttpGet]
+        public async Task<IActionResult> GetAvilableOrders() => await repository.GetAvilableOrders().ToJsonResultAsync();
+
+        [ApiGroup(ApiGroupNames.Driver)]
+        [AppAuthorize(AppRoles.Driver)]
+        [HttpGet]
+        public async Task<IActionResult> GetCurrentOrder() => await repository.GetCurrentOrder().ToJsonResultAsync();
+
+
     }
 }

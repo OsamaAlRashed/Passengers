@@ -47,11 +47,12 @@ namespace Passengers.Shared.SharedService
 
         public static bool Avilable(this AppUser driver)
             => driver.DriverOnline.HasValue && driver.DriverOnline.Value
-            && driver.DriverOrders.All(x => x.Status() >= OrderStatus.Completed && x.Status() <= OrderStatus.Accepted);
+            && driver.DriverOrders.Where(x => x.Status() == OrderStatus.Assigned || x.Status() <= OrderStatus.Collected).Count() == 0;
 
         public static decimal FixedAmount(this AppUser driver)
             => driver.Payments.Where(payment => payment.Type.IsFixed())
             .Sum(payment => payment.Amount * payment.Type.PaymentSign());
+
 
     }
 }

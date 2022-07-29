@@ -157,12 +157,34 @@ namespace Passengers.SqlServer.DataBase.Seed
                 var createResult = await userManager.CreateAsync(customer1, "1111");
                 if (createResult.Succeeded)
                 {
-                    var roleResult = await userManager.AddToRoleAsync(customer1, UserTypes.Shop.ToString());
+                    var roleResult = await userManager.AddToRoleAsync(customer1, UserTypes.Customer.ToString());
                     if (!roleResult.Succeeded)
                         throw new Exception(String.Join("\n", roleResult.Errors.Select(error => error.Description)));
                 }
             }
             #endregion
+
+            var driver = await context.Users.IgnoreQueryFilters().SingleOrDefaultAsync(x => x.UserName == "driver");
+            if (driver is null)
+            {
+                driver = new AppUser()
+                {
+                    UserName = "driver",
+                    FullName = "driver driver",
+                    Email = "driver@driver",
+                    UserType = UserTypes.Driver,
+                    DOB = new DateTime(1998, 12, 2),
+                    GenderType = GenderTypes.Male,
+                    AccountStatus = AccountStatus.Accepted
+                };
+                var createResult = await userManager.CreateAsync(driver, "1111");
+                if (createResult.Succeeded)
+                {
+                    var roleResult = await userManager.AddToRoleAsync(driver, UserTypes.Driver.ToString());
+                    if (!roleResult.Succeeded)
+                        throw new Exception(String.Join("\n", roleResult.Errors.Select(error => error.Description)));
+                }
+            }
         }
 
     }

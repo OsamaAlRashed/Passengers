@@ -15,6 +15,7 @@ using Passengers.Shared.NotificationService;
 using Passengers.Shared.SharedService;
 using Passengers.SharedKernel.Enums;
 using Passengers.SharedKernel.ExtensionMethods;
+using Passengers.SharedKernel.Map;
 using Passengers.SharedKernel.OperationResult;
 using Passengers.SharedKernel.OperationResult.Enums;
 using Passengers.SharedKernel.OperationResult.ExtensionMethods;
@@ -119,7 +120,7 @@ namespace Passengers.Order.OrderService
             await Context.SaveChangesAsync();
 
 
-            if(currentUserId == null)
+            if (currentUserId == null)
                 currentUserId = Context.CurrentUserId;
             await _UpdateOrdersListCustomer(currentUserId.Value);
             await _UpdateOrdersListDashboard();
@@ -133,7 +134,7 @@ namespace Passengers.Order.OrderService
                 .ToListAsync();
 
             lodedOrders.ForEach(async order => await SendNotification(admins, UserTypes.Admin, OrderStatus.Sended, order));
-            
+
             var result = new ResponseAddOrderDto
             {
                 Shops = lodedOrders.Select(x => new ShopCostDto
@@ -151,7 +152,7 @@ namespace Passengers.Order.OrderService
         public async Task<OperationResult<bool>> ChangeStatus(Guid orderId, OrderStatus newStatus, AppUser? mockCurrentUser = null, decimal deliveryCost = 0, int expectedTime = 0, string reasonRefuse = "")
         {
             var currentUser = await Context.Users.FindAsync(Context.CurrentUserId);
-            if(mockCurrentUser != null)
+            if (mockCurrentUser != null)
             {
                 currentUser = mockCurrentUser;
             }
@@ -167,7 +168,7 @@ namespace Passengers.Order.OrderService
             if (order == null)
                 return _Operation.SetContent<bool>(OperationResultTypes.NotExist, "OrderNotFound");
 
-            if(ValidAction(order, currentUser, newStatus))
+            if (ValidAction(order, currentUser, newStatus))
             {
                 Context.OrderStatusLogs.Add(new OrderStatusLog
                 {
@@ -176,12 +177,12 @@ namespace Passengers.Order.OrderService
                     OrderId = order.Id
                 });
 
-                if(newStatus == OrderStatus.Assigned)
+                if (newStatus == OrderStatus.Assigned)
                 {
                     order.DriverId = currentUser.Id;
                 }
 
-                if(newStatus == OrderStatus.Accepted)
+                if (newStatus == OrderStatus.Accepted)
                 {
                     order.DeliveryCost = deliveryCost;
                     order.ExpectedTime = expectedTime;
@@ -243,7 +244,7 @@ namespace Passengers.Order.OrderService
         public async Task<OperationResult<List<CustomerOrderDto>>> GetCustomerOrders()
         {
             var orders = await _GetCustomerOrders();
-            if(orders == null)
+            if (orders == null)
                 _Operation.SetContent<CustomerOrderDto>(OperationResultTypes.NotExist, "");
 
             return _Operation.SetSuccess(orders);
@@ -262,14 +263,14 @@ namespace Passengers.Order.OrderService
         public async Task<OperationResult<object>> NextStep(Guid? orderId, Guid? shopId, Guid? customerId, Guid? driverId)
         {
             var customer = await Context.Customers()
-                .Include(x => x.Addresses).Where(x => x.Addresses.Any() 
+                .Include(x => x.Addresses).Where(x => x.Addresses.Any()
              && (customerId.HasValue && x.Id == customerId.Value) || true).FirstOrDefaultAsync();
             var shop = await Context.Shops().Include(x => x.Tags).ThenInclude(x => x.Products).Where(x => (shopId.HasValue && x.Id == shopId.Value) || x.Tags.Select(x => x.Products.Any()).Any()).FirstOrDefaultAsync();
             var driver = await Context.Drivers().Where(x => (driverId.HasValue && x.Id == driverId.Value) || true).FirstOrDefaultAsync();
             var admin = await Context.Admins().FirstOrDefaultAsync();
 
             var currentUser1 = Context.Users.Where(x => x.Id == Context.CurrentUserId).Include(x => x.Tags).ThenInclude(x => x.Products).Include(x => x.Addresses).FirstOrDefault();
-            if(currentUser1 != null)
+            if (currentUser1 != null)
             {
                 switch (currentUser1.UserType)
                 {
@@ -473,7 +474,7 @@ namespace Passengers.Order.OrderService
 
             return _Operation.SetSuccess<string>("Hello from Test 2.");
         }
-        
+
         public async Task<List<Guid>> GetAvilableDriverIds(string latitude, string longitude, decimal total)
         {
             //Nearby Drivers (10)
@@ -481,24 +482,57 @@ namespace Passengers.Order.OrderService
             //Online
             //Fixed Amount
 
-            var driverIds = await Context.Drivers()
+            var drivers = await Context.Drivers()
                 .Include(x => x.DriverOrders).ThenInclude(x => x.OrderStatusLogs)
                 .Include(x => x.Payments)
+                .Include(x => x.Address)
+                .ToListAsync();
+
+            var driverIds = drivers
                 .Where(x => x.Avilable() && x.FixedAmount() >= total)
-                .OrderByDescending(x => CalculateDistance(new ValueTuple<string, string>(latitude, longitude), new ValueTuple<string, string>(x.Address.Lat, x.Address.Long)))
-                .Take(10).Select(x => x.Id).ToListAsync();
+                .OrderByDescending(driver => new Point(latitude, longitude)
+                            .CalculateDistance(new Point(driver.Address.Lat, driver.Address.Long)))
+                .Take(10).Select(x => x.Id).ToList();
 
             return driverIds;
         }
 
-        public Task<OperationResult<List<DriverOrderDto>>> GetAvilableOrders()
+        public async Task<OperationResult<List<DriverOrderDto>>> GetAvilableOrders()
         {
-            throw new NotImplementedException();
+            var result = await _GetDriverOrders();
+            if (result == null)
+                return _Operation.SetContent<List<DriverOrderDto>>(OperationResultTypes.NotExist, "");
+
+            return _Operation.SetSuccess(result);
         }
 
-        public Task<OperationResult<DriverOrderDetailsDto>> GetCurrentOrder()
+        public async Task<OperationResult<DriverOrderDetailsDto>> GetCurrentOrder()
         {
-            throw new NotImplementedException();
+            var orders = await Context.Orders.Include(x => x.OrderStatusLogs)
+                .Include(x => x.Address).ThenInclude(x => x.Customer)
+                .Include("OrderDetails.Product.Tag.Shop")
+                .Include("OrderDetails.Product.PriceLogs")
+                .ToListAsync();
+
+            var order = orders.Where(x => x.DriverId == Context.CurrentUserId &&
+                    x.Status() == OrderStatus.Assigned || x.Status() == OrderStatus.Collected)
+                .Select(x => new DriverOrderDetailsDto
+                {
+                    Id = x.Id,
+                    SerialNumber = x.SerialNumber,
+                    DateCreated = x.DateCreated,
+                    Status = x.DriverStatus(),
+                    CustomerImagePath = x.Address.Customer.IdentifierImagePath,
+                    CustomerName = x.Address.Customer.FullName,
+                    CustomerPhone = x.Address.Customer.PhoneNumber,
+                    ShopName = x.Shop().Name,
+                    CustomerAddress = x.Address.Text,
+                    DeliveryCost = x.DeliveryCost ?? 0,
+                    SubTotal = x.Cost(),
+                    Time = x.ExpectedTime,
+                }).FirstOrDefault();
+
+            return _Operation.SetSuccess(order);
         }
 
         #endregion
@@ -546,7 +580,7 @@ namespace Passengers.Order.OrderService
 
             return result;
         }
-        
+
         private async Task<List<CustomerOrderDto>> _GetCustomerOrders(Guid? id = null)
         {
             id = id.HasValue ? id.Value : Context.CurrentUserId;
@@ -574,31 +608,41 @@ namespace Passengers.Order.OrderService
         private async Task<List<DriverOrderDto>> _GetDriverOrders(Guid? id = null)
         {
             id = id.HasValue ? id.Value : Context.CurrentUserId;
-            var driver = await Context.Drivers().Include(x => x.DriverOrders).ThenInclude(x => x.OrderStatusLogs)
-                .Where(x => x.Id == id).SingleOrDefaultAsync();
+
+            var drivers = await Context.Drivers().Include(x => x.DriverOrders).ThenInclude(x => x.OrderStatusLogs).Include(x => x.Address).ToListAsync();
+
+            drivers = drivers.Where(x => x.Avilable()).ToList();
+
+            var driver = drivers.Where(x => x.Id == id).FirstOrDefault();
+
             if (driver == null)
                 return null;
 
-            var currentOrder = driver.DriverOrders.Any(x => x.Status() == OrderStatus.Assigned || x.Status() == OrderStatus.Completed);
-            if (currentOrder)
+            if (!driver.Avilable())
                 return new List<DriverOrderDto>();
 
-            var orders = await Context.Orders
-                .Where(x => x.Status() == OrderStatus.Accepted)
-                .Include(x => x.OrderStatusLogs)
+            var orders = await Context.Orders.Include(x => x.OrderStatusLogs)
+                .Include("OrderDetails.Product.Tag.Shop.Address")
                 .Include(x => x.Address).ThenInclude(x => x.Customer)
+                .ToListAsync();
+
+            var result = orders.Where(order => order.Status() == OrderStatus.Accepted
+                    && drivers.OrderByDescending(driver
+                        => new Point(order.Shop().Address.Lat, order.Shop().Address.Long)
+                            .CalculateDistance(new Point(driver.Address.Lat, driver.Address.Long)))
+                                .Take(10).Select(x => x.Id).Contains(driver.Id))
                 .Select(x => new DriverOrderDto
                 {
                     Id = x.Id,
                     SerialNumber = x.SerialNumber,
                     DateCreated = x.DateCreated,
-                    Status = OrderStatusHelper.MapDriver(x.Status()),
+                    Status = x.DriverStatus(),
                     CustomerName = x.Address.Customer.FullName,
                     CustomerImagePath = x.Address.Customer.IdentifierImagePath,
                     CustomerPhone = x.Address.Customer.PhoneNumber
-                }).ToListAsync();
-
-            return orders;
+                }).ToList();
+                
+            return result;
         }
 
         private async Task<List<ShopOrderDto>> _GetShopOrders(bool? isReady = null, string search = "")
@@ -668,7 +712,7 @@ namespace Passengers.Order.OrderService
             => currentUser.UserType == UserTypes.Customer && order.Status() == OrderStatus.Sended && newStatus == OrderStatus.Canceled;
 
         private static bool CanAdminAction(OrderSet order, AppUser currentUser, OrderStatus newStatus)
-            => currentUser.UserType == UserTypes.Admin 
+            => currentUser.UserType == UserTypes.Admin
                 && (
                     ((order.Status() == OrderStatus.Sended) && (newStatus == OrderStatus.Accepted || newStatus == OrderStatus.Refused))
                   || (order.Status() == OrderStatus.Accepted && newStatus == OrderStatus.Assigned)
@@ -695,7 +739,7 @@ namespace Passengers.Order.OrderService
                 await _UpdateOrderCustomer(order.Id);
                 await SendNotification(new List<Guid>() { customerId }, UserTypes.Customer, newStatus, order);
             }
-            else if(newStatus == OrderStatus.Accepted)
+            else if (newStatus == OrderStatus.Accepted)
             {
                 await _UpdateOrdersListShop(shopId);
                 await SendNotification(new List<Guid>() { shopId }, UserTypes.Shop, newStatus, order);
@@ -708,17 +752,17 @@ namespace Passengers.Order.OrderService
                 var driverIds = await GetAvilableDriverIds(order.Shop().Address.Lat, order.Shop().Address.Long, order.TotalCost());
 
             }
-            else if(newStatus == OrderStatus.Refused)
+            else if (newStatus == OrderStatus.Refused)
             {
                 await _UpdateOrdersListCustomer(customerId);
                 await _UpdateOrderCustomer(order.Id);
                 await SendNotification(new List<Guid>() { customerId }, UserTypes.Customer, newStatus, order);
             }
-            else if(newStatus == OrderStatus.Assigned)
+            else if (newStatus == OrderStatus.Assigned)
             {
                 var drisverIds = await GetAvilableDriverIds(order.Shop().Address.Lat, order.Shop().Address.Lat, order.TotalCost());
             }
-            else if(newStatus == OrderStatus.Collected)
+            else if (newStatus == OrderStatus.Collected)
             {
                 await _UpdateOrdersListCustomer(customerId);
                 await _UpdateOrderCustomer(order.Id);
@@ -732,22 +776,7 @@ namespace Passengers.Order.OrderService
             }
         }
 
-        private static double CalculateDistance((string, string) point1, (string, string) point2)
-        {
-            var latitude1 = double.Parse(point1.Item1);
-            var longitude1 = double.Parse(point1.Item2);
-
-            var latitude2 = double.Parse(point2.Item1);
-            var longitude2 = double.Parse(point2.Item2);
-
-            var d1 = latitude1 * (Math.PI / 180.0);
-            var num1 = longitude1 * (Math.PI / 180.0);
-            var d2 = latitude2 * (Math.PI / 180.0);
-            var num2 = longitude2 * (Math.PI / 180.0) - num1;
-            var d3 = Math.Pow(Math.Sin((d2 - d1) / 2.0), 2.0) +
-                     Math.Cos(d1) * Math.Cos(d2) * Math.Pow(Math.Sin(num2 / 2.0), 2.0);
-            return 6376500.0 * (2.0 * Math.Atan2(Math.Sqrt(d3), Math.Sqrt(1.0 - d3)));
-        }
+        
 
         private async Task<NotificationDto> SendNotification(List<Guid> userIds, UserTypes userType, OrderStatus status, OrderSet order)
         {
@@ -758,7 +787,7 @@ namespace Passengers.Order.OrderService
             switch (userType)
             {
                 case UserTypes.Admin:
-                    if(status == OrderStatus.Sended)
+                    if (status == OrderStatus.Sended)
                     {
                         notification.Title = $"You have a new order {order.SerialNumber} look at it.";
                     }
@@ -811,9 +840,13 @@ namespace Passengers.Order.OrderService
                     }
                     break;
             }
-            return (await notificationRepository.Add(notification)).Result;
+
+            if(notification.Title != null && notification.Body != null)
+                return (await notificationRepository.Add(notification)).Result;
+
+            return null;
         }
-        
+
         #endregion
     }
 }
