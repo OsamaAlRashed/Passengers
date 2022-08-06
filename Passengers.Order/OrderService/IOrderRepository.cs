@@ -29,8 +29,9 @@ namespace Passengers.Order.OrderService
         Task<OperationResult<OrderDashboardDetails>> GetOrderDashboardDetails(Guid orderId);
 
         Task<OperationResult<List<DriverOrderDto>>> GetAvilableOrders();
-        Task<OperationResult<DriverOrderDetailsDto>> GetCurrentOrder();
+        Task<OperationResult<DriverOrderDetailsDto>> GetCurrentOrder(Guid? id);
         Task<OperationResult<bool>> DeleteAll();
+        Task<OperationResult<bool>> RefuseDriverOrder(Guid orderId);
 
     }
 }

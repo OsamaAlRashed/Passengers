@@ -18,6 +18,7 @@ namespace Passengers.Models.Order
             Reviews = new HashSet<Review>();
             OrderDetails = new HashSet<OrderDetails>();
             OrderStatusLogs = new HashSet<OrderStatusLog>();
+            OrderDrivers = new HashSet<OrderDriver>();
         }
 
         public string SerialNumber { get; set; }
@@ -41,6 +42,7 @@ namespace Passengers.Models.Order
         public ICollection<OrderDetails> OrderDetails { get; set; }
         public ICollection<Review> Reviews { get; set; }
         public ICollection<OrderStatusLog> OrderStatusLogs { get; set; }
+        public ICollection<OrderDriver> OrderDrivers { get; set; }
 
         //[NotMapped] 
         //public OrderStatus Status => OrderStatusLogs.OrderBy(x => x.DateCreated).Select(x => x.Status).LastOrDefault();

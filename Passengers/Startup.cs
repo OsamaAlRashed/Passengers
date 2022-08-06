@@ -93,9 +93,21 @@ namespace Passengers
             services.AddSingleton<ICurrentUserService, CurrentUserService>();
             services.AddSingleton<ILangService, LangService>();
             services.AddHttpContextAccessor();
-            services.AddCors(c =>
+            //services.AddCors(c =>
+            //{
+            //    c.AddPolicy("AllowOrigin", options => options.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+            //});
+
+            services.AddCors(options =>
             {
-                c.AddPolicy("AllowOrigin", options => options.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+                options.AddPolicy("CorsPolicy", builder =>
+                {
+                    builder
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .SetIsOriginAllowed((host) => true)
+                    .AllowCredentials();
+                });
             });
 
             services.AddHttpClient("fcm", c =>
@@ -151,7 +163,7 @@ namespace Passengers
             
             app.ConfigureOpenAPI();
 
-            app.UseCors("AllowOrigin");
+            app.UseCors("CorsPolicy");
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();

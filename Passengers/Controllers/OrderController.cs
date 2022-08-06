@@ -88,12 +88,18 @@ namespace Passengers.Controllers
         [AppAuthorize(AppRoles.Driver)]
         [ApiGroup(ApiGroupNames.Driver)]
         [HttpPatch]
+        public async Task<IActionResult> Refuse([Required] Guid orderId) => await repository.RefuseDriverOrder(orderId).ToJsonResultAsync();
+
+        [AppAuthorize(AppRoles.Driver)]
+        [ApiGroup(ApiGroupNames.Driver)]
+        [HttpPatch]
         public async Task<IActionResult> Collect([Required] Guid orderId) => await repository.ChangeStatus(orderId, OrderStatus.Collected).ToJsonResultAsync();
 
         [AppAuthorize(AppRoles.Driver)]
         [ApiGroup(ApiGroupNames.Driver)]
         [HttpPatch]
         public async Task<IActionResult> Complete([Required] Guid orderId) => await repository.ChangeStatus(orderId, OrderStatus.Completed).ToJsonResultAsync();
+
 
         [ApiGroup(ApiGroupNames.Test)]
         [HttpGet]
@@ -127,7 +133,7 @@ namespace Passengers.Controllers
         [ApiGroup(ApiGroupNames.Driver)]
         [AppAuthorize(AppRoles.Driver)]
         [HttpGet]
-        public async Task<IActionResult> GetCurrentOrder() => await repository.GetCurrentOrder().ToJsonResultAsync();
+        public async Task<IActionResult> GetCurrentOrder(Guid? id) => await repository.GetCurrentOrder(id).ToJsonResultAsync();
 
         [HttpDelete]
         public async Task<IActionResult> DeleteAll() => await repository.DeleteAll().ToJsonResultAsync();

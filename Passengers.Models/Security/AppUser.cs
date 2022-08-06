@@ -2,6 +2,7 @@
 using Passengers.Models.Base;
 using Passengers.Models.Location;
 using Passengers.Models.Main;
+using Passengers.Models.Order;
 using Passengers.Models.Shared;
 using Passengers.SharedKernel.Enums;
 using System;
@@ -27,6 +28,7 @@ namespace Passengers.Models.Security
             Addresses = new HashSet<Address>();
             RefreshTokens = new HashSet<RefreshToken>();
             NotificationUsers = new HashSet<NotificationUser>();
+            OrderDrivers = new HashSet<OrderDriver>();
         }
 
         #region Base
@@ -93,6 +95,8 @@ namespace Passengers.Models.Security
         public ICollection<RefreshToken> RefreshTokens { get; set; }
 
         public ICollection<NotificationUser> NotificationUsers { get; set; }
+
+        public ICollection<OrderDriver> OrderDrivers { get; set; }
 
     }
 }

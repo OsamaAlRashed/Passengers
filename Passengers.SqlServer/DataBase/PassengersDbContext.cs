@@ -100,6 +100,7 @@ namespace Passengers.SqlServer.DataBase
         public DbSet<Address> Addresses { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderDetails> OrderDetails { get; set; }
+        public DbSet<OrderDriver> OrderDrivers { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Document> Documents { get; set; }
         public DbSet<Review> Reviews { get; set; }

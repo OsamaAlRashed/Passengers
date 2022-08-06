@@ -360,29 +360,36 @@ namespace Passengers.Order.OrderService
             }
         }
 
-        public async Task<OperationResult<List<DashboardOrderDto>>> GetOrdersBoard()
+        private async Task<List<DashboardOrderDto>> _GetOrdersBoard()
         {
             var orders = await Context.Orders
                 .Include(x => x.OrderStatusLogs)
                 .Include(x => x.Address).ThenInclude(x => x.Customer)
                 .Include(x => x.Driver)
                 .ToListAsync();
-           var result = orders.Select(x => new DashboardOrderDto
-                {
-                    Id = x.Id,
-                    DateCreated = x.DateCreated,
-                    SerialNumber = x.SerialNumber,
-                    Status = x.CompanyStatus(),
-                    ImagePath = x.Status() == OrderStatus.Sended ? x.Address.Customer.IdentifierImagePath
-                        : (x.Status() == OrderStatus.Accepted ? null : x.Driver.IdentifierImagePath),
-                    PhoneNumber = x.Status() == OrderStatus.Sended ? x.Address.Customer.PhoneNumber
-                        : (x.Status() == OrderStatus.Accepted ? "" : x.Driver.PhoneNumber),
-                    FullName = x.Status() == OrderStatus.Sended ? x.Address.Customer.FullName
-                        : (x.Status() == OrderStatus.Accepted ? "Unassigned" : x.Driver.FullName),
-                    Time = DateTime.Now.Subtract(x.OrderStatusLogs.OrderBy(x => x.DateCreated).Select(x => x.DateCreated).LastOrDefault()).Minutes,
-                }).OrderByDescending(x => x.Time).ToList();
+            var result = orders.Select(x => new DashboardOrderDto
+            {
+                Id = x.Id,
+                DateCreated = x.DateCreated,
+                SerialNumber = x.SerialNumber,
+                Status = x.CompanyStatus(),
+                ImagePath = x.Status() == OrderStatus.Sended ? x.Address.Customer.IdentifierImagePath
+                         : (x.Status() == OrderStatus.Accepted || x.Status() == OrderStatus.Refused || x.Status() == OrderStatus.Canceled ? null : x.Driver.IdentifierImagePath),
+                PhoneNumber = x.Status() == OrderStatus.Sended ? x.Address.Customer.PhoneNumber
+                         : (x.Status() == OrderStatus.Accepted || x.Status() == OrderStatus.Refused || x.Status() == OrderStatus.Canceled ? "" : x.Driver.PhoneNumber),
+                FullName = x.Status() == OrderStatus.Sended ? x.Address.Customer.FullName
+                         : (x.Status() == OrderStatus.Accepted ? "Unassigned" : (x.Status() == OrderStatus.Refused || x.Status() == OrderStatus.Canceled ? null : x.Driver.FullName)),
+                Time = DateTime.Now.Subtract(x.OrderStatusLogs.OrderBy(x => x.DateCreated).Select(x => x.DateCreated).LastOrDefault()).Minutes,
+            }).OrderByDescending(x => x.Time).ToList();
 
-            return _Operation.SetSuccess(result);
+            return result;
+        }
+
+        public async Task<OperationResult<List<DashboardOrderDto>>> GetOrdersBoard()
+        {
+            var orders = await _GetOrdersBoard();
+
+            return _Operation.SetSuccess(orders);
         }
 
         public async Task<OperationResult<OrderDashboardDetails>> GetOrderDashboardDetails(Guid orderId)
@@ -511,7 +518,7 @@ namespace Passengers.Order.OrderService
             return _Operation.SetSuccess(result);
         }
 
-        public async Task<OperationResult<DriverOrderDetailsDto>> GetCurrentOrder()
+        public async Task<OperationResult<DriverOrderDetailsDto>> GetCurrentOrder(Guid? id)
         {
             var orders = await Context.Orders.Include(x => x.OrderStatusLogs)
                 .Include(x => x.Address).ThenInclude(x => x.Customer)
@@ -519,8 +526,8 @@ namespace Passengers.Order.OrderService
                 .Include("OrderDetails.Product.PriceLogs")
                 .ToListAsync();
 
-            var order = orders.Where(x => x.DriverId == Context.CurrentUserId &&
-                    x.Status() == OrderStatus.Assigned || x.Status() == OrderStatus.Collected)
+            var order = orders.Where(x => id.HasValue ? x.Id == id : (x.DriverId == Context.CurrentUserId &&
+                    x.Status() == OrderStatus.Assigned || x.Status() == OrderStatus.Collected))
                 .Select(x => new DriverOrderDetailsDto
                 {
                     Id = x.Id,
@@ -624,9 +631,10 @@ namespace Passengers.Order.OrderService
             var orders = await Context.Orders.Include(x => x.OrderStatusLogs)
                 .Include("OrderDetails.Product.Tag.Shop.Address")
                 .Include(x => x.Address).ThenInclude(x => x.Customer)
+                .Include(x => x.OrderDrivers)
                 .ToListAsync();
 
-            var result = orders.Where(order => order.Status() == OrderStatus.Accepted
+            var result = orders.Where(order => order.Status() == OrderStatus.Accepted && order.IsNotRefused(id.Value)
                     && drivers.OrderByDescending(driver
                         => new Point(order.Shop().Address.Lat, order.Shop().Address.Long)
                             .CalculateDistance(new Point(driver.Address.Lat, driver.Address.Long)))
@@ -697,7 +705,8 @@ namespace Passengers.Order.OrderService
         {
             ///ToDo
             var admins = accountRepository.GetUserIds(UserTypes.Admin);
-            await orderHubContext.Clients.Users(admins.Select(x => x.ToString())).UpdateAdminOrders(new List<DashboardOrderDto>());
+            var orders = await _GetOrdersBoard();
+            await orderHubContext.Clients.Users(admins.Select(x => x.ToString())).UpdateAdminOrders(orders);
             return true;
         }
 
@@ -852,6 +861,30 @@ namespace Passengers.Order.OrderService
             var orders = await Context.Orders.ToListAsync();
             Context.Orders.RemoveRange(orders);
             await Context.SaveChangesAsync();
+            return _Operation.SetSuccess(true);
+        }
+
+        public async Task<OperationResult<bool>> RefuseDriverOrder(Guid orderId)
+        {
+            var orderDriver = await Context.OrderDrivers.Where(x => x.OrderId == orderId && x.DriverId == Context.CurrentUserId).FirstOrDefaultAsync();
+
+            if(orderDriver == null)
+            {
+                orderDriver = new OrderDriver();
+
+                orderDriver.OrderId = orderId;
+                orderDriver.DriverId = Context.CurrentUserId.Value;
+                orderDriver.OrderDriverType = OrderDriverType.Refused;
+
+                Context.OrderDrivers.Add(orderDriver);
+            }
+            else
+            {
+                orderDriver.OrderDriverType = OrderDriverType.Refused;
+            }
+
+            await Context.SaveChangesAsync();
+
             return _Operation.SetSuccess(true);
         }
 

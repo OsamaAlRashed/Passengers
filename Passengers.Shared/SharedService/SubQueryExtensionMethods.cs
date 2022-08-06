@@ -27,6 +27,9 @@ namespace Passengers.Shared.SharedService
         public static OrderStatus Status(this OrderSet order)
                 => order.OrderStatusLogs.OrderByDescending(x => x.DateCreated).Select(x => x.Status).FirstOrDefault();
 
+        public static bool IsNotRefused(this OrderSet order, Guid driverId)
+                => !order.OrderDrivers.Where(x => x.DriverId == driverId && x.OrderDriverType == OrderDriverType.Refused).Any();
+
         public static DeliveryCompanyOrderStatus CompanyStatus(this OrderSet order)
                 => order.Status().MapCompany();
 
