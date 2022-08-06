@@ -213,10 +213,11 @@ namespace Passengers.Security.CustomerService
 
         public async Task<OperationResult<CustomerHomeDto>> Home()
         {
-            var products = await Context.Products.Where(x => !x.DateDeleted.HasValue && !x.Tag.IsHidden && !x.Tag.DateDeleted.HasValue && !x.Tag.Shop.DateDeleted.HasValue)
+            var products = await Context.Products.Where(x => !x.DateDeleted.HasValue && !x.Tag.IsHidden && x.Tag.Shop != null && !x.Tag.DateDeleted.HasValue && !x.Tag.Shop.DateDeleted.HasValue)
                 .Include(x => x.Reviews).Include(x => x.Documents).Include(x => x.OrderDetails)
                 .Include(x => x.Tag).ThenInclude(x => x.Shop).ThenInclude(x => x.ShopSchedules)
                 .Include(x => x.Tag).ThenInclude(x => x.Shop).ThenInclude(x => x.Documents)
+                .Include(x => x.PriceLogs)
                 .ToListAsync();
 
             var homeDto = new CustomerHomeDto

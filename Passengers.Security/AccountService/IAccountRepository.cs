@@ -22,6 +22,7 @@ namespace Passengers.Security.AccountService
         Task<OperationResult<bool>> ChangePassword(Guid id, string newPassword);
         Task<bool> IsPhoneNumberUsed(string phoneNumber);
         Task<OperationResult<bool>> Delete(Guid id);
+        Task<OperationResult<bool>> DeleteAllShop(List<Guid> ids);
         Task<OperationResult<bool>> Block(Guid id);
         Task<OperationResult<List<SelectDto>>> Users(UserTypes? type);
         List<Guid> GetUserIds(UserTypes type);

@@ -129,6 +129,7 @@ namespace Passengers.Controllers
         [HttpGet]
         public async Task<IActionResult> GetCurrentOrder() => await repository.GetCurrentOrder().ToJsonResultAsync();
 
-
+        [HttpDelete]
+        public async Task<IActionResult> DeleteAll() => await repository.DeleteAll().ToJsonResultAsync();
     }
 }

@@ -351,6 +351,16 @@ namespace Passengers.Security.AccountService
             return principal;
         }
 
+        public async Task<OperationResult<bool>> DeleteAllShop(List<Guid> ids)
+        {
+            var shops = Context.Shops().Where(x => !ids.Contains(x.Id)).ToList();
 
+            foreach (var item in shops)
+            {
+                item.DateDeleted = DateTime.Now;
+            }
+            await Context.SaveChangesAsync();
+            return _Operation.SetSuccess(true);
+        }
     }
 }
