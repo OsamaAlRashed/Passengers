@@ -18,11 +18,7 @@ namespace Passengers.DataTransferObject.OrderDtos
         }
         public string DriverNote { get; set; }
         public string AddressTitle { get; set; }
-        public double Distance { get {
-            return Math.Round(Distance / 1000, 2);
-            }
-            set { }
-        }
+        public double Distance { get; set; }
         public int Time { get; set; }
         public Guid CustomerId { get; set; }
     }

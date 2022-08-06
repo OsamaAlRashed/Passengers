@@ -574,7 +574,7 @@ namespace Passengers.Order.OrderService
                 DriverNote = order.DriverNote,
                 AddressTitle = order.Address.Title,
                 CustomerId = order.Address.CustomerId.Value,
-                Distance = new Point(order.Address.Lat, order.Address.Long).CalculateDistance(new Point(order.Shop().Address.Lat, order.Shop().Address.Long)),
+                Distance = Math.Round(new Point(order.Address.Lat, order.Address.Long).CalculateDistance(new Point(order.Shop().Address.Lat, order.Shop().Address.Long)) / 1000, 2),
                 Time = order.ExpectedTime,
             };
 
