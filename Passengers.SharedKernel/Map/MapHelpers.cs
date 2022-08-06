@@ -10,6 +10,8 @@ namespace Passengers.SharedKernel.Map
     {
         public static double CalculateDistance(this Point point1, Point point2)
         {
+            if(point1.Lat == null || point1.Lng == null || point2.Lat == null || point2.Lng == null)
+                return 0;
             var latitude1 = double.Parse(point1.Lat);
             var longitude1 = double.Parse(point1.Lng);
 
