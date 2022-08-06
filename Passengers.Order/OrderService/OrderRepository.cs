@@ -61,6 +61,7 @@ namespace Passengers.Order.OrderService
 
             var result = (await Context.Products
                 .Include(x => x.Tag).ThenInclude(x => x.Shop).Include(x => x.PriceLogs)
+                .Include(x => x.Documents)
                .Where(x => dto.Products.Select(x => x.Id).Contains(x.Id) && x.Tag.ShopId.HasValue)
                .ToListAsync())
                .GroupBy(x => x.Tag.Shop)
@@ -74,7 +75,8 @@ namespace Passengers.Order.OrderService
                        Id = x.Id,
                        Name = x.Name,
                        Price = x.Price(),
-                       Count = dto.Products.Where(p => p.Id == x.Id).Select(x => x.Count).FirstOrDefault()
+                       Count = dto.Products.Where(p => p.Id == x.Id).Select(x => x.Count).FirstOrDefault(),
+                       ImagePath = x.ImagePath(),
                    }).ToList()
                }).ToList();
 
@@ -245,7 +247,7 @@ namespace Passengers.Order.OrderService
         {
             var orders = await _GetCustomerOrders();
             if (orders == null)
-                _Operation.SetContent<CustomerOrderDto>(OperationResultTypes.NotExist, "");
+                _Operation.SetContent<List<CustomerOrderDto>>(OperationResultTypes.NotExist, "");
 
             return _Operation.SetSuccess(orders);
         }
@@ -362,7 +364,10 @@ namespace Passengers.Order.OrderService
         {
             var orders = await Context.Orders
                 .Include(x => x.OrderStatusLogs)
-                .Select(x => new DashboardOrderDto
+                .Include(x => x.Address).ThenInclude(x => x.Customer)
+                .Include(x => x.Driver)
+                .ToListAsync();
+           var result = orders.Select(x => new DashboardOrderDto
                 {
                     Id = x.Id,
                     DateCreated = x.DateCreated,
@@ -375,9 +380,9 @@ namespace Passengers.Order.OrderService
                     FullName = x.Status() == OrderStatus.Sended ? x.Address.Customer.FullName
                         : (x.Status() == OrderStatus.Accepted ? "Unassigned" : x.Driver.FullName),
                     Time = DateTime.Now.Subtract(x.OrderStatusLogs.OrderBy(x => x.DateCreated).Select(x => x.DateCreated).LastOrDefault()).Minutes,
-                }).ToListAsync();
+                }).OrderByDescending(x => x.Time).ToList();
 
-            return _Operation.SetSuccess(orders);
+            return _Operation.SetSuccess(result);
         }
 
         public async Task<OperationResult<OrderDashboardDetails>> GetOrderDashboardDetails(Guid orderId)
@@ -548,7 +553,7 @@ namespace Passengers.Order.OrderService
 
             var order = await Context.Orders
                     .Where(order => order.Id == orderId)
-                    .Include("OrderDetails.Product.Tag.Shop")
+                    .Include("OrderDetails.Product.Tag.Shop.Address")
                     .Include("OrderDetails.Product.PriceLogs")
                     .Include(x => x.OrderStatusLogs)
                     .Include(x => x.Address)
@@ -564,18 +569,13 @@ namespace Passengers.Order.OrderService
                 DateCreated = order.DateCreated,
                 ShopName = order.OrderDetails.Select(x => x.Product.Tag.Shop.Name).FirstOrDefault(),
                 Status = order.Status().MapCustomer(),
-                SubTotal = order.OrderDetails.Select(x => new
-                {
-                    Price = x.Product.Price(),
-                    Quantity = x.Quantity
-                }).Sum(x => x.Price * x.Quantity),
+                SubTotal = order.Cost(),
                 DeliveryCost = order.DeliveryCost ?? 0,
                 DriverNote = order.DriverNote,
                 AddressTitle = order.Address.Title,
                 CustomerId = order.Address.CustomerId.Value,
-                ///TODO
-                Distance = 100,
-                Time = 10,
+                Distance = new Point(order.Address.Lat, order.Address.Long).CalculateDistance(new Point(order.Shop().Address.Lat, order.Shop().Address.Long)),
+                Time = order.ExpectedTime,
             };
 
             return result;
@@ -749,7 +749,7 @@ namespace Passengers.Order.OrderService
                 await SendNotification(new List<Guid>() { customerId }, UserTypes.Customer, newStatus, order);
 
                 //Drivers
-                var driverIds = await GetAvilableDriverIds(order.Shop().Address.Lat, order.Shop().Address.Long, order.TotalCost());
+                //var driverIds = await GetAvilableDriverIds(order.Shop().Address.Lat, order.Shop().Address.Long, order.TotalCost());
 
             }
             else if (newStatus == OrderStatus.Refused)
@@ -760,7 +760,7 @@ namespace Passengers.Order.OrderService
             }
             else if (newStatus == OrderStatus.Assigned)
             {
-                var drisverIds = await GetAvilableDriverIds(order.Shop().Address.Lat, order.Shop().Address.Lat, order.TotalCost());
+                //var driverIds = await GetAvilableDriverIds(order.Shop().Address.Lat, order.Shop().Address.Lat, order.TotalCost());
             }
             else if (newStatus == OrderStatus.Collected)
             {
@@ -845,6 +845,14 @@ namespace Passengers.Order.OrderService
                 return (await notificationRepository.Add(notification)).Result;
 
             return null;
+        }
+
+        public async Task<OperationResult<bool>> DeleteAll()
+        {
+            var orders = await Context.Orders.ToListAsync();
+            Context.Orders.RemoveRange(orders);
+            await Context.SaveChangesAsync();
+            return _Operation.SetSuccess(true);
         }
 
         #endregion

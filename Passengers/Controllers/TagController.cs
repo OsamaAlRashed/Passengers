@@ -83,5 +83,10 @@ namespace Passengers.Controllers
         [HttpGet]
         public async Task<IActionResult> GetTags() => await repository.GetByShopId(null).ToJsonResultAsync();
 
+        [ApiGroup(ApiGroupNames.Dashboard)]
+        [AppAuthorize(AppRoles.Admin)]
+        [HttpDelete]
+        public async Task<IActionResult> DeleteDraftTags([Required] Guid id) => await repository.DeleteDraftTags(id).ToJsonResultAsync();
+
     }
 }

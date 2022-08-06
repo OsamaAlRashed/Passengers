@@ -30,5 +30,7 @@ namespace Passengers.Order.OrderService
 
         Task<OperationResult<List<DriverOrderDto>>> GetAvilableOrders();
         Task<OperationResult<DriverOrderDetailsDto>> GetCurrentOrder();
+        Task<OperationResult<bool>> DeleteAll();
+
     }
 }

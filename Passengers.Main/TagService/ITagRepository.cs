@@ -18,5 +18,6 @@ namespace Passengers.Main.TagService
         Task<OperationResult<List<GetTagDto>>> GetPublicTag();
         Task<OperationResult<List<GetTagDto>>> GetByShopId(Guid? id);
         Task<OperationResult<bool>> ChangeStatus(Guid id, bool status);
+        Task<OperationResult<bool>> DeleteDraftTags(Guid shopId);
     }
 }

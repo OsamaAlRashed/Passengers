@@ -46,7 +46,12 @@ namespace Passengers.Shared.NotificationService
             Context.Notifications.Add(notification);
             await Context.SaveChangesAsync();
 
-            var tokens = users.SelectMany(x => x.DeviceTokens.Split(",").ToList()).Where(x => !string.IsNullOrEmpty(x)).ToList();
+            var tokens = new List<string>();
+            foreach (var user in users)
+            {
+                if (user.DeviceTokens != null)
+                    tokens.AddRange(user.DeviceTokens.Split(",").Where(x => !string.IsNullOrEmpty(x)).ToList());
+            } 
 
             if(tokens.Any())
                 await notificationService.SendNotification(tokens, dto.Title, dto.Body);

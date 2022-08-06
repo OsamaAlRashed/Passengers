@@ -126,5 +126,16 @@ namespace Passengers.Main.TagService
             await Context.SaveChangesAsync();
             return _Operation.SetSuccess(TagStore.Query.GetSelectTag.Compile()(entity));
         }
+
+        public async Task<OperationResult<bool>> DeleteDraftTags(Guid shopId)
+        {
+            var tags = await Context.Tags.Where(x => x.ShopId == shopId).ToListAsync();
+            if (tags == null)
+                return _Operation.SetContent<bool>(OperationResultTypes.NotExist, "UserNotFound");
+
+            Context.Tags.RemoveRange(tags);
+            await Context.SaveChangesAsync();
+            return _Operation.SetSuccess(true);
+        }
     }
 }

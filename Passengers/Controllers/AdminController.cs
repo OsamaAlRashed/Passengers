@@ -8,6 +8,7 @@ using Passengers.SharedKernel.Constants.Security;
 using Passengers.SharedKernel.OperationResult.ExtensionMethods;
 using Passengers.SharedKernel.Swagger.ApiGroup;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Passengers.Controllers
@@ -47,5 +48,8 @@ namespace Passengers.Controllers
 
         [HttpDelete]
         public async Task<IActionResult> Delete(Guid id) => await accountRepository.Delete(id).ToJsonResultAsync();
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteAllShop(List<Guid> expectIds) => await accountRepository.DeleteAllShop(expectIds).ToJsonResultAsync();
     }
 }
