@@ -20,6 +20,8 @@ namespace Passengers.Shared.SharedService
 
         public static string ImagePath(this Product product) => product.Documents.Select(x => x.Path).FirstOrDefault();
 
+        public static string ImagePath(this AppUser shop) => shop.Documents.Select(x => x.Path).FirstOrDefault();
+
         public static double Rate(this Product product) => product.Reviews.Any() ? product.Reviews.Average(x => x.Rate) : 0;
 
         public static int Buyers(this Product product) => product.OrderDetails.Sum(x => x.Quantity);
@@ -56,6 +58,8 @@ namespace Passengers.Shared.SharedService
             => driver.Payments.Where(payment => payment.Type.IsFixed())
             .Sum(payment => payment.Amount * payment.Type.PaymentSign());
 
+        public static bool IsNotRefused(this AppUser driver, Guid orderId)
+                => !driver.OrderDrivers.Where(x => x.OrderId == orderId && x.OrderDriverType == OrderDriverType.Refused).Any();
 
     }
 }
