@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Passengers.SharedKernel.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,9 @@ namespace Passengers.DataTransferObject.OrderDtos
         public Guid Id { get; set; }
         public string SerialNumber { get; set; }
         public DateTime DateCreated { get; set; }
+        public double TimeAmount { get; set; }
+        public TimeType TimeType { get; set; }
+
         public string ShopName { get; set; }
     }
 }

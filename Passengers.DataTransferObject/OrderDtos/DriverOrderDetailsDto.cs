@@ -12,6 +12,8 @@ namespace Passengers.DataTransferObject.OrderDtos
         public int Time { get; set; }
         public decimal DeliveryCost { get; set; }
         public decimal SubTotal { get; set; }
+        public string ShopLat { get; set; }
+        public string ShopLng { get; set; }
         public decimal TotalCost { get => DeliveryCost + SubTotal; }
     }
 }

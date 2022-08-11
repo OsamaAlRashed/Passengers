@@ -80,8 +80,15 @@ namespace Passengers.Order.OrderService
 
                 if (newStatus == OrderStatus.Assigned)
                 {
-                    order.DriverId = currentUser.Id;
-                    await _AcceptDriverOrder(orderId, currentUser.Id);
+                    if(await _DriverAvilable(currentUser.Id))
+                    {
+                        order.DriverId = currentUser.Id;
+                        await _AcceptDriverOrder(orderId, currentUser.Id);
+                    }
+                    else
+                    {
+                        return _Operation.SetFailed<bool>("Driver not avilable.");
+                    }
                 }
 
                 if (newStatus == OrderStatus.Accepted)
@@ -124,8 +131,6 @@ namespace Passengers.Order.OrderService
             result.TotalCost = result.DeliveryCost + result.SubTotal;
             return _Operation.SetSuccess(result);
         }
-
-        
 
         private async Task Invoke(OrderSet order, OrderStatus newStatus, Guid customerId, Guid shopId, Guid? driverId)
         {
@@ -394,6 +399,8 @@ namespace Passengers.Order.OrderService
                 CustomerId = order.Address.CustomerId.Value,
                 Distance = Math.Round(new Point(order.Address.Lat, order.Address.Long).CalculateDistance(new Point(order.Shop().Address.Lat, order.Shop().Address.Long)) / 1000, 2),
                 Time = order.ExpectedTime,
+                TimeAmount = order.GetTime().Item1,
+                TimeType = order.GetTime().Item2
             };
 
             return result;
@@ -417,6 +424,8 @@ namespace Passengers.Order.OrderService
                         SerialNumber = x.SerialNumber,
                         DateCreated = x.DateCreated,
                         Status = x.Status().MapCustomer(),
+                        TimeAmount = x.GetTime().Item1,
+                        TimeType = x.GetTime().Item2
                     }).ToListAsync();
 
             orders = orders.Where(x => x.Status <= CustomerOrderStatus.Completed).ToList();
@@ -451,6 +460,17 @@ namespace Passengers.Order.OrderService
         #endregion
 
         #region Driver
+
+        private async Task<bool> _DriverAvilable(Guid? driverId)
+        {
+            var id = driverId.HasValue ? driverId : Context.CurrentUserId;
+            var driver = await Context.Drivers().Where(x => x.Id == id).SingleOrDefaultAsync();
+            if (driver.Avilable())
+            {
+                return true;
+            }
+            return false;
+        }
 
         private async Task _SendToDrivers(Guid orderId, List<Guid> driverIds)
         {
@@ -503,7 +523,7 @@ namespace Passengers.Order.OrderService
         {
             var orders = await Context.Orders.Include(x => x.OrderStatusLogs)
                 .Include(x => x.Address).ThenInclude(x => x.Customer)
-                .Include("OrderDetails.Product.Tag.Shop")
+                .Include("OrderDetails.Product.Tag.Shop.Address")
                 .Include("OrderDetails.Product.PriceLogs")
                 .ToListAsync();
 
@@ -519,10 +539,14 @@ namespace Passengers.Order.OrderService
                     CustomerName = x.Address.Customer.FullName,
                     CustomerPhone = x.Address.Customer.PhoneNumber,
                     ShopName = x.Shop().Name,
+                    ShopLat = x.Shop().Address.Lat,
+                    ShopLng = x.Shop().Address.Long,
                     CustomerAddress = x.Address.Text,
                     DeliveryCost = x.DeliveryCost ?? 0,
                     SubTotal = x.Cost(),
                     Time = x.ExpectedTime,
+                    TimeAmount = x.GetTime().Item1,
+                    TimeType = x.GetTime().Item2
                 }).FirstOrDefault();
 
             return _Operation.SetSuccess(order);
@@ -563,7 +587,9 @@ namespace Passengers.Order.OrderService
                     Status = x.DriverStatus(),
                     CustomerName = x.Address.Customer.FullName,
                     CustomerImagePath = x.Address.Customer.IdentifierImagePath,
-                    CustomerPhone = x.Address.Customer.PhoneNumber
+                    CustomerPhone = x.Address.Customer.PhoneNumber,
+                    TimeAmount = x.GetTime().Item1,
+                    TimeType = x.GetTime().Item2
                 }).ToList();
 
             return result;
@@ -673,6 +699,8 @@ namespace Passengers.Order.OrderService
                         Count = x.Quantity,
                         Price = x.Product.Price()
                     }).ToList(),
+                    TimeAmount = x.GetTime().Item1,
+                    TimeType = x.GetTime().Item2
                 }).ToListAsync();
 
             return orders;
@@ -708,9 +736,10 @@ namespace Passengers.Order.OrderService
                          : (x.Status() == OrderStatus.Accepted || x.Status() == OrderStatus.Refused || x.Status() == OrderStatus.Canceled ? "" : x.Driver.PhoneNumber),
                 FullName = x.Status() == OrderStatus.Sended ? x.Address.Customer.FullName
                          : (x.Status() == OrderStatus.Accepted ? "Unassigned" : (x.Status() == OrderStatus.Refused || x.Status() == OrderStatus.Canceled ? null : x.Driver.FullName)),
-                Time = DateTime.Now.Subtract(x.OrderStatusLogs.OrderBy(x => x.DateCreated).Select(x => x.DateCreated).LastOrDefault()).Minutes,
-            }).OrderByDescending(x => x.Time).ToList();
-
+                TimeAmount = x.GetTime().Item1,
+                TimeType = x.GetTime().Item2
+            }).OrderBy(x => x.DateCreated).ToList();
+            
             return result;
         }
 

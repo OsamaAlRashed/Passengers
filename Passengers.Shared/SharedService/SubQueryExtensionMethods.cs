@@ -61,5 +61,20 @@ namespace Passengers.Shared.SharedService
         public static bool IsNotRefused(this AppUser driver, Guid orderId)
                 => !driver.OrderDrivers.Where(x => x.OrderId == orderId && x.OrderDriverType == OrderDriverType.Refused).Any();
 
+        public static (double, TimeType) GetTime(this OrderSet order)
+        {
+            int[] duration = new[] { 60, 60, 24, 7, 30 };
+
+            var total = DateTime.Now.Subtract(order.OrderStatusLogs.OrderBy(x => x.DateCreated).Select(x => x.DateCreated).LastOrDefault()).TotalSeconds;
+            TimeType timeType = TimeType.Second;
+            while(total >= duration[(int)timeType] && timeType < TimeType.Month)
+            {
+                total /= duration[(int)timeType];
+                timeType += 1;
+            }
+
+            return (Math.Round(total, 0), timeType);
+        }
+
     }
 }
