@@ -82,5 +82,10 @@ namespace Passengers.Controllers
         [HttpPatch]
         public async Task<IActionResult> UploadImage(IFormFile file) => await repository.UploadImage(file).ToJsonResultAsync();
 
+        [ApiGroup(ApiGroupNames.Driver)]
+        [AppAuthorize(AppRoles.Driver)]
+        [HttpGet]
+        public async Task<IActionResult> GetStatistics(DateTime? date) => await repository.GetStatistics(date).ToJsonResultAsync();
+
     }
 }

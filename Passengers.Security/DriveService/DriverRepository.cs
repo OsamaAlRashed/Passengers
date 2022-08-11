@@ -10,7 +10,9 @@ using Passengers.Models.Security;
 using Passengers.Repository.Base;
 using Passengers.Security.AccountService;
 using Passengers.Security.DriveService.Store;
+using Passengers.Shared.SharedService;
 using Passengers.SharedKernel.Constants;
+using Passengers.SharedKernel.Enums;
 using Passengers.SharedKernel.ExtensionMethods;
 using Passengers.SharedKernel.Files;
 using Passengers.SharedKernel.OperationResult;
@@ -221,5 +223,27 @@ namespace Passengers.Security.DriveService
 
         public async Task<OperationResult<GetDriverDto>> GetMyInformations() 
             => await GetById(Context.CurrentUserId.Value);
+
+        public async Task<OperationResult<DriverStatisticsDto>> GetStatistics(DateTime? date)
+        {
+            var driver = await Context.Drivers().Include(x => x.Payments).Include(x => x.DriverOrders).ThenInclude(x => x.OrderStatusLogs)
+                .Where(x => x.Id == Context.CurrentUserId).SingleOrDefaultAsync();
+
+            if (driver == null)
+                return _Operation.SetContent<DriverStatisticsDto>(OperationResultTypes.NotExist,"User not exist.");
+
+            DriverStatisticsDto dto = new();
+            dto.FixedAmount = driver.FixedAmount();
+            dto.DeliveryAmount = driver.DeliveryAmount();
+            dto.OrderCount = driver.DriverOrders.Count();
+            var deliveries = driver.DriverOrders.Where(x => (!date.HasValue || x.DateCreated == date) && x.Status() == OrderStatus.Completed)
+                .Select(x => x.OrderStatusLogs.Where(x => x.Status == OrderStatus.Completed).Select(x => x.DateCreated).FirstOrDefault()
+                .Subtract(x.OrderStatusLogs.Where(x => x.Status == OrderStatus.Assigned).Select(x => x.DateCreated).FirstOrDefault()))
+                .ToList();
+
+            dto.SpeedAverage = deliveries.Any() ? Math.Round(deliveries.Average(x => x.TotalMinutes), 0) : null;
+
+            return _Operation.SetSuccess(dto);
+        }
     }
 }

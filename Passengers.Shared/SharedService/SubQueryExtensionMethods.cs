@@ -54,8 +54,16 @@ namespace Passengers.Shared.SharedService
             => driver.DriverOnline.HasValue && driver.DriverOnline.Value
             && driver.DriverOrders.Where(x => x.Status() == OrderStatus.Assigned || x.Status() <= OrderStatus.Collected).Count() == 0;
 
-        public static decimal FixedAmount(this AppUser driver)
-            => driver.Payments.Where(payment => payment.Type.IsFixed())
+        public static decimal FixedAmount(this AppUser driver, DateTime? date = default)
+            => driver.Payments
+            .Where(x => !date.HasValue || x.Date == date)
+            .Where(payment => payment.Type.IsFixed())
+            .Sum(payment => payment.Amount * payment.Type.PaymentSign());
+
+        public static decimal DeliveryAmount(this AppUser driver, DateTime? date = default)
+            => driver.Payments
+            .Where(x => !date.HasValue || x.Date == date)
+            .Where(payment => payment.Type.IsFixed())
             .Sum(payment => payment.Amount * payment.Type.PaymentSign());
 
         public static bool IsNotRefused(this AppUser driver, Guid orderId)

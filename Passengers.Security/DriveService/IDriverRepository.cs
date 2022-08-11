@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Passengers.DataTransferObject.DriverDtos;
+using Passengers.DataTransferObject.SecurityDtos;
 using Passengers.SharedKernel.OperationResult;
 using Passengers.SharedKernel.Pagnation;
 using System;
@@ -22,6 +23,7 @@ namespace Passengers.Security.DriveService
         Task<OperationResult<object>> Login(LoginDriverDto dto);
         Task<OperationResult<string>> UploadImage(IFormFile file);
         Task<OperationResult<GetDriverDto>> GetMyInformations();
+        Task<OperationResult<DriverStatisticsDto>> GetStatistics(DateTime? date);
 
     }
 }

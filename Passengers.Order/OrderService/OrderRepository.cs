@@ -464,7 +464,8 @@ namespace Passengers.Order.OrderService
         private async Task<bool> _DriverAvilable(Guid? driverId)
         {
             var id = driverId.HasValue ? driverId : Context.CurrentUserId;
-            var driver = await Context.Drivers().Where(x => x.Id == id).SingleOrDefaultAsync();
+            var driver = await Context.Drivers().Include(x => x.DriverOrders).ThenInclude(x => x.OrderStatusLogs)
+                .Where(x => x.Id == id).SingleOrDefaultAsync();
             if (driver.Avilable())
             {
                 return true;
