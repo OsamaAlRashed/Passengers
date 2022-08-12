@@ -17,6 +17,16 @@ namespace Passengers.SqlServer.DataBase.Seed
         {
             var context = services.GetService<PassengersDbContext>();
 
+            if (!context.Settings.Any())
+            {
+                var setting = new Setting
+                {
+                    KMPrice = 500
+                };
+                context.Settings.Add(setting);
+                await context.SaveChangesAsync();
+            }
+
             if (!context.Countries.Any())
             {
                 var country = new Country
@@ -48,7 +58,7 @@ namespace Passengers.SqlServer.DataBase.Seed
             {
                 var category = new Category
                 {
-                    Name = "تصنيف رئيسي",
+                    Name = "Fast Food",
                     LogoPath = "",
                     ParentId = null,
                 };

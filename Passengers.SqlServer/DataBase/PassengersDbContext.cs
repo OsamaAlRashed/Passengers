@@ -73,11 +73,11 @@ namespace Passengers.SqlServer.DataBase
                         break;
                     case EntityState.Modified:
                         entity.UpdatedBy = _currentUserService.UserId;
-                        entity.DateUpdated = DateTime.Now.ToLocalTime();
+                        entity.DateUpdated = DateTime.UtcNow;
                         break;
                     case EntityState.Added:
                         entity.CreatedBy = _currentUserService.UserId;
-                        entity.DateCreated = DateTime.Now.ToLocalTime();
+                        entity.DateCreated = DateTime.UtcNow;
                         break;
                 }
             }
@@ -114,6 +114,7 @@ namespace Passengers.SqlServer.DataBase
         public DbSet<Offer> Offers { get; set; }
         public DbSet<ShopContact> ShopContacts { get; set; }
         public DbSet<ShopSchedule> ShopSchedules { get; set; }
+        public DbSet<Setting> Settings { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Tag> Tags { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }

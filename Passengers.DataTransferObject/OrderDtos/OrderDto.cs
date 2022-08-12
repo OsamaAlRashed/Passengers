@@ -12,8 +12,8 @@ namespace Passengers.DataTransferObject.OrderDtos
         public Guid Id { get; set; }
         public string SerialNumber { get; set; }
         public DateTime DateCreated { get; set; }
-        public double TimeAmount { get; set; }
-        public TimeType TimeType { get; set; }
+        //public double TimeAmount { get; set; }
+        //public TimeType TimeType { get; set; }
 
         public string ShopName { get; set; }
     }

@@ -389,7 +389,7 @@ namespace Passengers.Order.OrderService
             {
                 Id = order.Id,
                 SerialNumber = order.SerialNumber,
-                DateCreated = order.DateCreated,
+                DateCreated = order.DateCreated.UtcToLocal(),
                 ShopName = order.OrderDetails.Select(x => x.Product.Tag.Shop.Name).FirstOrDefault(),
                 Status = order.Status().MapCustomer(),
                 SubTotal = order.Cost(),
@@ -399,8 +399,8 @@ namespace Passengers.Order.OrderService
                 CustomerId = order.Address.CustomerId.Value,
                 Distance = Math.Round(new Point(order.Address.Lat, order.Address.Long).CalculateDistance(new Point(order.Shop().Address.Lat, order.Shop().Address.Long)) / 1000, 2),
                 Time = order.ExpectedTime,
-                TimeAmount = order.GetTime().Item1,
-                TimeType = order.GetTime().Item2
+                //TimeAmount = order.GetTime().Item1,
+                //TimeType = order.GetTime().Item2
             };
 
             return result;
@@ -422,10 +422,10 @@ namespace Passengers.Order.OrderService
                     {
                         Id = x.Id,
                         SerialNumber = x.SerialNumber,
-                        DateCreated = x.DateCreated,
+                        DateCreated = x.DateCreated.UtcToLocal("Syria Standard Time"),
                         Status = x.Status().MapCustomer(),
-                        TimeAmount = x.GetTime().Item1,
-                        TimeType = x.GetTime().Item2
+                        //TimeAmount = x.GetTime().Item1,
+                        //TimeType = x.GetTime().Item2
                     }).ToListAsync();
 
             orders = orders.Where(x => x.Status <= CustomerOrderStatus.Completed).ToList();
@@ -534,11 +534,13 @@ namespace Passengers.Order.OrderService
                 {
                     Id = x.Id,
                     SerialNumber = x.SerialNumber,
-                    DateCreated = x.DateCreated,
+                    DateCreated = x.DateCreated.UtcToLocal("Syria Standard Time"),
                     Status = x.DriverStatus(),
                     CustomerImagePath = x.Address.Customer.IdentifierImagePath,
                     CustomerName = x.Address.Customer.FullName,
                     CustomerPhone = x.Address.Customer.PhoneNumber,
+                    CustomerLat = x.Address.Lat,
+                    CustomerLng = x.Address.Long,
                     ShopName = x.Shop().Name,
                     ShopLat = x.Shop().Address.Lat,
                     ShopLng = x.Shop().Address.Long,
@@ -546,8 +548,10 @@ namespace Passengers.Order.OrderService
                     DeliveryCost = x.DeliveryCost ?? 0,
                     SubTotal = x.Cost(),
                     Time = x.ExpectedTime,
-                    TimeAmount = x.GetTime().Item1,
-                    TimeType = x.GetTime().Item2
+                    Distance = Math.Round(new Point(x.Address.Lat, x.Address.Long).CalculateDistance(new Point(x.Shop().Address.Lat, x.Shop().Address.Long)) / 1000, 2),
+
+                    //TimeAmount = x.GetTime().Item1,
+                    //TimeType = x.GetTime().Item2
                 }).FirstOrDefault();
 
             return _Operation.SetSuccess(order);
@@ -557,14 +561,14 @@ namespace Passengers.Order.OrderService
         {
             id = id.HasValue ? id.Value : Context.CurrentUserId;
 
-            var drivers = await Context.Drivers().Include(x => x.DriverOrders).ThenInclude(x => x.OrderStatusLogs).Include(x => x.Address).ToListAsync();
-
-            drivers = drivers.Where(x => x.Avilable()).ToList();
-
-            var driver = drivers.Where(x => x.Id == id).FirstOrDefault();
+            var driver = await Context.Drivers().Include(x => x.DriverOrders).ThenInclude(x => x.OrderStatusLogs)
+                .Include(x => x.Address).Where(x => x.Id == id).FirstOrDefaultAsync();
 
             if (driver == null)
                 return null;
+
+            var drivers = await Context.Drivers().Include(x => x.DriverOrders).ThenInclude(x => x.OrderStatusLogs).Include(x => x.Address).ToListAsync();
+            drivers = drivers.Where(x => x.Avilable()).ToList();
 
             if (!driver.Avilable())
                 return new List<DriverOrderDto>();
@@ -584,13 +588,13 @@ namespace Passengers.Order.OrderService
                 {
                     Id = x.Id,
                     SerialNumber = x.SerialNumber,
-                    DateCreated = x.DateCreated,
+                    DateCreated = x.DateCreated.UtcToLocal(),
                     Status = x.DriverStatus(),
                     CustomerName = x.Address.Customer.FullName,
                     CustomerImagePath = x.Address.Customer.IdentifierImagePath,
                     CustomerPhone = x.Address.Customer.PhoneNumber,
-                    TimeAmount = x.GetTime().Item1,
-                    TimeType = x.GetTime().Item2
+                    //TimeAmount = x.GetTime().Item1,
+                    //TimeType = x.GetTime().Item2
                 }).ToList();
 
             return result;
@@ -692,7 +696,7 @@ namespace Passengers.Order.OrderService
                 {
                     Id = x.Id,
                     SerialNumber = x.SerialNumber,
-                    DateCreated = x.DateCreated,
+                    DateCreated = x.DateCreated.UtcToLocal("Syria Standard Time"),
                     Products = x.OrderDetails.Select(x => new ProductCardDto
                     {
                         Id = x.Product.Id,
@@ -700,8 +704,8 @@ namespace Passengers.Order.OrderService
                         Count = x.Quantity,
                         Price = x.Product.Price()
                     }).ToList(),
-                    TimeAmount = x.GetTime().Item1,
-                    TimeType = x.GetTime().Item2
+                    //TimeAmount = x.GetTime().Item1,
+                    //TimeType = x.GetTime().Item2
                 }).ToListAsync();
 
             return orders;
@@ -728,7 +732,7 @@ namespace Passengers.Order.OrderService
             var result = orders.Select(x => new DashboardOrderDto
             {
                 Id = x.Id,
-                DateCreated = x.DateCreated,
+                DateCreated = x.DateCreated.UtcToLocal(),
                 SerialNumber = x.SerialNumber,
                 Status = x.CompanyStatus(),
                 ImagePath = x.Status() == OrderStatus.Sended ? x.Address.Customer.IdentifierImagePath
@@ -737,8 +741,9 @@ namespace Passengers.Order.OrderService
                          : (x.Status() == OrderStatus.Accepted || x.Status() == OrderStatus.Refused || x.Status() == OrderStatus.Canceled ? "" : x.Driver.PhoneNumber),
                 FullName = x.Status() == OrderStatus.Sended ? x.Address.Customer.FullName
                          : (x.Status() == OrderStatus.Accepted ? "Unassigned" : (x.Status() == OrderStatus.Refused || x.Status() == OrderStatus.Canceled ? null : x.Driver.FullName)),
-                TimeAmount = x.GetTime().Item1,
-                TimeType = x.GetTime().Item2
+                //TimeAmount = x.GetTime().Item1,
+                //TimeType = x.GetTime().Item2
+                Time = Math.Round(DateTime.Now.Subtract(x.OrderStatusLogs.OrderBy(x => x.DateCreated).Select(x => x.DateCreated).LastOrDefault()).TotalMinutes, 0),
             }).OrderBy(x => x.DateCreated).ToList();
             
             return result;
@@ -973,5 +978,6 @@ namespace Passengers.Order.OrderService
         }
 
         #endregion
+
     }
 }

@@ -242,8 +242,11 @@ namespace Passengers.SharedKernel.ExtensionMethods
 
         }
 
-        
-
+        public static DateTime UtcToLocal(this DateTime UtcDateTime, string TimezoneName = "Syria Standard Time")
+        {
+            return
+                TimeZoneInfo.ConvertTimeFromUtc(UtcDateTime, TimeZoneInfo.GetSystemTimeZones().Where(tz => TimezoneName.Equals(tz.StandardName)).Single());
+        }
 
     }
 }

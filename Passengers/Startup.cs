@@ -33,6 +33,7 @@ using Passengers.Security.ShopService;
 using Passengers.Shared.CategoryService;
 using Passengers.Shared.DocumentService;
 using Passengers.Shared.NotificationService;
+using Passengers.Shared.SettingService;
 using Passengers.Shared.SharedService;
 using Passengers.SharedKernel.Constants.Security;
 using Passengers.SharedKernel.Enums;
@@ -135,6 +136,7 @@ namespace Passengers
             services.AddScoped<IUserConnectionManager, UserConnectionManager>();
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<INotificationRepository, NotificationRepository>();
+            services.AddScoped<ISettingRepository, SettingRepository>();
 
             services.AddSignalR();
 

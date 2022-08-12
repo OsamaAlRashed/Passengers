@@ -66,7 +66,9 @@ namespace Passengers.SqlServer.DataBase.Seed
                     FullName = "Super User",
                     Email = "SuperUser@SuperUser",
                     UserType = UserTypes.Admin,
-                    AccountStatus = AccountStatus.Accepted
+                    AccountStatus = AccountStatus.Accepted,
+                    DOB = new DateTime(2000,1,1),
+                    AddressText = "Syria - Aleppo",
                 };
                 var createResult = await userManager.CreateAsync(superUser, "1111");
                 if (createResult.Succeeded)
@@ -89,7 +91,9 @@ namespace Passengers.SqlServer.DataBase.Seed
                     FullName = "admin admin",
                     Email = "admin@admin",
                     UserType = UserTypes.Admin,
-                    AccountStatus = AccountStatus.Accepted
+                    AccountStatus = AccountStatus.Accepted,
+                    DOB = new DateTime(2000, 1, 1),
+                    AddressText = "Syria - Aleppo",
                 };
                 var createResult = await userManager.CreateAsync(admin, "1111");
                 if (createResult.Succeeded)
@@ -100,92 +104,6 @@ namespace Passengers.SqlServer.DataBase.Seed
                 }
             }
             #endregion
-
-            #region Shop
-            var shop = await context.Users.IgnoreQueryFilters().SingleOrDefaultAsync(x => x.UserName == "shop1");
-            if (shop is null)
-            {
-                shop = new AppUser()
-                {
-                    UserName = "shop1",
-                    FullName = "shop1 shop1",
-                    Email = "shop1@shop1",
-                    UserType = UserTypes.Shop,
-                };
-                var createResult = await userManager.CreateAsync(shop, "1111");
-                if (createResult.Succeeded)
-                {
-                    var roleResult = await userManager.AddToRoleAsync(shop, UserTypes.Shop.ToString());
-                    if (!roleResult.Succeeded)
-                        throw new Exception(String.Join("\n", roleResult.Errors.Select(error => error.Description)));
-                }
-            }
-            var shop2 = await context.Users.IgnoreQueryFilters().SingleOrDefaultAsync(x => x.UserName == "shop2");
-            if (shop2 is null)
-            {
-                shop2 = new AppUser()
-                {
-                    UserName = "shop2",
-                    FullName = "shop2 shop2",
-                    Email = "shop2@shop2",
-                    UserType = UserTypes.Shop,
-                };
-                var createResult = await userManager.CreateAsync(shop2, "1111");
-                if (createResult.Succeeded)
-                {
-                    var roleResult = await userManager.AddToRoleAsync(shop2, UserTypes.Shop.ToString());
-                    if (!roleResult.Succeeded)
-                        throw new Exception(String.Join("\n", roleResult.Errors.Select(error => error.Description)));
-                }
-            }
-            #endregion
-
-            #region 
-            var customer1 = await context.Users.IgnoreQueryFilters().SingleOrDefaultAsync(x => x.UserName == "customer1");
-            if (customer1 is null)
-            {
-                customer1 = new AppUser()
-                {
-                    UserName = "customer1",
-                    FullName = "customer1 customer1",
-                    Email = "customer1@customer1",
-                    UserType = UserTypes.Customer,
-                    DOB = new DateTime(1998, 12, 2),
-                    GenderType = GenderTypes.Male,
-                    AccountStatus = AccountStatus.Accepted
-                };
-                var createResult = await userManager.CreateAsync(customer1, "1111");
-                if (createResult.Succeeded)
-                {
-                    var roleResult = await userManager.AddToRoleAsync(customer1, UserTypes.Customer.ToString());
-                    if (!roleResult.Succeeded)
-                        throw new Exception(String.Join("\n", roleResult.Errors.Select(error => error.Description)));
-                }
-            }
-            #endregion
-
-            var driver = await context.Users.IgnoreQueryFilters().SingleOrDefaultAsync(x => x.UserName == "driver");
-            if (driver is null)
-            {
-                driver = new AppUser()
-                {
-                    UserName = "driver",
-                    FullName = "driver driver",
-                    Email = "driver@driver",
-                    UserType = UserTypes.Driver,
-                    DOB = new DateTime(1998, 12, 2),
-                    GenderType = GenderTypes.Male,
-                    AccountStatus = AccountStatus.Accepted
-                };
-                var createResult = await userManager.CreateAsync(driver, "1111");
-                if (createResult.Succeeded)
-                {
-                    var roleResult = await userManager.AddToRoleAsync(driver, UserTypes.Driver.ToString());
-                    if (!roleResult.Succeeded)
-                        throw new Exception(String.Join("\n", roleResult.Errors.Select(error => error.Description)));
-                }
-            }
         }
-
     }
 }
