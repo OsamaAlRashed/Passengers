@@ -53,9 +53,9 @@ namespace Passengers.Security.AccountService
             var user = await Context.Users
                 .Include(x => x.Category)
                 .Include(x => x.Documents)
-                .Where(x => x.UserType == dto.UserType
-                    && (x.UserName == dto.UserName || x.Email == dto.UserName || x.PhoneNumber == dto.UserName))
-                .SingleOrDefaultAsync();
+                .Where(x => x.UserType == dto.UserType && !dto.UserName.IsNullOrEmpty()
+                    && (x.UserName == dto.UserName || x.PhoneNumber == dto.UserName || x.Email == dto.UserName))
+                .FirstOrDefaultAsync();
 
             if (user == null || user.DateDeleted.HasValue)
                 return _Operation.SetFailed<LoginResponseDto>("UserNotFound", OperationResultTypes.Unauthorized);

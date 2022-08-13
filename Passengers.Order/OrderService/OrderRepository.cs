@@ -309,8 +309,8 @@ namespace Passengers.Order.OrderService
             {
                 var shopAddress = await Context.Shops().Where(x => x.Id == shop.Id).Select(x => x.Address).FirstOrDefaultAsync();
                 if (shopAddress == null) continue;
-                var distance = new Point(customerAddress.Lat, customerAddress.Long)
-                    .CalculateDistance(new Point(shopAddress.Lat, shopAddress.Long));
+                var distance = Math.Round(new Point(customerAddress.Lat, customerAddress.Long)
+                    .CalculateDistance(new Point(shopAddress.Lat, shopAddress.Long)) / 1000, 1);
 
                 //cost
                 cost += (((int)kmPrice * (int)distance) / 100 * 100);
@@ -334,6 +334,8 @@ namespace Passengers.Order.OrderService
                 var resultList = similarity.GetSimilarity(orders, newOrder);
 
                 time = (int)resultList.Take(3).Select(x => x.Item2.TimeCost).ToList().Average(x => x);
+                if (time > 50)
+                    time = 40 + (new Random().Next() * 10);
             }
 
             return _Operation.SetSuccess(new ExpectedCostDto { Cost = cost, Time = time });
