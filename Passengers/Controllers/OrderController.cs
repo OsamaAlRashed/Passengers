@@ -33,12 +33,7 @@ namespace Passengers.Controllers
         [AppAuthorize(AppRoles.Customer)]
         [ApiGroup(ApiGroupNames.Customer)]
         [HttpPost]
-        public async Task<IActionResult> GetMyCart(RequestCardDto cart) => await repository.GetMyCart(cart).ToJsonResultAsync();
-
-        [AppAuthorize(AppRoles.Customer)]
-        [ApiGroup(ApiGroupNames.Customer)]
-        [HttpPost]
-        public async Task<IActionResult> GetExpectedCost(SetOrderDto dto) => await repository.GetExpectedCost(dto).ToJsonResultAsync();
+        public async Task<IActionResult> Checkout(SetOrderDto dto) => await repository.Checkout(dto).ToJsonResultAsync();
 
         [AppAuthorize(AppRoles.Customer, AppRoles.Shop, AppRoles.Driver, AppRoles.Admin)]
         [ApiGroup(ApiGroupNames.Customer, ApiGroupNames.Shop, ApiGroupNames.Driver, ApiGroupNames.Dashboard)]

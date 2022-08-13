@@ -25,5 +25,11 @@ namespace Passengers.DataTransferObject.OrderDtos
         public string ShopLng { get; set; }
         public string CustomerLat { get; set; }
         public string CustomerLng { get; set; }
+        public string DriverName { get; set; }
+        public string DriverImagePath { get; set; }
+        public string DriverPhone { get; set; }
+        public string DriverLat { get; set; }
+        public string DriverLng { get; set; }
+
     }
 }

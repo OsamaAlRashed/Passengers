@@ -269,36 +269,33 @@ namespace Passengers.Order.OrderService
 
         #region Customer
 
-        public async Task<OperationResult<List<ResponseCardDto>>> GetMyCart(RequestCardDto dto)
-        {
-            if (dto.Products == null || !dto.Products.Any())
-                return _Operation.SetFailed<List<ResponseCardDto>>("");
+        //public async Task<List<ResponseCardDto>> GetMyCart(RequestCardDto dto)
+        //{
+        //    var result = (await Context.Products
+        //        .Include(x => x.Tag).ThenInclude(x => x.Shop).Include(x => x.PriceLogs)
+        //        .Include(x => x.Documents)
+        //       .Where(x => dto.Products.Select(x => x.Id).Contains(x.Id) && x.Tag.ShopId.HasValue)
+        //       .ToListAsync())
+        //       .GroupBy(x => x.Tag.Shop)
+        //       .Select(x => new ResponseCardDto
+        //       {
+        //           Id = x.Key.Id,
+        //           Name = x.Key.Name,
+        //           Note = dto.Shops == null ? "" : dto.Shops.Where(s => s.Id == x.Key.Id).Select(s => s.Note).FirstOrDefault(),
+        //           Products = x.Select(x => new ProductCardDto
+        //           {
+        //               Id = x.Id,
+        //               Name = x.Name,
+        //               Price = x.Price(),
+        //               Count = dto.Products.Where(p => p.Id == x.Id).Select(x => x.Count).FirstOrDefault(),
+        //               ImagePath = x.ImagePath(),
+        //           }).ToList()
+        //       }).ToList();
 
-            var result = (await Context.Products
-                .Include(x => x.Tag).ThenInclude(x => x.Shop).Include(x => x.PriceLogs)
-                .Include(x => x.Documents)
-               .Where(x => dto.Products.Select(x => x.Id).Contains(x.Id) && x.Tag.ShopId.HasValue)
-               .ToListAsync())
-               .GroupBy(x => x.Tag.Shop)
-               .Select(x => new ResponseCardDto
-               {
-                   Id = x.Key.Id,
-                   Name = x.Key.Name,
-                   Note = dto.Shops == null ? "" : dto.Shops.Where(s => s.Id == x.Key.Id).Select(s => s.Note).FirstOrDefault(),
-                   Products = x.Select(x => new ProductCardDto
-                   {
-                       Id = x.Id,
-                       Name = x.Name,
-                       Price = x.Price(),
-                       Count = dto.Products.Where(p => p.Id == x.Id).Select(x => x.Count).FirstOrDefault(),
-                       ImagePath = x.ImagePath(),
-                   }).ToList()
-               }).ToList();
+        //    return _Operation.SetSuccess(result);
+        //}
 
-            return _Operation.SetSuccess(result);
-        }
-
-        public async Task<OperationResult<ExpectedCostDto>> GetExpectedCost(SetOrderDto dto)
+        public async Task<ExpectedCostDto> GetExpectedCost(SetOrderDto dto)
         {
             var customerAddress = await Context.Addresses.Where(x => x.Id == dto.AddressId).SingleOrDefaultAsync();
             var kmPrice = await Context.Settings.Select(x => x.KMPrice).FirstOrDefaultAsync();
@@ -338,7 +335,7 @@ namespace Passengers.Order.OrderService
                 time = FixTime(time);
             }
 
-            return _Operation.SetSuccess(new ExpectedCostDto { Cost = cost, Time = time });
+            return new ExpectedCostDto() { Cost = cost, Time = time };
         }
 
         private int FixTime(int time)
@@ -351,10 +348,10 @@ namespace Passengers.Order.OrderService
 
         }
 
-        public async Task<OperationResult<ResponseAddOrderDto>> AddOrder(SetOrderDto dto, Guid? currentUserId = null)
+        public async Task<OperationResult<bool>> AddOrder(SetOrderDto dto, Guid? currentUserId = null)
         {
             if (dto.Cart == null || !dto.Cart.Any())
-                return _Operation.SetFailed<ResponseAddOrderDto>("CartNotContainsItems");
+                return _Operation.SetFailed<bool>("CartNotContainsItems");
 
             var orders = new List<OrderSet>();
             foreach (var shop in dto.Cart)
@@ -389,24 +386,11 @@ namespace Passengers.Order.OrderService
             var admins = accountRepository.GetUserIds(UserTypes.Admin);
 
 
-            var lodedOrders = await Context.Orders
-                .Include("OrderDetails.Product.Tag.Shop")
-                .Include("OrderDetails.Product.PriceLogs")
-                .Where(x => orders.Select(x => x.Id).Contains(x.Id))
-                .ToListAsync();
+            
 
-            lodedOrders.ForEach(async order => await SendNotification(admins, UserTypes.Admin, OrderStatus.Sended, order));
+            orders.ForEach(async order => await SendNotification(admins, UserTypes.Admin, OrderStatus.Sended, order));
 
-            var result = new ResponseAddOrderDto
-            {
-                Shops = lodedOrders.Select(x => new ShopCostDto
-                {
-                    ShopName = x.Shop()?.Name,
-                    Cost = x.Cost()
-                }).ToList()
-            };
-            result.SubTotal = result.Shops.Sum(x => x.Cost);
-            return _Operation.SetSuccess(result);
+            return _Operation.SetSuccess(true);
         }
 
         public async Task<OperationResult<List<CustomerOrderDto>>> GetCustomerOrders()
@@ -433,8 +417,8 @@ namespace Passengers.Order.OrderService
                     .Where(order => order.Id == orderId)
                     .Include("OrderDetails.Product.Tag.Shop.Address")
                     .Include("OrderDetails.Product.PriceLogs")
-                    .Include(x => x.OrderStatusLogs)
-                    .Include(x => x.Address)
+                    .Include(x => x.OrderStatusLogs).Include(x => x.Address)
+                    .Include(x => x.Driver).ThenInclude(x => x.Address)
                     .SingleOrDefaultAsync();
 
             if (order == null)
@@ -458,6 +442,11 @@ namespace Passengers.Order.OrderService
                 CustomerLng = order.Address.Long,
                 ShopLat = order.Shop().Address.Lat,
                 ShopLng = order.Shop().Address.Long,
+                DriverImagePath = order.Driver.IdentifierImagePath,
+                DriverPhone = order.Driver?.PhoneNumber,
+                DriverLat = order.Driver?.Address.Lat ?? "36.2812",
+                DriverLng = order.Driver?.Address.Long ?? "37.1269412",
+                DriverName = order.Driver?.FullName
             };
 
             return result;
@@ -887,7 +876,7 @@ namespace Passengers.Order.OrderService
             {
                 try
                 {
-                    orderDashboardDetails.ExpectedCost = (await GetExpectedCost(new SetOrderDto
+                    orderDashboardDetails.ExpectedCost = await GetExpectedCost(new SetOrderDto
                     {
                         AddressId = order.AddressId,
                         Cart = new List<ResponseCardDto>()
@@ -902,7 +891,7 @@ namespace Passengers.Order.OrderService
                                 }).ToList()
                             }
                         }
-                        })).Result;
+                        });
                 }
                 catch
                 {
@@ -1082,6 +1071,28 @@ namespace Passengers.Order.OrderService
             await Context.SaveChangesAsync();
 
             return _Operation.SetSuccess(true);
+        }
+
+        public async Task<OperationResult<CheckoutDto>> Checkout(SetOrderDto dto)
+        {
+            CheckoutDto result = new();
+            result.ExpectedCost = await GetExpectedCost(dto);
+
+            var prices = await Context.Products.Include(x => x.PriceLogs)
+                    .Select(x => new { Id = x.Id, Price = x.Price() }).ToListAsync();
+
+            result.ShopCosts = new List<ShopCostDto>();
+            foreach (var shop in dto.Cart)
+            {
+                result.ShopCosts.Add(new ShopCostDto()
+                {
+                    Cost = shop.Products.Sum(x => x.Count * prices.Where(p => p.Id == x.Id).Select(x => x.Price).FirstOrDefault()),
+                    ShopName = shop.Name
+                });
+            }
+
+
+            return _Operation.SetSuccess(result);
         }
 
         #endregion
