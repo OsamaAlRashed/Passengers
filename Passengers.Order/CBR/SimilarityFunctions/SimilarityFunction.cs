@@ -109,12 +109,12 @@ namespace Passengers.Order.CBR.SimilarityFunctions
 
         public double GetLinearOrderTime(int val, int newval)
         {
-            return GetLinearVal(5, 40, val, newval);
+            return GetLinearVal(1, 40, val, newval);
         }
 
         public double GetLegthOfWay(int val, int newval)
         {
-            return GetLinearVal(900, 2000, val, newval);
+            return GetLinearVal(0, 20, val, newval);
         }
 
         public double GetLinearVal(int min , int max , int val, int newval)

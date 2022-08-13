@@ -333,12 +333,22 @@ namespace Passengers.Order.OrderService
                 List<OrderCBR> orders = IOHelper.ReadCsvFile<OrderCBR>(webHost.WebRootPath);
                 var resultList = similarity.GetSimilarity(orders, newOrder);
 
-                time = (int)resultList.Take(3).Select(x => x.Item2.TimeCost).ToList().Average(x => x);
-                if (time > 50)
-                    time = 40 + (new Random().Next() * 10);
+                time = Math.Max(time, (int)resultList.Take(3).Select(x => x.Item2.TimeCost).ToList().Average(x => x));
+
+                time = FixTime(time);
             }
 
             return _Operation.SetSuccess(new ExpectedCostDto { Cost = cost, Time = time });
+        }
+
+        private int FixTime(int time)
+        {
+            if (time <= 0)
+                return 5;
+            if(time > 40)
+                return 40;
+            return time;
+
         }
 
         public async Task<OperationResult<ResponseAddOrderDto>> AddOrder(SetOrderDto dto, Guid? currentUserId = null)
@@ -562,8 +572,8 @@ namespace Passengers.Order.OrderService
         public async Task<OperationResult<List<DriverOrderDto>>> GetAvilableOrders()
         {
             var result = await _GetDriverOrders();
-            if (result == null)
-                return _Operation.SetContent<List<DriverOrderDto>>(OperationResultTypes.NotExist, "");
+            //if (result == null)
+            //    return _Operation.SetContent<List<DriverOrderDto>>(OperationResultTypes.NotExist, "");
 
             return _Operation.SetSuccess(result);
         }
@@ -616,11 +626,8 @@ namespace Passengers.Order.OrderService
             var driver = await Context.Drivers().Include(x => x.DriverOrders).ThenInclude(x => x.OrderStatusLogs)
                 .Include(x => x.Address).Where(x => x.Id == id).FirstOrDefaultAsync();
 
-            if (driver == null)
-                return null;
-
             if (!driver.Avilable())
-                return new List<DriverOrderDto>();
+                return null;
 
             var orders = await Context.Orders.Include(x => x.OrderStatusLogs)
                 .Include("OrderDetails.Product.Tag.Shop.Address")
