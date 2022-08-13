@@ -37,8 +37,8 @@ namespace Passengers.Controllers
 
         [AppAuthorize(AppRoles.Customer)]
         [ApiGroup(ApiGroupNames.Customer)]
-        [HttpGet]
-        public async Task<IActionResult> GetExpectedCost([Required] Guid addressId) => await repository.GetExpectedCost(addressId).ToJsonResultAsync();
+        [HttpPost]
+        public async Task<IActionResult> GetExpectedCost(SetOrderDto dto) => await repository.GetExpectedCost(dto).ToJsonResultAsync();
 
         [AppAuthorize(AppRoles.Customer, AppRoles.Shop, AppRoles.Driver, AppRoles.Admin)]
         [ApiGroup(ApiGroupNames.Customer, ApiGroupNames.Shop, ApiGroupNames.Driver, ApiGroupNames.Dashboard)]

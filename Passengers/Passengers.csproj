@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="wwwroot\data_set.csv" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="EasyRefreshToken" Version="5.0.8" />
     <PackageReference Include="FluentValidation" Version="10.3.6" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="5.0.12" />
@@ -26,7 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\" />
+    <None Include="wwwroot\data_set.csv" />
   </ItemGroup>
 
   <ProjectExtensions><VisualStudio><UserProperties appsettings_1json__JsonSchema="https://json.schemastore.org/appveyor.json" /></VisualStudio></ProjectExtensions>

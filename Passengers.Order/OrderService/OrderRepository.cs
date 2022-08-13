@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Passengers.Base;
 using Passengers.DataTransferObject.NotificationDtos;
@@ -6,6 +7,10 @@ using Passengers.DataTransferObject.OrderDtos;
 using Passengers.Main.ProductService.Store;
 using Passengers.Models.Order;
 using Passengers.Models.Security;
+using Passengers.Order.CBR;
+using Passengers.Order.CBR.Enums;
+using Passengers.Order.CBR.Helpers;
+using Passengers.Order.CBR.SimilarityFunctions;
 using Passengers.Order.OrderService.Store;
 using Passengers.Order.RealTime;
 using Passengers.Order.RealTime.Hubs;
@@ -37,14 +42,17 @@ namespace Passengers.Order.OrderService
         private readonly IUserConnectionManager userConnectionManager;
         private readonly IAccountRepository accountRepository;
         private readonly INotificationRepository notificationRepository;
+        private readonly IWebHostEnvironment webHost;
 
         public OrderRepository(PassengersDbContext context, IHubContext<OrderHub, IOrderHub> orderHubContext, IUserConnectionManager userConnectionManager,
-            IAccountRepository accountRepository, INotificationRepository notificationRepository) : base(context)
+            IAccountRepository accountRepository, INotificationRepository notificationRepository
+            ,IWebHostEnvironment webHost) : base(context)
         {
             this.orderHubContext = orderHubContext;
             this.userConnectionManager = userConnectionManager;
             this.accountRepository = accountRepository;
             this.notificationRepository = notificationRepository;
+            this.webHost = webHost;
         }
 
         #endregion
@@ -95,6 +103,9 @@ namespace Passengers.Order.OrderService
                 {
                     order.DeliveryCost = deliveryCost;
                     order.ExpectedTime = expectedTime;
+                    
+                    ///ToDO
+                    //InsertRecordToCsvFile()
                 }
                 await Context.SaveChangesAsync();
 
@@ -167,9 +178,8 @@ namespace Passengers.Order.OrderService
             }
             else if (newStatus == OrderStatus.Assigned)
             {
-                var driverIds = await Context.OrderDrivers
-                    .Where(x => x.OrderId == order.Id && x.OrderDriverType == OrderDriverType.Nothing)
-                    .Select(x => x.DriverId).ToListAsync();
+                ///ToDo
+                var driverIds = await Context.Drivers().Select(x => x.Id).ToListAsync();
                 await _UpdateOrdersListDriver(driverIds);
             }
             else if (newStatus == OrderStatus.Collected)
@@ -288,11 +298,44 @@ namespace Passengers.Order.OrderService
             return _Operation.SetSuccess(result);
         }
 
-        public async Task<OperationResult<ExpectedCostDto>> GetExpectedCost(Guid addressId)
+        public async Task<OperationResult<ExpectedCostDto>> GetExpectedCost(SetOrderDto dto)
         {
-            Random random = new Random();
-            var cost = random.Next(20, 50) * 100;
-            var time = random.Next(10, 30);
+            var customerAddress = await Context.Addresses.Where(x => x.Id == dto.AddressId).SingleOrDefaultAsync();
+            var kmPrice = await Context.Settings.Select(x => x.KMPrice).FirstOrDefaultAsync();
+
+            var cost = 0;
+            var time = 0;
+            foreach (var shop in dto.Cart)
+            {
+                var shopAddress = await Context.Shops().Where(x => x.Id == shop.Id).Select(x => x.Address).FirstOrDefaultAsync();
+                if (shopAddress == null) continue;
+                var distance = new Point(customerAddress.Lat, customerAddress.Long)
+                    .CalculateDistance(new Point(shopAddress.Lat, shopAddress.Long));
+
+                //cost
+                cost += (((int)kmPrice * (int)distance) / 100 * 100);
+
+                //time
+                var preprationTime = await Context.Products.Where(x => shop.Products.Select(x => x.Id).Contains(x.Id)).MaxAsync(x => x.PrepareTime);
+
+                OrderCBR newOrder = new OrderCBR
+                {
+                    CustomerName = "",
+                    LengthOfWay = (int)distance,
+                    ProductCount = shop.Products.Count,
+                    OrderDay = DateTime.Now.DayOfWeek,
+                    VehicleType = VehicleTypes.ElectricBike,
+                    WeatherForcast = WeatherForecast.Sunny,
+                    PreprationTime = preprationTime,
+                };
+
+                SimilarityFunction similarity = new SimilarityFunction();
+                List<OrderCBR> orders = IOHelper.ReadCsvFile<OrderCBR>(webHost.WebRootPath);
+                var resultList = similarity.GetSimilarity(orders, newOrder);
+
+                time = (int)resultList.Take(3).Select(x => x.Item2.TimeCost).ToList().Average(x => x);
+            }
+
             return _Operation.SetSuccess(new ExpectedCostDto { Cost = cost, Time = time });
         }
 
@@ -497,6 +540,7 @@ namespace Passengers.Order.OrderService
             // Avilable
             // Online
             // Fixed Amount
+            //&& x.FixedAmount() >= total
 
             var drivers = await Context.Drivers()
                 .Include(x => x.DriverOrders).ThenInclude(x => x.OrderStatusLogs)
@@ -505,7 +549,7 @@ namespace Passengers.Order.OrderService
                 .ToListAsync();
 
             var driverIds = drivers
-                .Where(x => x.Avilable() && x.IsNotRefused(id) && x.FixedAmount() >= total)
+                .Where(x => x.Avilable() && x.IsNotRefused(id))
                 .OrderByDescending(driver => new Point(latitude, longitude)
                             .CalculateDistance(new Point(driver.Address.Lat, driver.Address.Long)))
                 .Take(10).Select(x => x.Id).ToList();
@@ -832,7 +876,29 @@ namespace Passengers.Order.OrderService
 
             if (order.Status() == OrderStatus.Sended)
             {
-                orderDashboardDetails.ExpectedCost = (await GetExpectedCost(order.AddressId)).Result;
+                try
+                {
+                    orderDashboardDetails.ExpectedCost = (await GetExpectedCost(new SetOrderDto
+                    {
+                        AddressId = order.AddressId,
+                        Cart = new List<ResponseCardDto>()
+                        {
+                            new ResponseCardDto()
+                            {
+                                Id = order.Shop().Id,
+                                Products = order.OrderDetails.Select(x => new ProductCardDto
+                                {
+                                    Id = x.Product.Id,
+                                    Count = order.OrderDetails.Count()
+                                }).ToList()
+                            }
+                        }
+                        })).Result;
+                }
+                catch
+                {
+                    orderDashboardDetails.ExpectedCost = new ExpectedCostDto() { Cost = 0, Time = 0};
+                }
             }
             else
             {
