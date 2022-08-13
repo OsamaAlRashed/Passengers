@@ -21,5 +21,9 @@ namespace Passengers.DataTransferObject.OrderDtos
         public double Distance { get; set; }
         public int Time { get; set; }
         public Guid CustomerId { get; set; }
+        public string ShopLat { get; set; }
+        public string ShopLng { get; set; }
+        public string CustomerLat { get; set; }
+        public string CustomerLng { get; set; }
     }
 }

@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Passengers.DataTransferObject.OrderDtos;
 using Passengers.Order.OrderService;
+using Passengers.Shared.SharedService;
+using Passengers.SharedKernel.Enums;
 using Passengers.SharedKernel.ExtensionMethods;
 using Passengers.SqlServer.DataBase;
 using System;
@@ -30,6 +32,8 @@ namespace Passengers.Order.RealTime.Hubs
 
         public Task UpdateAdminOrders(List<DashboardOrderDto> orders);
 
+        public Task UpdateLocation(string lat, string lng);
+
         public Task Test(string text);
         public Task Test2(string text1, string text2);
         public Task ReceiveMessage(object text);
@@ -38,9 +42,29 @@ namespace Passengers.Order.RealTime.Hubs
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class OrderHub : Hub<IOrderHub>
     {
+        private readonly PassengersDbContext context;
+
+        public OrderHub(PassengersDbContext context)
+        {
+            this.context = context;
+        }
+
         public async Task BroadcastMessage(string message)
         {
             await Clients.All.ReceiveMessage(message);
+        }
+
+        public async Task ChangeLocation(string lat, string lng)
+        {
+            var orders = await context.Orders
+                .Include(x => x.OrderStatusLogs)
+                .Include(x => x.Address)
+                .Where(x => x.DriverId == context.CurrentUserId).ToListAsync();
+
+            var currentCustomerId = orders.Where(x => x.Status() == OrderStatus.Assigned || x.Status() == OrderStatus.Collected).Select(x => x.Address.CustomerId).FirstOrDefault();
+
+            if(currentCustomerId != null)
+                await Clients.Clients(currentCustomerId.ToString()).UpdateLocation(lat, lng);
         }
 
         #region Connections
