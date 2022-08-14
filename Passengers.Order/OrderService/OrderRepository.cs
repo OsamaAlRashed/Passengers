@@ -442,7 +442,7 @@ namespace Passengers.Order.OrderService
                 CustomerLng = order.Address.Long,
                 ShopLat = order.Shop().Address.Lat,
                 ShopLng = order.Shop().Address.Long,
-                DriverImagePath = order.Driver.IdentifierImagePath,
+                DriverImagePath = order.Driver?.IdentifierImagePath,
                 DriverPhone = order.Driver?.PhoneNumber,
                 DriverLat = order.Driver?.Address.Lat ?? "36.2812",
                 DriverLng = order.Driver?.Address.Long ?? "37.1269412",
@@ -1076,25 +1076,59 @@ namespace Passengers.Order.OrderService
         public async Task<OperationResult<CheckoutDto>> Checkout(SetOrderDto dto)
         {
             CheckoutDto result = new();
-            result.ExpectedCost = await GetExpectedCost(dto);
+            var expectedCost = await GetExpectedCost(dto);
+            result.Time = expectedCost.Time;
+            result.DeliverCost = expectedCost.Cost;
 
-            var prices = await Context.Products.Include(x => x.PriceLogs)
-                    .Select(x => new { Id = x.Id, Price = x.Price() }).ToListAsync();
+            result.Items = await GetMyCart(dto.Cart);
 
-            var shops = await Context.Shops().ToListAsync();
-
-            result.ShopCosts = new List<ShopCostDto>();
-            foreach (var shop in dto.Cart)
-            {
-                result.ShopCosts.Add(new ShopCostDto()
-                {
-                    Cost = shop.Products.Sum(x => x.Count * prices.Where(p => p.Id == x.Id).Select(x => x.Price).FirstOrDefault()),
-                    ShopName = shops.Where(x => x.Id == shop.Id).Select(x => x.Name).FirstOrDefault()
-                });
-            }
-
+            result.Total = result.Items.Sum(x => x.ShopSubTotal) + result.DeliverCost;
 
             return _Operation.SetSuccess(result);
+        }
+
+        public async Task<List<ShopProductDto>> GetMyCart(List<ResponseCardDto> dto)
+        {
+            List<ShopProductDto> result = new();
+
+            var products = await Context.Products
+                .Include(x => x.Tag).ThenInclude(x => x.Shop).Include(x => x.PriceLogs)
+                .Include(x => x.Documents)
+                .Where(x => x.Tag.ShopId.HasValue)
+                .ToListAsync();
+
+            foreach (var shop in dto)
+            {
+                ShopProductDto ob = new();
+                var currentShop = await Context.Shops().Where(x => x.Id == shop.Id).FirstOrDefaultAsync();
+                if (currentShop == null) continue;
+
+                ob.ShopId = currentShop.Id;
+                ob.ShopName = currentShop.Name;
+
+                List<ProductCountDto> productsResult = new();
+                foreach (var product in shop.Products)
+                {
+                    var currentProduct = products.Where(x => x.Id == product.Id).FirstOrDefault();
+                    if (currentProduct == null) continue;
+
+                    ProductCountDto pro = new();
+                    pro.Id = currentProduct.Id;
+                    pro.Name = currentProduct.Name;
+                    pro.Price = currentProduct.Price();
+                    pro.ImagePath = currentProduct.ImagePath();
+                    pro.Count = product.Count;
+
+                    productsResult.Add(pro);
+                }
+
+                ob.Products = productsResult;
+                ob.ShopSubTotal = productsResult.Sum(x => x.Price * x.Count);
+
+                result.Add(ob);
+            }
+
+            return result;
         }
 
         #endregion
