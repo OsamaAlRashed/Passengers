@@ -178,6 +178,9 @@ namespace Passengers.Order.OrderService
             }
             else if (newStatus == OrderStatus.Assigned)
             {
+                await _UpdateOrdersListCustomer(customerId);
+                await _UpdateOrderCustomer(order.Id);
+                await SendNotification(new List<Guid>() { customerId }, UserTypes.Customer, newStatus, order);
                 ///ToDo
                 var driverIds = await Context.Drivers().Select(x => x.Id).ToListAsync();
                 await _UpdateOrdersListDriver(driverIds);
