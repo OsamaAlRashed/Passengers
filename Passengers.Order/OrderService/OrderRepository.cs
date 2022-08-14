@@ -447,8 +447,8 @@ namespace Passengers.Order.OrderService
                 ShopLng = order.Shop().Address.Long,
                 DriverImagePath = order.Driver?.IdentifierImagePath,
                 DriverPhone = order.Driver?.PhoneNumber,
-                DriverLat = order.Driver?.Address.Lat ?? "36.2812",
-                DriverLng = order.Driver?.Address.Long ?? "37.1269412",
+                DriverLat = order.Driver?.Address.Lat ?? "36.211771",
+                DriverLng = order.Driver?.Address.Long ?? "37.111304",
                 DriverName = order.Driver?.FullName
             };
 
