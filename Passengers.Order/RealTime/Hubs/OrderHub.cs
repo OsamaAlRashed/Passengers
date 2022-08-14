@@ -64,7 +64,13 @@ namespace Passengers.Order.RealTime.Hubs
             var currentCustomerId = orders.Where(x => x.Status() == OrderStatus.Assigned || x.Status() == OrderStatus.Collected).Select(x => x.Address.CustomerId).FirstOrDefault();
 
             if(currentCustomerId != null)
-                await Clients.Clients(currentCustomerId.ToString()).UpdateLocation(lat, lng);
+                await Clients.User(currentCustomerId.ToString()).UpdateLocation(lat, lng);
+        }
+
+
+        public async Task ChangeLocationTest(string lat, string lng)
+        {
+            await Clients.User("06fb27cb-9ae8-44c4-4921-08da7de6f854").UpdateLocation(lat, lng);
         }
 
         #region Connections
