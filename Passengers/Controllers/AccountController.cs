@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Passengers.DataTransferObject.SecurityDtos;
 using Passengers.DataTransferObject.SecurityDtos.Login;
 using Passengers.Security.AccountService;
-using Passengers.SharedKernel.Attribute;
+using Passengers.Security.Attribute;
 using Passengers.SharedKernel.Constants.Security;
 using Passengers.SharedKernel.Enums;
 using Passengers.SharedKernel.OperationResult.Enums;

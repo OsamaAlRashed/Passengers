@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Passengers.Shared.NotificationService;
-using Passengers.SharedKernel.Attribute;
+using Passengers.Security.Attribute;
 using Passengers.SharedKernel.Constants.Security;
 using Passengers.SharedKernel.OperationResult.ExtensionMethods;
 using Passengers.SharedKernel.Swagger.ApiGroup;

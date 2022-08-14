@@ -21,8 +21,8 @@ namespace Passengers.Main.ProductService.Store
              && (!filter.FromPrice.HasValue || filter.FromPrice <= product.Price())
              && (!filter.ToPrice.HasValue || filter.ToPrice >= product.Price())
              && ((!filter.Discount.HasValue) ||
-                (filter.Discount.Value ? product.Discounts.Where(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate).Any()
-                                       : !product.Discounts.Where(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate).Any()))
+                (filter.Discount.Value ? product.Discounts.Where(x => x.StartDate <= DateTime.UtcNow && DateTime.UtcNow <= x.EndDate).Any()
+                                       : !product.Discounts.Where(x => x.StartDate <= DateTime.UtcNow && DateTime.UtcNow <= x.EndDate).Any()))
              && (filter.TagIds == null || !filter.TagIds.Any() || filter.TagIds.Contains(product.TagId))
              && (string.IsNullOrEmpty(filter.Search) || product.Name.Contains(filter.Search))
              && (!filter.Avilable.HasValue || product.Avilable == filter.Avilable);
@@ -39,9 +39,9 @@ namespace Passengers.Main.ProductService.Store
                 PrepareTime = c.PrepareTime,
                 Price = c.Price(),
                 TagId = c.TagId,
-                HasDiscount = c.Discounts.Any(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate),
-                Discount = c.Discounts.Any(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate) ? c.Discounts.FirstOrDefault(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate).Price : null,
-                IsNew = DateTime.Now.Day - c.DateCreated.Day <= 2,
+                HasDiscount = c.Discounts.Any(x => x.StartDate <= DateTime.UtcNow && DateTime.UtcNow <= x.EndDate),
+                Discount = c.Discounts.Any(x => x.StartDate <= DateTime.UtcNow && DateTime.UtcNow <= x.EndDate) ? c.Discounts.FirstOrDefault(x => x.StartDate <= DateTime.UtcNow && DateTime.UtcNow <= x.EndDate).Price : null,
+                IsNew = DateTime.UtcNow.Day - c.DateCreated.Day <= 2,
                 Rate = c.Reviews.Any() ? c.Reviews.Average(x => x.Rate) : 0,
             };
 

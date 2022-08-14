@@ -86,7 +86,7 @@ namespace Passengers.Main.OfferService
             var offer = await Context.Offers.Where(x => x.Id == id).SingleOrDefaultAsync();
             if (offer == null)
                 return (OperationResultTypes.NotExist, "");
-            offer.EndDate = endDate ?? DateTime.Now;
+            offer.EndDate = endDate ?? DateTime.UtcNow;
             await Context.SaveChangesAsync();
             return _Operation.SetSuccess(true);
         }

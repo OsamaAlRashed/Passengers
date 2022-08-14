@@ -88,7 +88,7 @@ namespace Passengers.Main.ProductService
 
             var oldPrice = product.PriceLogs.Where(x => !x.EndDate.HasValue).FirstOrDefault();
             if (oldPrice != null)
-                oldPrice.EndDate = DateTime.Now;
+                oldPrice.EndDate = DateTime.UtcNow;
             product.PriceLogs.Add(new PriceLog
             {
                 Price = newPrice
@@ -151,7 +151,7 @@ namespace Passengers.Main.ProductService
             if (product == null)
                 return _Operation.SetContent<bool>(OperationResultTypes.NotExist, "ProductNotExist");
 
-            product.DateDeleted = DateTime.Now;
+            product.DateDeleted = DateTime.UtcNow;
             await Context.SaveChangesAsync();
             return _Operation.SetSuccess(true);
         }
@@ -172,7 +172,7 @@ namespace Passengers.Main.ProductService
 
             var oldPrice = product.PriceLogs.Where(x => !x.EndDate.HasValue).FirstOrDefault();
             if (oldPrice != null)
-                oldPrice.EndDate = DateTime.Now;
+                oldPrice.EndDate = DateTime.UtcNow;
             product.PriceLogs.Add(new PriceLog
             {
                 Price = dto.Price
@@ -198,7 +198,7 @@ namespace Passengers.Main.ProductService
 
         private static Discount GetCurrentDiscount(ICollection<Discount> discounts)
         {
-            return discounts.Where(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate).FirstOrDefault();
+            return discounts.Where(x => x.StartDate <= DateTime.UtcNow && DateTime.UtcNow <= x.EndDate).FirstOrDefault();
         }
 
         public async Task<OperationResult<PagedList<GetProductDto>>> Get(ProductFilterDto filterDto, SortProductTypes? sortType, bool? isDes, int pageNumber = 1, int pageSize = 10)

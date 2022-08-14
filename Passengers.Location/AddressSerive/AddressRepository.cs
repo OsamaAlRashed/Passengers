@@ -62,7 +62,7 @@ namespace Passengers.Location.AddressSerive
             if (entity == null)
                 return (OperationResultTypes.NotExist, "");
 
-            entity.DateDeleted = DateTime.Now;
+            entity.DateDeleted = DateTime.UtcNow;
             await Context.SaveChangesAsync();
             return true;
         }
@@ -72,7 +72,7 @@ namespace Passengers.Location.AddressSerive
             var entities = await Context.Addresses.Where(x => x.CustomerId == userId).ToListAsync();
             foreach (var entity in entities)
             {
-                entity.DateDeleted = DateTime.Now;
+                entity.DateDeleted = DateTime.UtcNow;
             }
             await Context.SaveChangesAsync();
             return true;

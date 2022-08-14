@@ -105,7 +105,7 @@ namespace Passengers.Main.TagService
             if (tag == null)
                 return _Operation.SetFailed<bool>("Tag Not Found.", OperationResultTypes.NotExist);
 
-            tag.DateDeleted = DateTime.Now;
+            tag.DateDeleted = DateTime.UtcNow;
             await Context.SaveChangesAsync();
             return _Operation.SetSuccess(true);
         }

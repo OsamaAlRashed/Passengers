@@ -149,7 +149,7 @@ namespace Passengers.Security.CustomerService
                 ShopId = product.Tag.Shop.Id,
                 ShopCategory = product.Tag.Shop.Category.Name,
                 ShopImagePath = product.Tag.Shop.Documents.Select(x => x.Path).FirstOrDefault(),
-                ShopOnline = product.Tag.Shop.ShopSchedules.Any(x => x.Days.Contains(DateTime.Now.Day.ToString()) && x.FromTime <= DateTime.Now.TimeOfDay && DateTime.Now.TimeOfDay <= x.ToTime),
+                ShopOnline = product.Tag.Shop.ShopSchedules.Any(x => x.Days.Contains(DateTime.UtcNow.Day.ToString()) && x.FromTime <= DateTime.UtcNow.TimeOfDay && DateTime.UtcNow.TimeOfDay <= x.ToTime),
                 Reviews = product.Reviews.Select(r => new
                 {
                     r.Id,
@@ -294,8 +294,8 @@ namespace Passengers.Security.CustomerService
                 TagName = product.Tag?.Name,
                 product.Name,
                 Price = product.Price(),
-                HasDiscount = product.Discounts.Where(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate).FirstOrDefault() is null ? false : true,
-                DiscountPrice = product.Discounts.Where(x => x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate).FirstOrDefault()?.Price,
+                HasDiscount = product.Discounts.Where(x => x.StartDate <= DateTime.UtcNow && DateTime.UtcNow <= x.EndDate).FirstOrDefault() is null ? false : true,
+                DiscountPrice = product.Discounts.Where(x => x.StartDate <= DateTime.UtcNow && DateTime.UtcNow <= x.EndDate).FirstOrDefault()?.Price,
                 product.Avilable,
                 product.PrepareTime,
                 RateDegree = product.Rate(),
@@ -306,7 +306,7 @@ namespace Passengers.Security.CustomerService
                 {
                     Id = product.Tag?.ShopId,
                     Name = product.Tag?.Shop?.Name,
-                    Online = product.Tag?.Shop?.ShopSchedules.Any(x => x.Days.Contains(DateTime.Now.Day.ToString()) && x.FromTime <= DateTime.Now.TimeOfDay && DateTime.Now.TimeOfDay <= x.ToTime),
+                    Online = product.Tag?.Shop?.ShopSchedules.Any(x => x.Days.Contains(DateTime.UtcNow.Day.ToString()) && x.FromTime <= DateTime.UtcNow.TimeOfDay && DateTime.UtcNow.TimeOfDay <= x.ToTime),
                     Follow = product.Tag?.Shop?.ShopFavorites.Any(x => x.CustomerId == Context.CurrentUserId),
                     ImagePath = product.Tag?.Shop?.Documents.Select(x => x.Path).FirstOrDefault(),
                     CategoryName = product.Tag?.Shop?.Category?.Name
@@ -344,7 +344,7 @@ namespace Passengers.Security.CustomerService
             {
                 Id = shopId,
                 Name = shop.Name,
-                Online = shop.ShopSchedules.Any(x => x.Days.Contains(DateTime.Now.Day.ToString()) && x.FromTime <= DateTime.Now.TimeOfDay && DateTime.Now.TimeOfDay <= x.ToTime),
+                Online = shop.ShopSchedules.Any(x => x.Days.Contains(DateTime.UtcNow.Day.ToString()) && x.FromTime <= DateTime.UtcNow.TimeOfDay && DateTime.UtcNow.TimeOfDay <= x.ToTime),
                 Follow = shop.ShopFavorites.Any(x => x.CustomerId == Context.CurrentUserId),
                 ImagePath = shop.Documents.Select(x => x.Path).FirstOrDefault(),
                 CategoryName = shop.Category.Name,

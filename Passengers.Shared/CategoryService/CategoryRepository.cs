@@ -184,7 +184,7 @@ namespace Passengers.Shared.CategoryService
             {
                 await RemoveAllChildren(cat);
             }
-            category.DateDeleted = DateTime.Now;
+            category.DateDeleted = DateTime.UtcNow;
             category.LogoPath.TryDeleteImage(webHostEnvironment.WebRootPath);
             await Context.SaveChangesAsync();
             return true;

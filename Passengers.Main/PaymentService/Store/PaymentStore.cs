@@ -21,7 +21,7 @@ namespace Passengers.Main.PaymentService.Store
                 (!year.HasValue || x.Date.Year == year)
                 && (string.IsNullOrEmpty(search) || x.User.FullName.Contains(search))
                 && (!month.HasValue || x.Date.Month == month)
-                && ((!year.HasValue && month.HasValue) ? x.Date.Year == DateTime.Now.Year : true);
+                && ((!year.HasValue && month.HasValue) ? x.Date.Year == DateTime.UtcNow.Year : true);
         }
         public static class Query
         {

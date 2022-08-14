@@ -346,7 +346,7 @@ namespace Passengers.Security.ShopService
                 .OrderByDescending(x => x.OrderDetails.Sum(x => x.Quantity))
                 .Take(5).ToListAsync();
 
-            var topOffers = await Context.Offers.Where(x => x.ShopId == Context.CurrentUserId && x.EndDate > DateTime.Now)
+            var topOffers = await Context.Offers.Where(x => x.ShopId == Context.CurrentUserId && x.EndDate > DateTime.UtcNow)
                 .Include(x => x.Documents).Include(x => x.OrderDetails)
                 .OrderByDescending(x => x.OrderDetails.Sum(x => x.Quantity))
                 .Take(5).ToListAsync();

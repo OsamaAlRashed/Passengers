@@ -54,9 +54,9 @@ namespace Passengers.Main.OfferService.Store
         public static class Filter
         {
             public static Expression<Func<Offer, bool>> WhereType(OfferTypes type) => (offer)
-                => type == OfferTypes.Active ? offer.StartDate <= DateTime.Now && DateTime.Now <= offer.EndDate
-                                             : (type == OfferTypes.Pending ? offer.StartDate > DateTime.Now
-                                                                          : (type == OfferTypes.Archive ? offer.EndDate < DateTime.Now
+                => type == OfferTypes.Active ? offer.StartDate <= DateTime.UtcNow && DateTime.UtcNow <= offer.EndDate
+                                             : (type == OfferTypes.Pending ? offer.StartDate > DateTime.UtcNow
+                                                                          : (type == OfferTypes.Archive ? offer.EndDate < DateTime.UtcNow
                                                                                                         : true));
         }
     }

@@ -272,7 +272,7 @@ namespace Passengers.Security.AccountService
             if (user == null)
                 return _Operation.SetContent<bool>(OperationResultTypes.NotExist, "UserNotFound");
 
-            user.DateBlocked = user.DateBlocked.HasValue ? null : DateTime.Now;
+            user.DateBlocked = user.DateBlocked.HasValue ? null : DateTime.UtcNow;
 
             await tokenService.Clear(id);
 
@@ -287,7 +287,10 @@ namespace Passengers.Security.AccountService
             if (user == null)
                 return _Operation.SetContent<bool>(OperationResultTypes.NotExist, "UserNotFound");
 
-            user.DateDeleted = DateTime.Now;
+            user.DateDeleted = DateTime.UtcNow;
+
+            await tokenService.Clear(id);
+
             await Context.SaveChangesAsync();
 
             return _Operation.SetSuccess(true);
@@ -363,7 +366,7 @@ namespace Passengers.Security.AccountService
 
             foreach (var item in shops)
             {
-                item.DateDeleted = DateTime.Now;
+                item.DateDeleted = DateTime.UtcNow;
             }
             await Context.SaveChangesAsync();
             return _Operation.SetSuccess(true);

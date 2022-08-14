@@ -14,7 +14,7 @@ namespace Passengers.Shared.SharedService
     {
         public static decimal Price(this Product product)
                 => product.PriceLogs
-                            .Where(x => x.DateCreated <= DateTime.Now && (!x.EndDate.HasValue || DateTime.Now <= x.EndDate))
+                            .Where(x => x.DateCreated <= DateTime.UtcNow && (!x.EndDate.HasValue || DateTime.UtcNow <= x.EndDate))
                             .Select(x => x.Price)
                             .FirstOrDefault();
 
@@ -73,7 +73,7 @@ namespace Passengers.Shared.SharedService
         {
             int[] duration = new[] { 60, 60, 24, 7, 30 };
 
-            var total = DateTime.Now.Subtract(order.OrderStatusLogs.OrderBy(x => x.DateCreated).Select(x => x.DateCreated).LastOrDefault()).TotalSeconds;
+            var total = DateTime.UtcNow.Subtract(order.OrderStatusLogs.OrderBy(x => x.DateCreated).Select(x => x.DateCreated).LastOrDefault()).TotalSeconds;
             TimeType timeType = TimeType.Second;
             while(total >= duration[(int)timeType] && timeType < TimeType.Month)
             {

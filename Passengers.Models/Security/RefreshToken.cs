@@ -14,7 +14,7 @@ namespace Passengers.Models.Security
         public DateTime DateCreated { get; set; }
         public RefreshToken()
         {
-            DateCreated = DateTime.Now;
+            DateCreated = DateTime.UtcNow;
         }
     }
 }

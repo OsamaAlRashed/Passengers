@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Passengers.DataTransferObject.CustomerDtos;
 using Passengers.Security.CustomerService;
-using Passengers.SharedKernel.Attribute;
+using Passengers.Security.Attribute;
 using Passengers.SharedKernel.Constants.Security;
 using Passengers.SharedKernel.OperationResult.ExtensionMethods;
 using Passengers.SharedKernel.Pagnation;

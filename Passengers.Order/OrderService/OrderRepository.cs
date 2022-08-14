@@ -320,7 +320,7 @@ namespace Passengers.Order.OrderService
                     CustomerName = "",
                     LengthOfWay = (int)distance,
                     ProductCount = shop.Products.Count,
-                    OrderDay = DateTime.Now.DayOfWeek,
+                    OrderDay = DateTime.UtcNow.DayOfWeek,
                     VehicleType = VehicleTypes.ElectricBike,
                     WeatherForcast = WeatherForecast.Sunny,
                     PreprationTime = preprationTime,

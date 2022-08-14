@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Passengers.DataTransferObject.ProductDtos;
 using Passengers.Main.ProductService;
-using Passengers.SharedKernel.Attribute;
+using Passengers.Security.Attribute;
 using Passengers.SharedKernel.Constants.Security;
 using Passengers.SharedKernel.Enums;
 using Passengers.SharedKernel.OperationResult.ExtensionMethods;

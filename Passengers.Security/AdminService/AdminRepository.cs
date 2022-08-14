@@ -95,7 +95,7 @@ namespace Passengers.Security.AdminService
         {
             ///ToDO
             pageSize = 100000;
-            var users = await Context.Admins().Where(x => string.IsNullOrEmpty(search) || x.FullName.Contains(search))
+            var users = await Context.Admins().Where(x => x.UserName != "SuperUser" && (string.IsNullOrEmpty(search) || x.FullName.Contains(search)))
                 .OrderByDescending(x => x.DateCreated).ToPagedListAsync(pageNumber, pageSize);
             var result = users.Select(AdminStore.Query.AdminToAdminDto).ToPagedList(pageNumber, pageSize);
             return _Operation.SetSuccess(result);
@@ -127,9 +127,9 @@ namespace Passengers.Security.AdminService
                     PhoneNumber = x.PhoneNumber,
                     ImagePath = x.Documents.Select(x => x.Path).FirstOrDefault(),
                     Category = x.Category.Name,
-                    Online = x.ShopSchedules.Any(x => x.Days.Contains(DateTime.Now.Day.ToString()) 
-                                                   && x.FromTime <= DateTime.Now.TimeOfDay 
-                                                   && x.ToTime >= DateTime.Now.TimeOfDay),
+                    Online = x.ShopSchedules.Any(x => x.Days.Contains(DateTime.UtcNow.Day.ToString()) 
+                                                   && x.FromTime <= DateTime.UtcNow.TimeOfDay 
+                                                   && x.ToTime >= DateTime.UtcNow.TimeOfDay),
                     FromDay = x.ShopSchedules.Any() ? 
                         (x.ShopSchedules.FirstOrDefault().Days.IsNullOrEmpty() ?
                             null : (x.ShopSchedules.FirstOrDefault().Days[0] - 49))

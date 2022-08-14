@@ -38,7 +38,7 @@ namespace Passengers.Shared.SharedService
             {
                 OrderCount = await Context.Orders.CountAsync(),
                 OrderMonthly = Enumerable.Range(1, 12)
-                                           .GroupJoin(Context.Orders.Where(x => x.DateCreated.Year == DateTime.Now.Year).ToList(),
+                                           .GroupJoin(Context.Orders.Where(x => x.DateCreated.Year == DateTime.UtcNow.Year).ToList(),
                                                         m => m,
                                                         x => x.DateCreated.Month, (m, order) => order.Count()).ToList()
             };
@@ -47,7 +47,7 @@ namespace Passengers.Shared.SharedService
             {
                 TotalImport = (await Context.Payments.ToListAsync()).Where(x => !x.Type.IsExport()).Sum(x => x.Amount),
                 ImportMonthly = Enumerable.Range(1, 12)
-                                           .GroupJoin(Context.Payments.ToList().Where(x => x.Date.Year == DateTime.Now.Year && !x.Type.IsExport()),
+                                           .GroupJoin(Context.Payments.ToList().Where(x => x.Date.Year == DateTime.UtcNow.Year && !x.Type.IsExport()),
                                                         m => m,
                                                         x => x.Date.Month, (m, import) => import.Sum(x => x.Amount)).ToList()
             };
@@ -56,7 +56,7 @@ namespace Passengers.Shared.SharedService
             {
                 TotalExport = (await Context.Payments.ToListAsync()).Where(x => x.Type.IsExport()).Sum(x => x.Amount),
                 ExportMonthly = Enumerable.Range(1, 12)
-                                           .GroupJoin(Context.Payments.ToList().Where(x => x.Date.Year == DateTime.Now.Year && x.Type.IsExport()),
+                                           .GroupJoin(Context.Payments.ToList().Where(x => x.Date.Year == DateTime.UtcNow.Year && x.Type.IsExport()),
                                                         m => m,
                                                         x => x.Date.Month, (m, import) => import.Sum(x => x.Amount)).ToList()
             };

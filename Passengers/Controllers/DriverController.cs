@@ -5,7 +5,7 @@ using Passengers.DataTransferObject.DriverDtos;
 using Passengers.Security.AccountService;
 using Passengers.Security.AdminService;
 using Passengers.Security.DriveService;
-using Passengers.SharedKernel.Attribute;
+using Passengers.Security.Attribute;
 using Passengers.SharedKernel.Constants.Security;
 using Passengers.SharedKernel.OperationResult.ExtensionMethods;
 using Passengers.SharedKernel.Swagger.ApiGroup;

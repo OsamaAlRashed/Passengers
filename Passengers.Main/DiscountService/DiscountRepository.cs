@@ -26,7 +26,7 @@ namespace Passengers.Main.DiscountService
         public async Task<OperationResult<DiscountDto>> Add(DiscountDto dto)
         {
             var currentDiscount = await Context.Discounts
-                .Where(x => x.ProductId == dto.ProductId && x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate)
+                .Where(x => x.ProductId == dto.ProductId && x.StartDate <= DateTime.UtcNow && DateTime.UtcNow <= x.EndDate)
                 .AnyAsync();
             if (currentDiscount)
                 return _Operation.SetFailed<DiscountDto>(LangErrorStore.Get(ErrorCodeConstant.DiscountAlreadyExist, Context.CurrentLang));
@@ -43,7 +43,7 @@ namespace Passengers.Main.DiscountService
             var entity = await Context.Discounts.Where(x => x.Id == id).SingleOrDefaultAsync();
             if (entity == null)
                 return _Operation.SetContent<bool>(OperationResultTypes.NotExist, LangErrorStore.Get(ErrorCodeConstant.DiscountNotFound, Context.CurrentLang));
-            entity.DateDeleted = DateTime.Now;
+            entity.DateDeleted = DateTime.UtcNow;
             await Context.SaveChangesAsync();
             return _Operation.SetSuccess(true);
         }
@@ -51,7 +51,7 @@ namespace Passengers.Main.DiscountService
         public async Task<OperationResult<bool>> DeleteActiveByProductId(Guid productId)
         {
             var discounts = await Context.Discounts
-               .Where(x => x.ProductId == productId && x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate)
+               .Where(x => x.ProductId == productId && x.StartDate <= DateTime.UtcNow && DateTime.UtcNow <= x.EndDate)
                .ToListAsync();
 
             List<Task> tasks = new();
@@ -81,11 +81,11 @@ namespace Passengers.Main.DiscountService
         public async Task<OperationResult<bool>> EditEndDate(Guid productId, DateTime? endDate)
         {
             var currentDiscount = await Context.Discounts
-                .Where(x => x.ProductId == productId && x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate)
+                .Where(x => x.ProductId == productId && x.StartDate <= DateTime.UtcNow && DateTime.UtcNow <= x.EndDate)
                 .FirstOrDefaultAsync();
             if (currentDiscount == null)
                 return _Operation.SetContent<bool>(OperationResultTypes.NotExist, LangErrorStore.Get(ErrorCodeConstant.DiscountNotFound, Context.CurrentLang));
-            currentDiscount.EndDate = endDate ?? DateTime.Now;
+            currentDiscount.EndDate = endDate ?? DateTime.UtcNow;
             await Context.SaveChangesAsync();
             return _Operation.SetSuccess(true);
         }
@@ -101,7 +101,7 @@ namespace Passengers.Main.DiscountService
         public async Task<OperationResult<DiscountDto>> GetActiveByProductId(Guid productId)
         {
             var discounts = await Context.Discounts
-               .Where(x => x.ProductId == productId && x.StartDate <= DateTime.Now && DateTime.Now <= x.EndDate)
+               .Where(x => x.ProductId == productId && x.StartDate <= DateTime.UtcNow && DateTime.UtcNow <= x.EndDate)
                .Select(DiscountStore.Query.GetSelectDiscount)
                .FirstOrDefaultAsync();
             return _Operation.SetSuccess(discounts);
