@@ -118,10 +118,10 @@ namespace Passengers.Order.OrderService
 
         public async Task<OperationResult<OrderDetailsDto>> GetOrderDetails(Guid orderId)
         {
-            var order = await Context.Orders.Include(x => x.OrderDetails)
-                .ThenInclude(x => x.Product).ThenInclude(x => x.PriceLogs)
-                .ThenInclude(x => x.Product).ThenInclude(x => x.Documents)
-                .Where(x => x.Id == orderId).SingleOrDefaultAsync();
+            var order = await Context.Orders
+               .Include(x => x.OrderDetails).ThenInclude(x => x.Product).ThenInclude(x => x.PriceLogs)
+               .Include(x => x.OrderDetails).ThenInclude(x => x.Product).ThenInclude(x => x.Documents)
+               .Where(x => x.Id == orderId).SingleOrDefaultAsync();
             if (order == null)
                 return _Operation.SetContent<OrderDetailsDto>(OperationResultTypes.NotExist, "OrderNotFound");
 
@@ -300,7 +300,7 @@ namespace Passengers.Order.OrderService
             var customerAddress = await Context.Addresses.Where(x => x.Id == dto.AddressId).SingleOrDefaultAsync();
             var kmPrice = await Context.Settings.Select(x => x.KMPrice).FirstOrDefaultAsync();
 
-            var cost = 0;
+            decimal cost = 0;
             var time = 0;
             foreach (var shop in dto.Cart)
             {
@@ -310,7 +310,7 @@ namespace Passengers.Order.OrderService
                     .CalculateDistance(new Point(shopAddress.Lat, shopAddress.Long)) / 1000, 1);
 
                 //cost
-                cost += (((int)kmPrice * (int)distance) / 100 * 100);
+                cost += ((decimal)Math.Round(Convert.ToDouble(kmPrice) * distance, 0)) / 100 * 100;
 
                 //time
                 var preprationTime = await Context.Products.Where(x => shop.Products.Select(x => x.Id).Contains(x.Id)).MaxAsync(x => x.PrepareTime);
@@ -737,34 +737,34 @@ namespace Passengers.Order.OrderService
             return _Operation.SetSuccess(orders);
         }
 
-        private async Task<List<ShopOrderDto>> _GetShopOrders(bool? isReady = null, string search = "")
+        private async Task<List<ShopOrderDto>> _GetShopOrders(bool? isReady = null, string search = "", Guid? id = null)
         {
-            var orders = await Context.Orders
-                .Where(x => x.OrderDetails.Select(x => x.Product.Tag.ShopId).Any(id => id == Context.CurrentUserId)
+            var orders = await Context.Orders.Include(x => x.OrderStatusLogs).Include(x => x.OrderDetails).ThenInclude(x => x.Product).ThenInclude(x => x.PriceLogs)
+                .Where(x => x.OrderDetails.Select(x => x.Product.Tag.ShopId).Any(shopId => id.HasValue ? id == shopId : shopId == Context.CurrentUserId)
                     && (!isReady.HasValue || x.IsShopReady == isReady)
                     && (string.IsNullOrEmpty(search) || x.SerialNumber.Contains(search) || x.Cost().ToString().Contains(search)))
-                .Select(x => new ShopOrderDto
-                {
-                    Id = x.Id,
-                    SerialNumber = x.SerialNumber,
-                    DateCreated = x.DateCreated.UtcToLocal("Syria Standard Time"),
-                    Products = x.OrderDetails.Select(x => new ProductCardDto
-                    {
-                        Id = x.Product.Id,
-                        Name = x.Product.Name,
-                        Count = x.Quantity,
-                        Price = x.Product.Price()
-                    }).ToList(),
-                    //TimeAmount = x.GetTime().Item1,
-                    //TimeType = x.GetTime().Item2
-                }).ToListAsync();
+                .ToListAsync();
 
-            return orders;
+           var result = orders.Where(x => x.Status() >= OrderStatus.Accepted && x.Status() <= OrderStatus.Completed).Select(x => new ShopOrderDto
+           {
+               Id = x.Id,
+               SerialNumber = x.SerialNumber,
+               DateCreated = x.DateCreated.UtcToLocal("Syria Standard Time"),
+               Products = x.OrderDetails.Select(x => new ProductCardDto
+               {
+                   Id = x.Product.Id,
+                   Name = x.Product.Name,
+                   Count = x.Quantity,
+                   Price = x.Product.Price()
+               }).ToList(),
+           }).OrderByDescending(x => x.DateCreated).ToList();
+
+            return result;
         }
 
         private async Task<bool> _UpdateOrdersListShop(Guid id, bool? isReady = false)
         {
-            var result = await _GetShopOrders(isReady);
+            var result = await _GetShopOrders(isReady, "", id);
             await orderHubContext.Clients.User(id.ToString()).UpdateShopOrders(result);
             return true;
         }
@@ -796,7 +796,7 @@ namespace Passengers.Order.OrderService
                 //TimeAmount = x.GetTime().Item1,
                 //TimeType = x.GetTime().Item2
                 Time = Math.Round(DateTime.UtcNow.Subtract(x.OrderStatusLogs.OrderBy(x => x.DateCreated).Select(x => x.DateCreated).LastOrDefault()).TotalMinutes, 0),
-            }).OrderBy(x => x.DateCreated).ToList();
+            }).OrderByDescending(x => x.DateCreated).ToList();
             
             return result;
         }
