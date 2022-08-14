@@ -1081,13 +1081,15 @@ namespace Passengers.Order.OrderService
             var prices = await Context.Products.Include(x => x.PriceLogs)
                     .Select(x => new { Id = x.Id, Price = x.Price() }).ToListAsync();
 
+            var shops = await Context.Shops().ToListAsync();
+
             result.ShopCosts = new List<ShopCostDto>();
             foreach (var shop in dto.Cart)
             {
                 result.ShopCosts.Add(new ShopCostDto()
                 {
                     Cost = shop.Products.Sum(x => x.Count * prices.Where(p => p.Id == x.Id).Select(x => x.Price).FirstOrDefault()),
-                    ShopName = shop.Name
+                    ShopName = shops.Where(x => x.Id == shop.Id).Select(x => x.Name).FirstOrDefault()
                 });
             }
 

@@ -76,7 +76,7 @@ namespace Passengers.Repository.Base
             TEntity entity = await Context.FindAsync<TEntity>(id);
             if (entity is null)
                 return (OperationResultTypes.NotExist, $"{typeof(TEntity).Name}: {id} not exist");
-            entity.DateDeleted = DateTime.Now.ToLocalTime();
+            entity.DateDeleted = DateTime.UtcNow;
             await Context.SaveChangesAsync();
             return _Operation.SetSuccess(true, $"Soft deleted {typeof(TEntity).Name} success");
         }

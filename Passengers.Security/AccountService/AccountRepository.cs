@@ -58,7 +58,10 @@ namespace Passengers.Security.AccountService
                 .FirstOrDefaultAsync();
 
             if (user == null || user.DateDeleted.HasValue)
-                return _Operation.SetFailed<LoginResponseDto>("UserNotFound", OperationResultTypes.Unauthorized);
+                return _Operation.SetFailed<LoginResponseDto>("User not found", OperationResultTypes.Unauthorized);
+
+            if (user.DateBlocked.HasValue)
+                return _Operation.SetFailed<LoginResponseDto>("User is blocked", OperationResultTypes.Unauthorized);
 
             if (user.AccountStatus == AccountStatus.Draft)
                 return _Operation.SetFailed<LoginResponseDto>("UserNotAccepted", OperationResultTypes.Unauthorized);
@@ -270,6 +273,9 @@ namespace Passengers.Security.AccountService
                 return _Operation.SetContent<bool>(OperationResultTypes.NotExist, "UserNotFound");
 
             user.DateBlocked = user.DateBlocked.HasValue ? null : DateTime.Now;
+
+            await tokenService.Clear(id);
+
             await Context.SaveChangesAsync();
 
             return _Operation.SetSuccess(true);

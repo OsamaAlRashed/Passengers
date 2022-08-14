@@ -70,7 +70,7 @@ namespace Passengers.SqlServer.DataBase.Seed
                     DOB = new DateTime(2000,1,1),
                     AddressText = "Syria - Aleppo",
                 };
-                var createResult = await userManager.CreateAsync(superUser, "1111");
+                var createResult = await userManager.CreateAsync(superUser, "passengers");
                 if (createResult.Succeeded)
                 {
                     var identityRoles = roleManager.Roles.Select(a => a.Name).ToList();
@@ -95,7 +95,7 @@ namespace Passengers.SqlServer.DataBase.Seed
                     DOB = new DateTime(2000, 1, 1),
                     AddressText = "Syria - Aleppo",
                 };
-                var createResult = await userManager.CreateAsync(admin, "1111");
+                var createResult = await userManager.CreateAsync(admin, "passengers");
                 if (createResult.Succeeded)
                 {
                     var roleResult = await userManager.AddToRoleAsync(admin, UserTypes.Admin.ToString());

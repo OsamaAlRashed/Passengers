@@ -90,6 +90,7 @@ namespace Passengers.Main.SalaryLogService
         public async Task<OperationResult<List<SalaryPaymentDto>>> GetSalaries(int? year, int? month, string search)
         {
             var data = await Context.Payments
+                .IgnoreQueryFilters()
                 .Include(x => x.User)
                 .Where(x => x.Type == PaymentType.Salary)
                 .Where(PaymentStore.Filter.WhereDateFilter(year, month, search))
@@ -102,6 +103,7 @@ namespace Passengers.Main.SalaryLogService
         public async Task<OperationResult<List<ImportPaymentDto>>> GetImports(int? year, int? month, string search)
         {
             var data = await Context.Payments
+                .IgnoreQueryFilters()
                 .Include(x => x.User)
                 .Where(x => x.Type == PaymentType.Delivery || x.Type == PaymentType.FixedImport || x.Type == PaymentType.OtherImport)
                 .Where(PaymentStore.Filter.WhereDateFilter(year, month, search))
@@ -114,6 +116,7 @@ namespace Passengers.Main.SalaryLogService
         public async Task<OperationResult<List<ExportPaymentDto>>> GetExports(int? year, int? month, string search)
         {
             var data = await Context.Payments
+                .IgnoreQueryFilters()
                 .Include(x => x.User)
                 .Where(x => x.Type == PaymentType.FixedExport || x.Type == PaymentType.OtherExport)
                 .Where(PaymentStore.Filter.WhereDateFilter(year, month, search))
