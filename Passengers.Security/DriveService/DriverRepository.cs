@@ -233,8 +233,8 @@ namespace Passengers.Security.DriveService
                 return _Operation.SetContent<DriverStatisticsDto>(OperationResultTypes.NotExist,"User not exist.");
 
             DriverStatisticsDto dto = new();
-            dto.FixedAmount = driver.FixedAmount();
-            dto.DeliveryAmount = driver.DeliveryAmount();
+            dto.FixedAmount = Math.Abs(driver.FixedAmount());
+            dto.DeliveryAmount = Math.Abs(driver.DeliveryAmount());
             dto.OrderCount = driver.DriverOrders.Count();
             var deliveries = driver.DriverOrders.Where(x => (!date.HasValue || x.DateCreated == date) && x.Status() == OrderStatus.Completed)
                 .Select(x => x.OrderStatusLogs.Where(x => x.Status == OrderStatus.Completed).Select(x => x.DateCreated).FirstOrDefault()
