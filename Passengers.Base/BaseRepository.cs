@@ -4,7 +4,6 @@ using Passengers.SharedKernel.OperationResult.Enums;
 using Passengers.SharedKernel.OperationResult.ExtensionMethods;
 using Passengers.SharedKernel.Services.Selector;
 using Passengers.SqlServer.DataBase;
-using Microsoft.AspNetCore.JsonPatch.Operations;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;

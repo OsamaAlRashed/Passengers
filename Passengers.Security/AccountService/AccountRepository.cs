@@ -1,4 +1,4 @@
-﻿using EasyRefreshToken.TokenService;
+﻿using EasyRefreshToken.Service;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
@@ -77,7 +77,7 @@ namespace Passengers.Security.AccountService
                     user.DeviceTokens = String.Join(",", user.DeviceTokens, dto.DeviceToken);
                 }
 
-                var tokenResult = await tokenService.OnLogin(user.Id);
+                var tokenResult = await tokenService.OnLoginAsync(user.Id);
 
                 if (!tokenResult.IsSucceded)
                     return _Operation.SetFailed<LoginResponseDto>(tokenResult.ErrorMessage);
@@ -220,7 +220,7 @@ namespace Passengers.Security.AccountService
             if (user == null)
                 return _Operation.SetContent<TokenDto>(OperationResultTypes.NotExist, "UserNotFound");
 
-            var tokenResult = await tokenService.OnAccessTokenExpired(user.Id, refreshToken);
+            var tokenResult = await tokenService.OnAccessTokenExpiredAsync(user.Id, refreshToken);
 
             if (!tokenResult.IsSucceded)
                 return _Operation.SetFailed<TokenDto>(tokenResult.ErrorMessage);
@@ -246,7 +246,7 @@ namespace Passengers.Security.AccountService
             if (!result.Succeeded)
                 return _Operation.SetFailed<bool>("");
 
-            await tokenService.OnChangePassword(user.Id);
+            await tokenService.OnChangePasswordAsync(user.Id);
 
             return _Operation.SetSuccess(true);
         }
@@ -274,7 +274,7 @@ namespace Passengers.Security.AccountService
 
             user.DateBlocked = user.DateBlocked.HasValue ? null : DateTime.UtcNow;
 
-            await tokenService.Clear(id);
+            await tokenService.ClearAsync(id);
 
             await Context.SaveChangesAsync();
 
@@ -289,7 +289,7 @@ namespace Passengers.Security.AccountService
 
             user.DateDeleted = DateTime.UtcNow;
 
-            await tokenService.Clear(id);
+            await tokenService.ClearAsync(id);
 
             await Context.SaveChangesAsync();
 
@@ -309,7 +309,7 @@ namespace Passengers.Security.AccountService
         }
 
         public async Task<OperationResult<bool>> Logout(string refreshToken) 
-            => await tokenService.OnLogout(refreshToken);
+            => await tokenService.OnLogoutAsync(refreshToken);
 
         public List<Guid> GetUserIds(UserTypes type) =>
             Context.Users(type).Select(x => x.Id).ToList();

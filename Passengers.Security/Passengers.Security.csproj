@@ -1,11 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="EasyRefreshToken" Version="5.0.8" />
+    <PackageReference Include="EasyRefreshToken" Version="7.1.2" />
   </ItemGroup>
 
   <ItemGroup>

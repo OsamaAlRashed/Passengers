@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using EasyRefreshToken.Abstractions;
+using Microsoft.AspNetCore.Identity;
 using Passengers.Models.Base;
 using Passengers.Models.Location;
 using Passengers.Models.Main;
@@ -13,7 +14,7 @@ using System.Text;
 using OrderSet = Passengers.Models.Order.Order;
 namespace Passengers.Models.Security
 {
-    public class AppUser : IdentityUser<Guid> , IBaseEntity
+    public class AppUser : IdentityUser<Guid> , IBaseEntity, IUser<Guid>
     {
         public AppUser()
         {
