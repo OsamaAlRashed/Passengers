@@ -1,4 +1,6 @@
 using EasyRefreshToken.DependencyInjection;
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
@@ -45,6 +47,7 @@ using Passengers.SharedKernel.Swagger;
 using Passengers.SqlServer.DataBase;
 using Passengers.SqlServer.DataBase.Seed;
 using System;
+using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -80,10 +83,6 @@ builder.Services.AddDbContext<PassengersDbContext>
 builder.Services.AddSingleton<ICurrentUserService, CurrentUserService>();
 builder.Services.AddSingleton<ILangService, LangService>();
 builder.Services.AddHttpContextAccessor();
-//services.AddCors(c =>
-//{
-//    c.AddPolicy("AllowOrigin", options => options.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
-//});
 
 builder.Services.AddCors(options =>
 {
@@ -135,10 +134,10 @@ builder.Services.AddRefreshToken<PassengersDbContext, RefreshToken, AppUser, Gui
     op.PreventingLoginWhenAccessToMaxNumberOfActiveDevices = false;
 });
 
-//FirebaseApp.Create(new AppOptions()
-//{
-//    Credential = GoogleCredential.FromFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "firebasekey.json"))
-//});
+FirebaseApp.Create(new AppOptions()
+{
+    Credential = GoogleCredential.FromFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "firebasekey.json"))
+});
 
 var app = builder.Build();
 
