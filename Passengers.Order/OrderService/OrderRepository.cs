@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using EasyCBR.Enums;
+using EasyCBR.SimilarityFunctions;
+using EasyCBR;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Passengers.Base;
@@ -31,6 +34,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using OrderSet = Passengers.Models.Order.Order;
+using System.IO;
+using EasyCBR.IO;
+using EasyCBR.Helpers;
+using Passengers.Models.Main;
 
 namespace Passengers.Order.OrderService
 {
@@ -300,55 +307,69 @@ namespace Passengers.Order.OrderService
 
         public async Task<ExpectedCostDto> GetExpectedCost(SetOrderDto dto)
         {
-            var customerAddress = await Context.Addresses.Where(x => x.Id == dto.AddressId).SingleOrDefaultAsync();
-            var kmPrice = await Context.Settings.Select(x => x.KMPrice).FirstOrDefaultAsync();
+            var customerAddress = await Context.Addresses
+                .Where(x => x.Id == dto.AddressId)
+                .SingleOrDefaultAsync();
+
+            var kmPrice = await Context.Settings.Select(x => x.KMPrice)
+                .FirstOrDefaultAsync();
 
             decimal cost = 0;
-            var time = 0;
+            double distance = 0;
+
             foreach (var shop in dto.Cart)
             {
-                var shopAddress = await Context.Shops().Where(x => x.Id == shop.Id).Select(x => x.Address).FirstOrDefaultAsync();
-                if (shopAddress == null) continue;
-                var distance = Math.Round(new Point(customerAddress.Lat, customerAddress.Long)
+                var shopAddress = await Context.Shops()
+                    .Where(x => x.Id == shop.Id).Select(x => x.Address)
+                    .FirstOrDefaultAsync();
+
+                distance += Math.Round(new Point(customerAddress.Lat, customerAddress.Long)
                     .CalculateDistance(new Point(shopAddress.Lat, shopAddress.Long)) / 1000, 1);
 
                 //cost
                 cost += ((decimal)Math.Round(Convert.ToDouble(kmPrice) * distance, 0)) / 100 * 100;
-
-                //time
-                var preprationTime = await Context.Products.Where(x => shop.Products.Select(x => x.Id).Contains(x.Id)).MaxAsync(x => x.PrepareTime);
-
-                OrderCBR newOrder = new OrderCBR
-                {
-                    CustomerName = "",
-                    LengthOfWay = (int)distance,
-                    ProductCount = shop.Products.Count,
-                    OrderDay = DateTime.UtcNow.DayOfWeek,
-                    VehicleType = VehicleTypes.ElectricBike,
-                    WeatherForcast = WeatherForecast.Sunny,
-                    PreprationTime = preprationTime,
-                };
-
-                SimilarityFunction similarity = new SimilarityFunction();
-                List<OrderCBR> orders = IOHelper.ReadCsvFile<OrderCBR>(webHost.WebRootPath);
-                var resultList = similarity.GetSimilarity(orders, newOrder);
-
-                time = Math.Max(time, (int)resultList.Take(3).Select(x => x.Item2.TimeCost).ToList().Average(x => x));
-
-                time = FixTime(time);
             }
 
-            return new ExpectedCostDto() { Cost = cost, Time = time };
-        }
+            //var preprationTime = await Context.Shops()
+            //    .Where(x => shop.Products.Select(x => x.Id).Contains(x.Id))
+            //    .MaxAsync(x => x.PrepareTime);
 
-        private int FixTime(int time)
-        {
-            if (time <= 0)
-                return 5;
-            if(time > 40)
-                return 40;
-            return time;
+            List<OrderCBR> orders = IOHelper.ReadCsvFile<OrderCBR>(webHost.WebRootPath);
 
+            OrderCBR newOrder = new()
+            {
+                LengthOfWay = (int)distance,
+                ProductCount = dto.Cart.Sum(x => x.Products.Count),
+                OrderDay = DateTime.UtcNow.DayOfWeek,
+                VehicleType = VehicleTypes.ElectricBike,
+                WeatherForcast = WeatherForecast.Sunny,
+                PreprationTime = 30 /// ToDo
+            };
+
+            var orderCBRResult = CBR<OrderCBR>
+                .Create(orders)
+                .Output(order => order.TimeCost)
+                .SetSimilarityFunctions
+                (
+                    (nameof(OrderCBR.WeatherForcast), new TableSimilarityFunction<WeatherForecast>(new double[3, 3]
+                    {
+                        { 1, 0.5 , 0 },
+                        { 0.5, 1, 0.5 },
+                        { 0, 0.5, 1 }
+                    })),
+                    (nameof(OrderCBR.OrderDay), new TableSimilarityFunction<DayOfWeek>()),
+                    (nameof(OrderCBR.VehicleType), new TableSimilarityFunction<VehicleTypes>()),
+                    (nameof(OrderCBR.PreprationTime), new LinearSimilarityFunction<int>(1, 60)),
+                    (nameof(OrderCBR.ProductCount), new LinearSimilarityFunction<int>(1, 10)),
+                    (nameof(OrderCBR.LengthOfWay), new LinearSimilarityFunction<int>(1, 20))
+                )
+                .Retrieve(newOrder, 5)
+                .Reuse(SelectType.MaxSimilarity)
+                .Revise()
+                .Retain()
+                .Run();
+
+            return new ExpectedCostDto() { Cost = cost, Time = orderCBRResult.TimeCost };
         }
 
         public async Task<OperationResult<bool>> AddOrder(SetOrderDto dto, Guid? currentUserId = null)
