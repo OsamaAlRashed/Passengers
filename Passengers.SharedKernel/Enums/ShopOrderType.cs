@@ -1,14 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace Passengers.SharedKernel.Enums;
 
-namespace Passengers.SharedKernel.Enums
+public enum ShopOrderType
 {
-    public enum ShopOrderType
-    {
-        Open = 1,
-        Closed
-    }
+    Open = 1,
+    Closed
 }

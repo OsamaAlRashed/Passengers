@@ -20,7 +20,7 @@ namespace Passengers.Main.ProductService
         Task<OperationResult<bool>> Remove(Guid id);
         Task<OperationResult<bool>> ChangeAvilable(Guid id);
         Task<OperationResult<object>> GetById(Guid id);
-        Task<OperationResult<PagedList<GetProductDto>>> Get(ProductFilterDto filterDto, SortProductTypes? sortType, bool? isDes, int pageNumber = 1, int pageSize = 10);
+        Task<OperationResult<PagedList<GetProductDto>>> Get(ProductFilterDto filterDto, SortProductType? sortType, bool? isDes, int pageNumber = 1, int pageSize = 10);
         Task<OperationResult<bool>> ChangePrice(Guid id, decimal newPrice);
     }
 }

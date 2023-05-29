@@ -11,7 +11,7 @@ namespace Passengers.Models.Main
 {
     public class ShopContact : BaseEntity
     {
-        public ContactShopTypes Type { get; set; }
+        public ContactShopType Type { get; set; }
         public string Text { get; set; }
 
         public Guid ShopId { get; set; }

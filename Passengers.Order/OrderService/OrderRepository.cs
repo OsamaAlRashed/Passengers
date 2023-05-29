@@ -154,23 +154,23 @@ namespace Passengers.Order.OrderService
         {
             //Admins
             await _UpdateOrdersListDashboard();
-            var admins = accountRepository.GetUserIds(UserTypes.Admin);
-            await SendNotification(admins, UserTypes.Admin, newStatus, order);
+            var admins = accountRepository.GetUserIds(UserType.Admin);
+            await SendNotification(admins, UserType.Admin, newStatus, order);
 
             if (newStatus == OrderStatus.Canceled)
             {
                 await _UpdateOrdersListCustomer(customerId);
                 await _UpdateOrderCustomer(order.Id);
-                await SendNotification(new List<Guid>() { customerId }, UserTypes.Customer, newStatus, order);
+                await SendNotification(new List<Guid>() { customerId }, UserType.Customer, newStatus, order);
             }
             else if (newStatus == OrderStatus.Accepted)
             {
                 await _UpdateOrdersListShop(shopId);
-                await SendNotification(new List<Guid>() { shopId }, UserTypes.Shop, newStatus, order);
+                await SendNotification(new List<Guid>() { shopId }, UserType.Shop, newStatus, order);
 
                 await _UpdateOrdersListCustomer(customerId);
                 await _UpdateOrderCustomer(order.Id);
-                await SendNotification(new List<Guid>() { customerId }, UserTypes.Customer, newStatus, order);
+                await SendNotification(new List<Guid>() { customerId }, UserType.Customer, newStatus, order);
 
                 //Drivers
                 var driverIds = await GetAvilableDriverIds(order.Id, order.Shop().Address.Lat, order.Shop().Address.Long, order.TotalCost());
@@ -181,13 +181,13 @@ namespace Passengers.Order.OrderService
             {
                 await _UpdateOrdersListCustomer(customerId);
                 await _UpdateOrderCustomer(order.Id);
-                await SendNotification(new List<Guid>() { customerId }, UserTypes.Customer, newStatus, order);
+                await SendNotification(new List<Guid>() { customerId }, UserType.Customer, newStatus, order);
             }
             else if (newStatus == OrderStatus.Assigned)
             {
                 await _UpdateOrdersListCustomer(customerId);
                 await _UpdateOrderCustomer(order.Id);
-                await SendNotification(new List<Guid>() { customerId }, UserTypes.Customer, newStatus, order);
+                await SendNotification(new List<Guid>() { customerId }, UserType.Customer, newStatus, order);
                 ///ToDo
                 var driverIds = await Context.Drivers().Select(x => x.Id).ToListAsync();
                 await _UpdateOrdersListDriver(driverIds);
@@ -196,17 +196,17 @@ namespace Passengers.Order.OrderService
             {
                 await _UpdateOrdersListCustomer(customerId);
                 await _UpdateOrderCustomer(order.Id);
-                await SendNotification(new List<Guid>() { customerId }, UserTypes.Customer, newStatus, order);
+                await SendNotification(new List<Guid>() { customerId }, UserType.Customer, newStatus, order);
             }
             else if (newStatus == OrderStatus.Completed)
             {
                 await _UpdateOrdersListCustomer(customerId);
                 await _UpdateOrderCustomer(order.Id);
-                await SendNotification(new List<Guid>() { customerId }, UserTypes.Customer, newStatus, order);
+                await SendNotification(new List<Guid>() { customerId }, UserType.Customer, newStatus, order);
             }
         }
 
-        private async Task<NotificationDto> SendNotification(List<Guid> userIds, UserTypes userType, OrderStatus status, OrderSet order)
+        private async Task<NotificationDto> SendNotification(List<Guid> userIds, UserType userType, OrderStatus status, OrderSet order)
         {
             var notification = new NotificationDto()
             {
@@ -214,7 +214,7 @@ namespace Passengers.Order.OrderService
             };
             switch (userType)
             {
-                case UserTypes.Admin:
+                case UserType.Admin:
                     if (status == OrderStatus.Sended)
                     {
                         notification.Title = $"You have a new order {order.SerialNumber} look at it.";
@@ -232,13 +232,13 @@ namespace Passengers.Order.OrderService
                         notification.Title = $"The driver {order.Driver.FullName} Deliver order {order.Driver.FullName}";
                     }
                     break;
-                case UserTypes.Driver:
+                case UserType.Driver:
                     if (status == OrderStatus.Accepted)
                     {
                         notification.Title = $"You have a new order {order.SerialNumber} look at it";
                     }
                     break;
-                case UserTypes.Customer:
+                case UserType.Customer:
                     if (status == OrderStatus.Accepted)
                     {
                         notification.Title = $"Your order {order.SerialNumber} is accepted.";
@@ -260,7 +260,7 @@ namespace Passengers.Order.OrderService
                         notification.Body = "Thanks for using our app, if you have any problems, please send feedback or communicate with customer services.";
                     }
                     break;
-                case UserTypes.Shop:
+                case UserType.Shop:
                     if (status == OrderStatus.Accepted)
                     {
                         notification.Title = $"You have a new order {order.SerialNumber}.";
@@ -382,14 +382,14 @@ namespace Passengers.Order.OrderService
             {
                 var order = new OrderSet
                 {
-                    SerialNumber = GenerateSerialNumber(OrderTypes.Instant),
+                    SerialNumber = GenerateSerialNumber(OrderType.Instant),
                     DriverNote = dto.DriverNote,
                     AddressId = dto.AddressId,
                     OrderStatusLogs = new List<OrderStatusLog>()
                     {
                         new OrderStatusLog() { Status = OrderStatus.Sended }
                     },
-                    OrderType = OrderTypes.Instant,
+                    OrderType = OrderType.Instant,
                     ShopNote = shop.Note,
                     OrderDetails = shop.Products.Select(x => new OrderDetails
                     {
@@ -407,12 +407,12 @@ namespace Passengers.Order.OrderService
                 currentUserId = Context.CurrentUserId;
             await _UpdateOrdersListCustomer(currentUserId.Value);
             await _UpdateOrdersListDashboard();
-            var admins = accountRepository.GetUserIds(UserTypes.Admin);
+            var admins = accountRepository.GetUserIds(UserType.Admin);
 
 
             
 
-            orders.ForEach(async order => await SendNotification(admins, UserTypes.Admin, OrderStatus.Sended, order));
+            orders.ForEach(async order => await SendNotification(admins, UserType.Admin, OrderStatus.Sended, order));
 
             return _Operation.SetSuccess(true);
         }
@@ -520,8 +520,8 @@ namespace Passengers.Order.OrderService
             return true;
         }
 
-        private static string GenerateSerialNumber(OrderTypes type)
-            => (type == OrderTypes.Instant ? "A" : "B") + Helpers.GetNumberToken(5);
+        private static string GenerateSerialNumber(OrderType type)
+            => (type == OrderType.Instant ? "A" : "B") + Helpers.GetNumberToken(5);
 
         private static bool ValidAction(OrderSet order, AppUser currentUser, OrderStatus newStatus)
             => CanCustomerCancel(order, currentUser, newStatus) || CanAdminAction(order, currentUser, newStatus)
@@ -676,7 +676,7 @@ namespace Passengers.Order.OrderService
         }
 
         private static bool CanDriverAction(OrderSet order, AppUser currentUser, OrderStatus newStatus)
-            => currentUser.UserType == UserTypes.Driver
+            => currentUser.UserType == UserType.Driver
                 && (
                     (order.Status() == OrderStatus.Accepted && newStatus == OrderStatus.Assigned)
                  || (order.Status() == OrderStatus.Assigned && newStatus == OrderStatus.Collected)
@@ -736,7 +736,7 @@ namespace Passengers.Order.OrderService
         }
 
         private static bool CanCustomerCancel(OrderSet order, AppUser currentUser, OrderStatus newStatus)
-           => currentUser.UserType == UserTypes.Customer && order.Status() == OrderStatus.Sended && newStatus == OrderStatus.Canceled;
+           => currentUser.UserType == UserType.Customer && order.Status() == OrderStatus.Sended && newStatus == OrderStatus.Canceled;
 
 
         #endregion
@@ -938,14 +938,14 @@ namespace Passengers.Order.OrderService
         private async Task<bool> _UpdateOrdersListDashboard()
         {
             ///ToDo
-            var admins = accountRepository.GetUserIds(UserTypes.Admin);
+            var admins = accountRepository.GetUserIds(UserType.Admin);
             var orders = await _GetOrdersBoard();
             await orderHubContext.Clients.Users(admins.Select(x => x.ToString())).UpdateAdminOrders(orders);
             return true;
         }
 
         private static bool CanAdminAction(OrderSet order, AppUser currentUser, OrderStatus newStatus)
-            => currentUser.UserType == UserTypes.Admin
+            => currentUser.UserType == UserType.Admin
                 && (
                     ((order.Status() == OrderStatus.Sended) && (newStatus == OrderStatus.Accepted || newStatus == OrderStatus.Refused))
                   || (order.Status() == OrderStatus.Accepted && newStatus == OrderStatus.Assigned)
@@ -969,16 +969,16 @@ namespace Passengers.Order.OrderService
             {
                 switch (currentUser1.UserType)
                 {
-                    case UserTypes.Admin:
+                    case UserType.Admin:
                         admin = currentUser1;
                         break;
-                    case UserTypes.Shop:
+                    case UserType.Shop:
                         shop = currentUser1;
                         break;
-                    case UserTypes.Customer:
+                    case UserType.Customer:
                         customer = currentUser1;
                         break;
-                    case UserTypes.Driver:
+                    case UserType.Driver:
                         driver = currentUser1;
                         break;
                     default:

@@ -24,8 +24,8 @@ namespace Passengers.Security.AccountService
         Task<OperationResult<bool>> Delete(Guid id);
         Task<OperationResult<bool>> DeleteAllShop(List<Guid> ids);
         Task<OperationResult<bool>> Block(Guid id);
-        Task<OperationResult<List<SelectDto>>> Users(UserTypes? type);
-        List<Guid> GetUserIds(UserTypes type);
+        Task<OperationResult<List<SelectDto>>> Users(UserType? type);
+        List<Guid> GetUserIds(UserType type);
 
         //Task<OperationResult<bool>> ResendToken(Guid id, TokenTypes type);
         //Task<OperationResult<bool>> ForgetPassword(string email);

@@ -46,7 +46,7 @@ namespace Passengers.Security.AdminService
         public async Task<OperationResult<GetAdminDto>> Add(SetAdminDto dto)
         {
             if (string.IsNullOrEmpty(dto.UserName))
-                dto.UserName = UserTypes.Admin.ToString() + Helpers.GetUniqueKey(6);
+                dto.UserName = UserType.Admin.ToString() + Helpers.GetUniqueKey(6);
 
             if (string.IsNullOrEmpty(dto.Password))
                 dto.Password = "passengers";
@@ -55,7 +55,7 @@ namespace Passengers.Security.AdminService
             {
                 PhoneNumber = dto.PhoneNumber,
                 UserName = dto.UserName,
-                Type = UserTypes.Admin,
+                Type = UserType.Admin,
                 Password = dto.Password,
             })).Result;
 

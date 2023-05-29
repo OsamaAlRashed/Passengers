@@ -38,7 +38,7 @@ namespace Passengers.Main.TagService
 
             var tag = TagStore.Query.InverseSetSelectCategory.Compile()(dto);
 
-            tag.ShopId = user.UserType == UserTypes.Shop ? Context.CurrentUserId : null;
+            tag.ShopId = user.UserType == UserType.Shop ? Context.CurrentUserId : null;
             tag.LogoPath = dto.LogoFile.TryUploadImage(FolderNames.Tag, webHostEnvironment.WebRootPath);
             Context.Tags.Add(tag);
             await Context.SaveChangesAsync();

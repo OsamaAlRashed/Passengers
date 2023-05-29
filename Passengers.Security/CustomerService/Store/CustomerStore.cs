@@ -48,7 +48,7 @@ namespace Passengers.Security.CustomerService.Store
                 DeviceToken = c.DeviceToken,
                 Password = c.Password,
                 RemmberMe = false,
-                UserType = UserTypes.Customer
+                UserType = UserType.Customer
             };
 
             public static Expression<Func<Product, GetProductDto>> GetSelectProduct(Guid? customerId = null) => c => new GetProductDto

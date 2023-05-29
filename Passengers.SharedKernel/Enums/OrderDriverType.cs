@@ -1,15 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace Passengers.SharedKernel.Enums;
 
-namespace Passengers.SharedKernel.Enums
+public enum OrderDriverType
 {
-    public enum OrderDriverType
-    {
-        Nothing,
-        Accepted,
-        Refused
-    }
+    Nothing,
+    Accepted,
+    Refused
 }

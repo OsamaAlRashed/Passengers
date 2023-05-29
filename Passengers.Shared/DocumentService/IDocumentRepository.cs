@@ -14,11 +14,11 @@ namespace Passengers.Shared.DocumentService
     {
         Task<List<GetDocumentDto>> Get();
         Task<GetDocumentDto> GetById(Guid id);
-        Task<List<GetDocumentDto>> GetByEntityId(Guid entityId, DocumentEntityTypes type);
-        Task<GetDocumentDto> Add(IFormFile file, Guid entityId, DocumentEntityTypes type);
-        Task<List<GetDocumentDto>> Add(List<IFormFile> files, Guid entityId, DocumentEntityTypes type);
-        Task<GetDocumentDto> Update(IFormFile file, Guid entityId, DocumentEntityTypes type);
-        Task<List<GetDocumentDto>> Update(List<Guid> olds, List<IFormFile> news, Guid entityId, DocumentEntityTypes type);
+        Task<List<GetDocumentDto>> GetByEntityId(Guid entityId, DocumentEntityType type);
+        Task<GetDocumentDto> Add(IFormFile file, Guid entityId, DocumentEntityType type);
+        Task<List<GetDocumentDto>> Add(List<IFormFile> files, Guid entityId, DocumentEntityType type);
+        Task<GetDocumentDto> Update(IFormFile file, Guid entityId, DocumentEntityType type);
+        Task<List<GetDocumentDto>> Update(List<Guid> olds, List<IFormFile> news, Guid entityId, DocumentEntityType type);
         Task<bool> Remove(Guid id);
         Task<bool> Remove(List<Guid> id);
         Task<bool> RemoveByEntityId(Guid entityId);

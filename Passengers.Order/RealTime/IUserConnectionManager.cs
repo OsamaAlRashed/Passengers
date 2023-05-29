@@ -11,7 +11,7 @@ namespace Passengers.Order.RealTime
         void RemoveUserConnection(string connectionId);
         List<string> GetConnections(Guid userId);
         List<string> GetConnections(List<Guid> userIds);
-        List<string> GetConnections(UserTypes type);
-        List<string> GetConnections(UserTypes type, List<Guid> expectedUserIds);
+        List<string> GetConnections(UserType type);
+        List<string> GetConnections(UserType type, List<Guid> expectedUserIds);
     }
 }

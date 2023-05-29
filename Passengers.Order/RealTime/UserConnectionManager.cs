@@ -61,7 +61,7 @@ namespace Passengers.Order.RealTime
             }
             return conn;
         }
-        public List<string> GetConnections(UserTypes type)
+        public List<string> GetConnections(UserType type)
         {
             var conn = new List<string>();
 
@@ -85,7 +85,7 @@ namespace Passengers.Order.RealTime
             return conn;
         }
 
-        public List<string> GetConnections(UserTypes type, List<Guid> exceptUserIds)
+        public List<string> GetConnections(UserType type, List<Guid> exceptUserIds)
         {
             var conn = new List<string>();
 

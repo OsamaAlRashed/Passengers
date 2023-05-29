@@ -130,7 +130,7 @@ builder.Services.AddSingleton<IUserIdProvider, NameUserIdProvider>();
 builder.Services.AddRefreshToken<PassengersDbContext, RefreshToken, AppUser, Guid>(op =>
 {
     op.TokenExpiredDays = ConstantValue.ExpireRefreshTokenDay;
-    op.MaxNumberOfActiveDevices = MaxNumberOfActiveDevices.Configure("UserType", (UserTypes.Driver, 1));
+    op.MaxNumberOfActiveDevices = MaxNumberOfActiveDevices.Configure("UserType", (UserType.Driver, 1));
     op.PreventingLoginWhenAccessToMaxNumberOfActiveDevices = false;
 });
 

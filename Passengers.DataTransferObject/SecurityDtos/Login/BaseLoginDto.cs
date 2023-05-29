@@ -13,6 +13,6 @@ namespace Passengers.DataTransferObject.SecurityDtos.Login
         public string Password { get; set; }
         public string DeviceToken { get; set; }
         public bool RemmberMe { get; set; }
-        public UserTypes UserType { get; set; }
+        public UserType UserType { get; set; }
     }
 }

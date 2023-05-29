@@ -9,7 +9,7 @@ namespace Passengers.DataTransferObject.ShopDtos
 {
     public class ContactInformationDto
     {
-        public ContactShopTypes Type { get; set; }
+        public ContactShopType Type { get; set; }
         public string Text { get; set; }
     }
 }

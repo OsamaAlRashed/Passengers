@@ -27,7 +27,7 @@ namespace Passengers.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get(OfferTypes type, int pageSize, int pageNumber) => await repository.Get(type, pageSize, pageNumber).ToJsonResultAsync();
+        public async Task<IActionResult> Get(OfferType type, int pageSize, int pageNumber) => await repository.Get(type, pageSize, pageNumber).ToJsonResultAsync();
 
         [HttpPost]
         public async Task<IActionResult> Add(SetOfferDto dto) => await repository.Add(dto).ToJsonResultAsync();

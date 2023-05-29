@@ -67,7 +67,7 @@ namespace Passengers.Security.ShopService
                 Name = dto.Name,
                 Description = dto.Decription,
                 OwnerName = dto.OwnerName,
-                UserType = UserTypes.Shop,
+                UserType = UserType.Shop,
                 AccountStatus = AccountStatus.WaitingCompleteInformation, ///ToDo Draft
                 Address = new Address
                 {
@@ -83,7 +83,7 @@ namespace Passengers.Security.ShopService
             if (!identityResult.Succeeded)
                 return _Operation.SetFailed<CreateShopAccountDto>(String.Join(",", identityResult.Errors.Select(error => error.Description)));
 
-            var roleIdentityResult = await userManager.AddToRoleAsync(shop, UserTypes.Shop.ToString());
+            var roleIdentityResult = await userManager.AddToRoleAsync(shop, UserType.Shop.ToString());
 
             if (!roleIdentityResult.Succeeded)
                 return _Operation.SetFailed<CreateShopAccountDto>(String.Join(",", roleIdentityResult.Errors.Select(error => error.Description)));
@@ -144,7 +144,7 @@ namespace Passengers.Security.ShopService
                 Context.ShopSchedules.Add(shopSchacule);
             }
 
-            var document = await documentRepository.Add(dto.Image, shop.Id, DocumentEntityTypes.Shop);
+            var document = await documentRepository.Add(dto.Image, shop.Id, DocumentEntityType.Shop);
             
             if(dto.Contacts != null)
             {
@@ -237,7 +237,7 @@ namespace Passengers.Security.ShopService
             if (shop == null)
                 return _Operation.SetContent<string>(OperationResultTypes.NotExist, "");
             
-            var document = await documentRepository.Update(image, shop.Id, DocumentEntityTypes.Shop);
+            var document = await documentRepository.Update(image, shop.Id, DocumentEntityType.Shop);
             if (document == null)
                 return _Operation.SetFailed<string>("UploadImageFailed");
 

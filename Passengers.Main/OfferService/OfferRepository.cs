@@ -31,7 +31,7 @@ namespace Passengers.Main.OfferService
         public async Task<OperationResult<GetOfferDto>> Add(SetOfferDto dto)
         {
             var entity = OfferStore.Query.SetSelectOffer.Compile()(dto);
-            await documentRepository.Add(dto.ImageFile, Context.CurrentUserId.Value, DocumentEntityTypes.Offer);
+            await documentRepository.Add(dto.ImageFile, Context.CurrentUserId.Value, DocumentEntityType.Offer);
             entity.ShopId = Context.CurrentUserId.Value;
             Context.Offers.Add(entity);
             await Context.SaveChangesAsync();
@@ -49,7 +49,7 @@ namespace Passengers.Main.OfferService
             return _Operation.SetSuccess(true);
         }
 
-        public async Task<OperationResult<List<GetOfferDto>>> Get(OfferTypes type, int pageSize, int pageNumber)
+        public async Task<OperationResult<List<GetOfferDto>>> Get(OfferType type, int pageSize, int pageNumber)
         {
             var result = await Context.Offers.Where(OfferStore.Filter.WhereType(type))
                 //.Pagnation(pageSize, pageNumber)
@@ -75,7 +75,7 @@ namespace Passengers.Main.OfferService
             OfferStore.Query.AssignDtoToOffer(offer, dto);
 
             if(dto.ImageFile != null)
-                await documentRepository.Update(dto.ImageFile, offer.Id, DocumentEntityTypes.Offer);
+                await documentRepository.Update(dto.ImageFile, offer.Id, DocumentEntityType.Offer);
 
             await Context.SaveChangesAsync();
             return _Operation.SetSuccess(OfferStore.Query.GetSelectOffer.Compile()(offer));

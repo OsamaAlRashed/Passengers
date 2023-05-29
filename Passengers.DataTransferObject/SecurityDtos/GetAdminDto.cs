@@ -14,7 +14,7 @@ namespace Passengers.DataTransferObject.SecurityDtos
         public string PhoneNumber { get; set; }
         public string AddressText { get; set; }
         public string UserName { get; set; }
-        public GenderTypes? GenderType { get; set; }
+        public GenderType? GenderType { get; set; }
         public decimal Salary { get; set; }
         public int? Age { get; set; }
         public string IdentifierImagePath { get; set; }

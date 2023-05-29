@@ -13,6 +13,6 @@ namespace Passengers.DataTransferObject.SecurityDtos
         public string UserName { get; set; }
         public string PhoneNumber { get; set; }
         public string Password { get; set; }
-        public UserTypes Type { get; set; }
+        public UserType Type { get; set; }
     }
 }

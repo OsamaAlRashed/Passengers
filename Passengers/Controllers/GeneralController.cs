@@ -21,55 +21,52 @@ namespace Passengers.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Users(UserTypes? type) => await accountRepository.Users(type).ToJsonResultAsync();
+        public async Task<IActionResult> Users(UserType? type) => await accountRepository.Users(type).ToJsonResultAsync();
 
         [HttpGet]
         public IActionResult AccountStatus() => Ok(Helpers.EnumToList(typeof(AccountStatus)));
 
         [HttpGet]
-        public IActionResult AddressTypes() => Ok(Helpers.EnumToList(typeof(AddressTypes)));
+        public IActionResult AddressTypes() => Ok(Helpers.EnumToList(typeof(AddressType)));
 
         [HttpGet]
-        public IActionResult BloodTypes() => Ok(Helpers.EnumToList(typeof(BloodTypes)));
+        public IActionResult BloodTypes() => Ok(Helpers.EnumToList(typeof(BloodType)));
 
         [HttpGet]
-        public IActionResult ContactShopTypes() => Ok(Helpers.EnumToList(typeof(ContactShopTypes)));
+        public IActionResult ContactShopTypes() => Ok(Helpers.EnumToList(typeof(ContactShopType)));
 
         [HttpGet]
-        public IActionResult DocumentEntityTypes() => Ok(Helpers.EnumToList(typeof(DocumentEntityTypes)));
+        public IActionResult DocumentEntityTypes() => Ok(Helpers.EnumToList(typeof(DocumentEntityType)));
 
         [HttpGet]
-        public IActionResult DocumentTypes() => Ok(Helpers.EnumToList(typeof(DocumentTypes)));
+        public IActionResult DocumentTypes() => Ok(Helpers.EnumToList(typeof(DocumentType)));
 
         [HttpGet]
-        public IActionResult GenderTypes() => Ok(Helpers.EnumToList(typeof(GenderTypes)));
+        public IActionResult GenderTypes() => Ok(Helpers.EnumToList(typeof(GenderType)));
 
         [HttpGet]
-        public IActionResult NotesToDrive() => Ok(Helpers.EnumToList(typeof(NotesToDrive)));
-
-        [HttpGet]
-        public IActionResult OfferTypes() => Ok(Helpers.EnumToList(typeof(OfferTypes)));
+        public IActionResult OfferTypes() => Ok(Helpers.EnumToList(typeof(OfferType)));
 
         [HttpGet]
         public IActionResult OrderStatus() => Ok(Helpers.EnumToList(typeof(OrderStatus)));
 
         [HttpGet]
-        public IActionResult OrderTypes() => Ok(Helpers.EnumToList(typeof(OrderTypes)));
+        public IActionResult OrderTypes() => Ok(Helpers.EnumToList(typeof(OrderType)));
 
         [HttpGet]
         public IActionResult ShopOrderType() => Ok(Helpers.EnumToList(typeof(ShopOrderType)));
 
         [HttpGet]
-        public IActionResult SortProductTypes() => Ok(Helpers.EnumToList(typeof(SortProductTypes)));
+        public IActionResult SortProductTypes() => Ok(Helpers.EnumToList(typeof(SortProductType)));
 
         [HttpGet]
-        public IActionResult TagTypes() => Ok(Helpers.EnumToList(typeof(TagTypes)));
+        public IActionResult TagTypes() => Ok(Helpers.EnumToList(typeof(TagType)));
 
         [HttpGet]
-        public IActionResult TokenTypes() => Ok(Helpers.EnumToList(typeof(TokenTypes)));
+        public IActionResult TokenTypes() => Ok(Helpers.EnumToList(typeof(TokenType)));
 
         [HttpGet]
-        public IActionResult UserTypes() => Ok(Helpers.EnumToList(typeof(UserTypes)));
+        public IActionResult UserTypes() => Ok(Helpers.EnumToList(typeof(UserType)));
 
         [HttpGet]
         public IActionResult DayOfWeek() => Ok(Helpers.EnumToList(typeof(DayOfWeek)));

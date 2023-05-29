@@ -25,7 +25,7 @@ namespace Passengers.Models.Order
         public string ShopNote { get; set; }
         public bool IsShopReady { get; set; }
         public string DriverNote { get; set; }
-        public OrderTypes OrderType { get; set; }
+        public OrderType OrderType { get; set; }
         public decimal? DeliveryCost { get; set; }
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             public decimal ExpectedCost { get; set; }
         public int ExpectedTime { get; set; }

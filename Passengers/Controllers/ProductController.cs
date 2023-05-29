@@ -50,7 +50,7 @@ namespace Passengers.Controllers
 
         [AppAuthorize(AppRoles.Shop)]
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery] ProductFilterDto filterDto, SortProductTypes? sortType, bool? isDes, int pageNumber = 1, int pageSize = 10)
+        public async Task<IActionResult> Get([FromQuery] ProductFilterDto filterDto, SortProductType? sortType, bool? isDes, int pageNumber = 1, int pageSize = 10)
             => await repository.Get(filterDto, sortType, isDes, pageNumber, pageSize).AddPagnationHeaderAsync(this).ToJsonResultAsync();
         
         [AppAuthorize(AppRoles.Shop)]

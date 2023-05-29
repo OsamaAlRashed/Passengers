@@ -127,7 +127,7 @@ namespace Passengers.Security.AccountService
                 UserName = dto.UserName,
                 Email = dto.UserName + "@passengers.com",
                 UserType = dto.Type,
-                AccountStatus = dto.Type == UserTypes.Shop ? AccountStatus.WaitingCompleteInformation : AccountStatus.Accepted
+                AccountStatus = dto.Type == UserType.Shop ? AccountStatus.WaitingCompleteInformation : AccountStatus.Accepted
             };
             var identityResult = await userManager.CreateAsync(user, dto.Password);
 
@@ -296,7 +296,7 @@ namespace Passengers.Security.AccountService
             return _Operation.SetSuccess(true);
         }
 
-        public async Task<OperationResult<List<SelectDto>>> Users(UserTypes? type)
+        public async Task<OperationResult<List<SelectDto>>> Users(UserType? type)
         {
             var data = await Context.Users.Where(x => !type.HasValue || x.UserType == type)
                 .Select(x => new SelectDto
@@ -311,7 +311,7 @@ namespace Passengers.Security.AccountService
         public async Task<OperationResult<bool>> Logout(string refreshToken) 
             => await tokenService.OnLogoutAsync(refreshToken);
 
-        public List<Guid> GetUserIds(UserTypes type) =>
+        public List<Guid> GetUserIds(UserType type) =>
             Context.Users(type).Select(x => x.Id).ToList();
 
         public string GenerateAccessToken(AppUser user, IList<string> roles, DateTime expierDate)

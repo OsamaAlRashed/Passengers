@@ -28,7 +28,7 @@ namespace Passengers.Shared.DocumentService
             this.host = host;
         }
 
-        public async Task<GetDocumentDto> Add(IFormFile file, Guid entityId, DocumentEntityTypes type)
+        public async Task<GetDocumentDto> Add(IFormFile file, Guid entityId, DocumentEntityType type)
         {
             var path = Upload(file, type);
             if (path.IsNullOrEmpty())
@@ -50,7 +50,7 @@ namespace Passengers.Shared.DocumentService
             };
         }
 
-        public async Task<List<GetDocumentDto>> Add(List<IFormFile> files, Guid entityId, DocumentEntityTypes type)
+        public async Task<List<GetDocumentDto>> Add(List<IFormFile> files, Guid entityId, DocumentEntityType type)
         {
             List<GetDocumentDto> documents = new ();
             foreach (var file in files)
@@ -65,7 +65,7 @@ namespace Passengers.Shared.DocumentService
             return await Context.Documents.Select(DocumentStore.Query.GetSelectDocument).ToListAsync();
         }
 
-        public Task<List<GetDocumentDto>> GetByEntityId(Guid entityId, DocumentEntityTypes type)
+        public Task<List<GetDocumentDto>> GetByEntityId(Guid entityId, DocumentEntityType type)
         {
             throw new NotImplementedException();
         }
@@ -90,21 +90,21 @@ namespace Passengers.Shared.DocumentService
             throw new NotImplementedException();
         }
 
-        public async Task<GetDocumentDto> Update(IFormFile file, Guid entityId, DocumentEntityTypes type)
+        public async Task<GetDocumentDto> Update(IFormFile file, Guid entityId, DocumentEntityType type)
         {
             var path = Upload(file, type);
             if (path.IsNullOrEmpty())
                 return null;
 
             var document = await Context.Documents
-                .Where(x => type == DocumentEntityTypes.Product ? x.ProductId == entityId : x.ShopId == entityId).FirstOrDefaultAsync();
+                .Where(x => type == DocumentEntityType.Product ? x.ProductId == entityId : x.ShopId == entityId).FirstOrDefaultAsync();
 
             if(document == null)
             {
                 document = new Document()
                 {
                     ShopId = entityId,
-                    Type = DocumentTypes.Image
+                    Type = DocumentType.Image
                 };
                 Context.Documents.Add(document);
             }
@@ -121,43 +121,43 @@ namespace Passengers.Shared.DocumentService
             };
         }
 
-        public async Task<List<GetDocumentDto>> Update(List<Guid> olds, List<IFormFile> news, Guid entityId, DocumentEntityTypes type)
+        public async Task<List<GetDocumentDto>> Update(List<Guid> olds, List<IFormFile> news, Guid entityId, DocumentEntityType type)
         {
             throw new NotImplementedException();
         }
-        private static void SetEntityId(Document model, Guid entityId, DocumentEntityTypes type)
+        private static void SetEntityId(Document model, Guid entityId, DocumentEntityType type)
         {
-            if (type == DocumentEntityTypes.Product)
+            if (type == DocumentEntityType.Product)
                 model.ProductId = entityId;
-            else if (type == DocumentEntityTypes.Shop)
+            else if (type == DocumentEntityType.Shop)
                 model.ShopId = entityId;
-            else if (type == DocumentEntityTypes.Offer)
+            else if (type == DocumentEntityType.Offer)
                 model.ShopId = entityId;
         }
 
-        private static DocumentEntityTypes? Map(string name)
+        private static DocumentEntityType? Map(string name)
         {
             if (name == FolderNames.Product)
-                return DocumentEntityTypes.Product;
+                return DocumentEntityType.Product;
             else if (name == FolderNames.Shop)
-                return DocumentEntityTypes.Shop;
+                return DocumentEntityType.Shop;
             else if (name == FolderNames.Offer)
-                return DocumentEntityTypes.Offer;
+                return DocumentEntityType.Offer;
             return null;
         }
 
-        private static string Map(DocumentEntityTypes type)
+        private static string Map(DocumentEntityType type)
         {
-            if (type == DocumentEntityTypes.Product)
+            if (type == DocumentEntityType.Product)
                 return FolderNames.Product;
-            else if (type == DocumentEntityTypes.Shop)
+            else if (type == DocumentEntityType.Shop)
                 return FolderNames.Shop;
-            else if (type == DocumentEntityTypes.Offer)
+            else if (type == DocumentEntityType.Offer)
                 return FolderNames.Offer;
             return null;
         }
 
-        private string Upload(IFormFile file, DocumentEntityTypes type)
+        private string Upload(IFormFile file, DocumentEntityType type)
         {
             var folderName = Map(type);
             if (folderName is null) return null;

@@ -11,7 +11,7 @@ namespace Passengers.DataTransferObject.CustomerDtos
     {
         public Guid Id { get; set; }
         public string FullName { get; set; }
-        public GenderTypes Gender { get; set; }
+        public GenderType Gender { get; set; }
         public DateTime DOB { get; set; }
         public string PhoneNumber { get; set; }
         public string Password { get; set; }

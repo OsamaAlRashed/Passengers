@@ -14,8 +14,8 @@ namespace Passengers.DataTransferObject.DriverDtos
         public string PhoneNumber { get; set; }
         public string AddressText { get; set; }
         public string UserName { get; set; }
-        public GenderTypes? GenderType { get; set; }
-        public BloodTypes? BloodType { get; set; }
+        public GenderType? GenderType { get; set; }
+        public BloodType? BloodType { get; set; }
         public int? Age { get; set; }
         public DateTime? DOB { get; set; }
         public string IdentifierImagePath { get; set; }

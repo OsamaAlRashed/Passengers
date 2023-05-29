@@ -12,7 +12,7 @@ namespace Passengers.Models.Shared
         public string Name { get; set; }
         public string Path { get; set; }
         public long Length { get; set; }
-        public DocumentTypes Type { get; set; }
+        public DocumentType Type { get; set; }
 
         public Guid? ShopId { get; set; }
         public AppUser Shop { get; set; }

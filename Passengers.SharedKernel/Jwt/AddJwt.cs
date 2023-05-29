@@ -3,60 +3,58 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Passengers.SharedKernel.Jwt
+namespace Passengers.SharedKernel.Jwt;
+
+public static class AddJwt
 {
-    public static class AddJwt
+    public static IServiceCollection AddJwtSecurity(this IServiceCollection services, IConfiguration Configuration)
     {
-        public static IServiceCollection AddJwtSecurity(this IServiceCollection services, IConfiguration Configuration)
+        JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+
+        services.AddAuthentication(options =>
         {
-            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 
-            services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+         .AddJwtBearer(options =>
+         {
+             options.SaveToken = true;
 
-            })
-             .AddJwtBearer(options =>
+             options.TokenValidationParameters = new TokenValidationParameters
              {
-                 options.SaveToken = true;
+                 ValidateIssuer = true,
+                 ValidateAudience = true,
+                 ValidateLifetime = true,
+                 ValidateIssuerSigningKey = true,
+                 ValidIssuer = Configuration["Jwt:Issuer"],
+                 ValidAudience = Configuration["Jwt:Issuer"],
+                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"])),
+                 ClockSkew = TimeSpan.Zero
+             };
 
-                 options.TokenValidationParameters = new TokenValidationParameters
+             options.Events = new JwtBearerEvents
+             {
+                 OnMessageReceived = context =>
                  {
-                     ValidateIssuer = true,
-                     ValidateAudience = true,
-                     ValidateLifetime = true,
-                     ValidateIssuerSigningKey = true,
-                     ValidIssuer = Configuration["Jwt:Issuer"],
-                     ValidAudience = Configuration["Jwt:Issuer"],
-                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"])),
-                     ClockSkew = TimeSpan.Zero
-                 };
+                     var accessToken = context.Request.Query["access_token"];
 
-                 options.Events = new JwtBearerEvents
-                 {
-                     OnMessageReceived = context =>
+                     var path = context.HttpContext.Request.Path;
+                     if (!string.IsNullOrEmpty(accessToken) &&
+                         (path.StartsWithSegments("/orderHub")))
                      {
-                         var accessToken = context.Request.Query["access_token"];
-
-                         var path = context.HttpContext.Request.Path;
-                         if (!string.IsNullOrEmpty(accessToken) &&
-                             (path.StartsWithSegments("/orderHub")))
-                         {
-                             context.Token = accessToken;
-                         }
-                         return Task.CompletedTask;
+                         context.Token = accessToken;
                      }
-                 };
-             });
+                     return Task.CompletedTask;
+                 }
+             };
+         });
 
-            return services;
-        }
+        return services;
     }
 }

@@ -11,7 +11,7 @@ namespace Passengers.Main.OfferService
 {
     public interface IOfferRepository
     {
-        Task<OperationResult<List<GetOfferDto>>> Get(OfferTypes type, int pageSize, int pageNumber);
+        Task<OperationResult<List<GetOfferDto>>> Get(OfferType type, int pageSize, int pageNumber);
         Task<OperationResult<GetOfferDto>> GetById(Guid id);
         Task<OperationResult<GetOfferDto>> Add(SetOfferDto dto);
         Task<OperationResult<GetOfferDto>> Update(SetOfferDto dto);

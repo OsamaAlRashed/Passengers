@@ -10,7 +10,7 @@ namespace Passengers.DataTransferObject.CustomerDtos
     public class CustomerInformationDto
     {
         public string FullName { get; set; }
-        public GenderTypes GenderType { get; set; }
+        public GenderType GenderType { get; set; }
         public DateTime DOB { get; set; }
     }
 }

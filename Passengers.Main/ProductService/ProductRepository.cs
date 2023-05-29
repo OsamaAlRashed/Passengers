@@ -54,7 +54,7 @@ namespace Passengers.Main.ProductService
 
             Context.Products.Add(product);
             await Context.SaveChangesAsync();
-            await documentRepository.Add(dto.ImageFile, product.Id, DocumentEntityTypes.Product);
+            await documentRepository.Add(dto.ImageFile, product.Id, DocumentEntityType.Product);
             return _Operation.SetSuccess(new GetProductDto
             {
                 Id = product.Id,
@@ -181,7 +181,7 @@ namespace Passengers.Main.ProductService
             await Context.SaveChangesAsync();
 
             if(dto.ImageFile != null)
-                await documentRepository.Update(dto.ImageFile, product.Id, DocumentEntityTypes.Product);
+                await documentRepository.Update(dto.ImageFile, product.Id, DocumentEntityType.Product);
 
             return _Operation.SetSuccess(new GetProductDto
             {
@@ -201,7 +201,7 @@ namespace Passengers.Main.ProductService
             return discounts.Where(x => x.StartDate <= DateTime.UtcNow && DateTime.UtcNow <= x.EndDate).FirstOrDefault();
         }
 
-        public async Task<OperationResult<PagedList<GetProductDto>>> Get(ProductFilterDto filterDto, SortProductTypes? sortType, bool? isDes, int pageNumber = 1, int pageSize = 10)
+        public async Task<OperationResult<PagedList<GetProductDto>>> Get(ProductFilterDto filterDto, SortProductType? sortType, bool? isDes, int pageNumber = 1, int pageSize = 10)
         {
             var products = await Context.Products
                 .Include(x => x.Documents).Include(x => x.OrderDetails).Include(x => x.Reviews)

@@ -73,7 +73,7 @@ namespace Passengers.Security.DriveService.Store
                 DeviceToken = c.DeviceToken,
                 Password = c.Password,
                 RemmberMe = false,
-                UserType = UserTypes.Driver
+                UserType = UserType.Driver
             };
         }
 

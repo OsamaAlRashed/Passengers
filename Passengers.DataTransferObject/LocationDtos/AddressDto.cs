@@ -15,6 +15,6 @@ namespace Passengers.DataTransferObject.LocationDtos
         public string Long { get; set; }
         public Guid AreaId { get; set; }
         public Guid EntityId { get; set; }
-        public AddressTypes Type { get; set; }
+        public AddressType Type { get; set; }
     }
 }

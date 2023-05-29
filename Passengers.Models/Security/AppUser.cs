@@ -43,14 +43,14 @@ namespace Passengers.Models.Security
         #endregion
 
         #region Shared
-        public UserTypes UserType { get; set; }
+        public UserType UserType { get; set; }
 
         [DefaultValue(AccountStatus.Accepted)]
         public AccountStatus AccountStatus { get; set; }
         public string FullName { get; set; }
         public DateTime? DOB { get; set; }
         public string DeviceTokens { get; set; }
-        public GenderTypes? GenderType { get; set; }
+        public GenderType? GenderType { get; set; }
         public DateTime? DateBlocked { get; set; }
         public decimal Salary { get; set; }
         public string AddressText { get; set; }
@@ -58,7 +58,7 @@ namespace Passengers.Models.Security
 
         public double? Rate { get; set; }
         public string IdentifierImagePath { get; set; }
-        public BloodTypes? BloodType { get; set; }
+        public BloodType? BloodType { get; set; }
 
         public ICollection<OrderSet> DriverOrders { get; set; }
 

@@ -17,24 +17,24 @@ namespace Passengers.Base
     public static class Queries
     {
         public static IQueryable<AppUser> Drivers(this PassengersDbContext context)
-            => context.Users(UserTypes.Driver);
+            => context.Users(UserType.Driver);
 
         public static IQueryable<AppUser> Admins(this PassengersDbContext context)
-            => context.Users(UserTypes.Admin);
+            => context.Users(UserType.Admin);
 
         public static IQueryable<AppUser> Customers(this PassengersDbContext context)
-            => context.Users(UserTypes.Customer);
+            => context.Users(UserType.Customer);
 
         public static IQueryable<AppUser> Shops(this PassengersDbContext context, AccountStatus status = AccountStatus.Accepted)
-            => context.Users(UserTypes.Shop, status);
+            => context.Users(UserType.Shop, status);
 
-        public static IQueryable<AppUser> Users(this PassengersDbContext context, UserTypes type = UserTypes.Admin, AccountStatus accountStatus = AccountStatus.Accepted)
+        public static IQueryable<AppUser> Users(this PassengersDbContext context, UserType type = UserType.Admin, AccountStatus accountStatus = AccountStatus.Accepted)
             => context.Users.Where(x => x.UserType == type && x.AccountStatus == accountStatus);
 
         public static IQueryable<AppUser> Users(this PassengersDbContext context, AccountStatus accountStatus = AccountStatus.Accepted)
             => context.Users.Where(x => x.AccountStatus == accountStatus);
 
-        public static IQueryable<AppUser> Users(this PassengersDbContext context, UserTypes type = UserTypes.Admin)
+        public static IQueryable<AppUser> Users(this PassengersDbContext context, UserType type = UserType.Admin)
             => context.Users.Where(x => x.UserType == type);
 
         public static IQueryable<T> QueryNoTracking<T>(this PassengersDbContext context) where T : BaseEntity

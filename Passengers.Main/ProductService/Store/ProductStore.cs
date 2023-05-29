@@ -45,17 +45,17 @@ namespace Passengers.Main.ProductService.Store
                 Rate = c.Reviews.Any() ? c.Reviews.Average(x => x.Rate) : 0,
             };
 
-            public static Expression<Func<Product, object>> Sort(SortProductTypes? sortType)
+            public static Expression<Func<Product, object>> Sort(SortProductType? sortType)
             {
                 if (sortType == null)
                     return x => x.DateCreated;
                 return sortType switch
                 {
-                    SortProductTypes.Name => x => x.Name,
-                    SortProductTypes.Rate => x => x.Reviews.Any() ? x.Reviews.Average(x => x.Rate) : 0,
-                    SortProductTypes.PrepareTime => x => x.PrepareTime,
-                    SortProductTypes.Avilable => x => x.Avilable,
-                    SortProductTypes.Price => x => x.Price(),
+                    SortProductType.Name => x => x.Name,
+                    SortProductType.Rate => x => x.Reviews.Any() ? x.Reviews.Average(x => x.Rate) : 0,
+                    SortProductType.PrepareTime => x => x.PrepareTime,
+                    SortProductType.Avilable => x => x.Avilable,
+                    SortProductType.Price => x => x.Price(),
                     _ => x => x.DateCreated,
                 };
             }

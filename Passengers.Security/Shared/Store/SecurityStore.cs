@@ -23,7 +23,7 @@ namespace Passengers.Security.Shared.Store
                 DeviceToken = c.DeviceToken,
                 Password = c.Password,
                 RemmberMe = false,
-                UserType = UserTypes.Shop
+                UserType = UserType.Shop
             };
 
         }

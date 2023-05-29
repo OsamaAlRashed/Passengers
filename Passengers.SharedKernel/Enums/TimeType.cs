@@ -1,18 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace Passengers.SharedKernel.Enums;
 
-namespace Passengers.SharedKernel.Enums
+public enum TimeType
 {
-    public enum TimeType
-    {
-        Second,
-        Minute,
-        Hour,
-        Day,
-        Week,
-        Month
-    }
+    Second,
+    Minute,
+    Hour,
+    Day,
+    Week,
+    Month
 }

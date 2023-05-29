@@ -20,8 +20,8 @@ namespace Passengers.Location.AddressSerive.Store
             public static Expression<Func<AddressDto, Address>> GetSelectAddress => c => new Address
             {
                 AreaId = c.AreaId,
-                CustomerId = c.Type == SharedKernel.Enums.AddressTypes.Customer ? c.EntityId : null,
-                ShopId = c.Type == SharedKernel.Enums.AddressTypes.Shop ? c.EntityId : null,
+                CustomerId = c.Type == SharedKernel.Enums.AddressType.Customer ? c.EntityId : null,
+                ShopId = c.Type == SharedKernel.Enums.AddressType.Shop ? c.EntityId : null,
                 Text = c.Text,
                 Lat = c.Lat,
                 Long = c.Long,
@@ -31,7 +31,7 @@ namespace Passengers.Location.AddressSerive.Store
             {
                 AreaId = c.AreaId,
                 EntityId = c.ShopId ?? c.CustomerId.Value,
-                Type = c.ShopId != null ? SharedKernel.Enums.AddressTypes.Shop : SharedKernel.Enums.AddressTypes.Customer,
+                Type = c.ShopId != null ? SharedKernel.Enums.AddressType.Shop : SharedKernel.Enums.AddressType.Customer,
                 Text = c.Text,
                 Lat = c.Lat,
                 Long = c.Long,

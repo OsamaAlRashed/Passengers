@@ -27,7 +27,7 @@ namespace Passengers.SqlServer.DataBase.Seed
 
         private static async Task<IEnumerable<string>> CreateNewRoles(RoleManager<IdentityRole<Guid>> roleManager)
         {
-            var roles = Enum.GetValues(typeof(UserTypes)).Cast<UserTypes>().Select(a => a.ToString());
+            var roles = Enum.GetValues(typeof(UserType)).Cast<UserType>().Select(a => a.ToString());
             var identityRoles = roleManager.Roles.Select(a => a.Name).ToList();
             var newRoles = roles.Except(identityRoles); 
 
@@ -41,7 +41,7 @@ namespace Passengers.SqlServer.DataBase.Seed
 
         private static async Task<IEnumerable<string>> ClearRoles(RoleManager<IdentityRole<Guid>> roleManager)
         {
-            var roles = Enum.GetValues(typeof(UserTypes)).Cast<UserTypes>().Select(a => a.ToString());
+            var roles = Enum.GetValues(typeof(UserType)).Cast<UserType>().Select(a => a.ToString());
             var identityRoles = roleManager.Roles.ToList();
 
             var clearRoles = identityRoles.Where(x => !roles.Contains(x.Name));
@@ -65,7 +65,7 @@ namespace Passengers.SqlServer.DataBase.Seed
                     UserName = "SuperUser",
                     FullName = "Super User",
                     Email = "SuperUser@SuperUser",
-                    UserType = UserTypes.Admin,
+                    UserType = UserType.Admin,
                     AccountStatus = AccountStatus.Accepted,
                     DOB = new DateTime(2000,1,1),
                     AddressText = "Syria - Aleppo",
@@ -90,7 +90,7 @@ namespace Passengers.SqlServer.DataBase.Seed
                     UserName = "admin",
                     FullName = "admin admin",
                     Email = "admin@admin",
-                    UserType = UserTypes.Admin,
+                    UserType = UserType.Admin,
                     AccountStatus = AccountStatus.Accepted,
                     DOB = new DateTime(2000, 1, 1),
                     AddressText = "Syria - Aleppo",
@@ -98,7 +98,7 @@ namespace Passengers.SqlServer.DataBase.Seed
                 var createResult = await userManager.CreateAsync(admin, "passengers");
                 if (createResult.Succeeded)
                 {
-                    var roleResult = await userManager.AddToRoleAsync(admin, UserTypes.Admin.ToString());
+                    var roleResult = await userManager.AddToRoleAsync(admin, UserType.Admin.ToString());
                     if (!roleResult.Succeeded)
                         throw new Exception(String.Join("\n", roleResult.Errors.Select(error => error.Description)));
                 }

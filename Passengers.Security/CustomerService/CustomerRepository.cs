@@ -388,7 +388,7 @@ namespace Passengers.Security.CustomerService
                 UserName = "Customer" + dto.PhoneNumber,
                 Email = "Customer" + dto.PhoneNumber + "@Customer",
                 FullName = dto.FullName,
-                UserType = UserTypes.Customer,
+                UserType = UserType.Customer,
                 AccountStatus = AccountStatus.Accepted,
                 GenderType = dto.Gender,
                 DOB = dto.DOB,
@@ -398,7 +398,7 @@ namespace Passengers.Security.CustomerService
             if (!identityResult.Succeeded)
                 return _Operation.SetFailed<CreateAccountCustomerDto>(String.Join(",", identityResult.Errors.Select(error => error.Description)));
 
-            var roleIdentityResult = await userManager.AddToRoleAsync(customer, UserTypes.Customer.ToString());
+            var roleIdentityResult = await userManager.AddToRoleAsync(customer, UserType.Customer.ToString());
 
             if (!roleIdentityResult.Succeeded)
                 return _Operation.SetFailed<CreateAccountCustomerDto>(String.Join(",", roleIdentityResult.Errors.Select(error => error.Description)));
