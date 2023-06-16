@@ -33,6 +33,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Passengers.Main", "Passenge
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Passengers.Order", "Passengers.Order\Passengers.Order.csproj", "{9B596BCB-2E41-489C-9C8B-949B01BFE02C}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{E3FB2639-C433-4BFD-A7C1-FB1C97E04FF7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Passengers.Test", "Passengers.Test\Passengers.Test.csproj", "{FA5AF606-1DE8-4793-B306-D407801E6DBC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,6 +87,10 @@ Global
 		{9B596BCB-2E41-489C-9C8B-949B01BFE02C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9B596BCB-2E41-489C-9C8B-949B01BFE02C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9B596BCB-2E41-489C-9C8B-949B01BFE02C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FA5AF606-1DE8-4793-B306-D407801E6DBC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FA5AF606-1DE8-4793-B306-D407801E6DBC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FA5AF606-1DE8-4793-B306-D407801E6DBC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FA5AF606-1DE8-4793-B306-D407801E6DBC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -99,6 +107,7 @@ Global
 		{7DBDD6D2-DA35-4BA6-B6A4-1359D344FBBC} = {BFFE3111-0120-4F39-BCEC-653177BE178D}
 		{D18C313F-42F2-415F-9377-4E4F6C3B2B53} = {BFFE3111-0120-4F39-BCEC-653177BE178D}
 		{9B596BCB-2E41-489C-9C8B-949B01BFE02C} = {BFFE3111-0120-4F39-BCEC-653177BE178D}
+		{FA5AF606-1DE8-4793-B306-D407801E6DBC} = {E3FB2639-C433-4BFD-A7C1-FB1C97E04FF7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F5A59759-D575-4306-B64D-23DA65877053}

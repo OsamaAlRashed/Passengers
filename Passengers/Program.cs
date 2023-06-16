@@ -134,10 +134,10 @@ builder.Services.AddRefreshToken<PassengersDbContext, RefreshToken, AppUser, Gui
     op.PreventingLoginWhenAccessToMaxNumberOfActiveDevices = false;
 });
 
-FirebaseApp.Create(new AppOptions()
-{
-    Credential = GoogleCredential.FromFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "firebasekey.json"))
-});
+//FirebaseApp.Create(new AppOptions()
+//{
+//    Credential = GoogleCredential.FromFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "firebasekey.json"))
+//});
 
 var app = builder.Build();
 
@@ -163,8 +163,12 @@ app.UseSqlServerSeed<PassengersDbContext>(async (context, provider) =>
 {
     await context.Database.MigrateAsync();
     await context.Database.EnsureCreatedAsync();
-    await SecuritySeed.InitializeAsync(provider);
     await DataSeed.InitializeAsync(provider);
 });
 
 app.Run();
+
+public partial class Startup
+{
+
+}

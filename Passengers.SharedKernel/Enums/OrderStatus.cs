@@ -6,7 +6,7 @@ public static class OrderStatusHelper
 {
     public static CustomerOrderStatus MapCustomer(this OrderStatus orderStatus)
     {
-        if (orderStatus == OrderStatus.Sended)
+        if (orderStatus == OrderStatus.Sent)
             return CustomerOrderStatus.Pending;
         if (orderStatus == OrderStatus.Accepted)
             return CustomerOrderStatus.Inprogress1;
@@ -27,7 +27,7 @@ public static class OrderStatusHelper
 
     public static DeliveryCompanyOrderStatus MapCompany(this OrderStatus orderStatus)
     {
-        if (orderStatus == OrderStatus.Sended)
+        if (orderStatus == OrderStatus.Sent)
             return DeliveryCompanyOrderStatus.Received;
         if (orderStatus == OrderStatus.Accepted)
             return DeliveryCompanyOrderStatus.Unassigned;
@@ -62,7 +62,7 @@ public static class OrderStatusHelper
 
 public enum OrderStatus
 {
-    Sended = 1,
+    Sent = 1,
     Accepted,
     Assigned,
     Collected,

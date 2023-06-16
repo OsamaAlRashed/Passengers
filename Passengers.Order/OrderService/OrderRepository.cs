@@ -215,7 +215,7 @@ namespace Passengers.Order.OrderService
             switch (userType)
             {
                 case UserType.Admin:
-                    if (status == OrderStatus.Sended)
+                    if (status == OrderStatus.Sent)
                     {
                         notification.Title = $"You have a new order {order.SerialNumber} look at it.";
                     }
@@ -387,7 +387,7 @@ namespace Passengers.Order.OrderService
                     AddressId = dto.AddressId,
                     OrderStatusLogs = new List<OrderStatusLog>()
                     {
-                        new OrderStatusLog() { Status = OrderStatus.Sended }
+                        new OrderStatusLog() { Status = OrderStatus.Sent }
                     },
                     OrderType = OrderType.Instant,
                     ShopNote = shop.Note,
@@ -412,7 +412,7 @@ namespace Passengers.Order.OrderService
 
             
 
-            orders.ForEach(async order => await SendNotification(admins, UserType.Admin, OrderStatus.Sended, order));
+            orders.ForEach(async order => await SendNotification(admins, UserType.Admin, OrderStatus.Sent, order));
 
             return _Operation.SetSuccess(true);
         }
@@ -736,7 +736,7 @@ namespace Passengers.Order.OrderService
         }
 
         private static bool CanCustomerCancel(OrderSet order, AppUser currentUser, OrderStatus newStatus)
-           => currentUser.UserType == UserType.Customer && order.Status() == OrderStatus.Sended && newStatus == OrderStatus.Canceled;
+           => currentUser.UserType == UserType.Customer && order.Status() == OrderStatus.Sent && newStatus == OrderStatus.Canceled;
 
 
         #endregion
@@ -811,11 +811,11 @@ namespace Passengers.Order.OrderService
                 DateCreated = x.DateCreated.UtcToLocal(),
                 SerialNumber = x.SerialNumber,
                 Status = x.CompanyStatus(),
-                ImagePath = x.Status() == OrderStatus.Sended ? x.Address.Customer.IdentifierImagePath
+                ImagePath = x.Status() == OrderStatus.Sent ? x.Address.Customer.IdentifierImagePath
                          : (x.Status() == OrderStatus.Accepted || x.Status() == OrderStatus.Refused || x.Status() == OrderStatus.Canceled ? null : x.Driver.IdentifierImagePath),
-                PhoneNumber = x.Status() == OrderStatus.Sended ? x.Address.Customer.PhoneNumber
+                PhoneNumber = x.Status() == OrderStatus.Sent ? x.Address.Customer.PhoneNumber
                          : (x.Status() == OrderStatus.Accepted || x.Status() == OrderStatus.Refused || x.Status() == OrderStatus.Canceled ? "" : x.Driver.PhoneNumber),
-                FullName = x.Status() == OrderStatus.Sended ? x.Address.Customer.FullName
+                FullName = x.Status() == OrderStatus.Sent ? x.Address.Customer.FullName
                          : (x.Status() == OrderStatus.Accepted ? "Unassigned" : (x.Status() == OrderStatus.Refused || x.Status() == OrderStatus.Canceled ? null : x.Driver.FullName)),
                 //TimeAmount = x.GetTime().Item1,
                 //TimeType = x.GetTime().Item2
@@ -896,7 +896,7 @@ namespace Passengers.Order.OrderService
                 };
             }
 
-            if (order.Status() == OrderStatus.Sended)
+            if (order.Status() == OrderStatus.Sent)
             {
                 try
                 {
@@ -947,7 +947,7 @@ namespace Passengers.Order.OrderService
         private static bool CanAdminAction(OrderSet order, AppUser currentUser, OrderStatus newStatus)
             => currentUser.UserType == UserType.Admin
                 && (
-                    ((order.Status() == OrderStatus.Sended) && (newStatus == OrderStatus.Accepted || newStatus == OrderStatus.Refused))
+                    ((order.Status() == OrderStatus.Sent) && (newStatus == OrderStatus.Accepted || newStatus == OrderStatus.Refused))
                   || (order.Status() == OrderStatus.Accepted && newStatus == OrderStatus.Assigned)
                 );
 
@@ -1029,7 +1029,7 @@ namespace Passengers.Order.OrderService
                 AppUser currentUser = null;
                 switch (currentStatus)
                 {
-                    case OrderStatus.Sended:
+                    case OrderStatus.Sent:
                         currentStatus = OrderStatus.Accepted;
                         currentUser = admin;
                         break;
